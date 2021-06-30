@@ -36,10 +36,10 @@ if __name__ == "__main__":
             print(f"Input {i} was read from excel format.")
         else:
             if i == "-t":
-                T = np.float(filenames[idx + 1])
+                T = np.float(arguments[idx + 1])
                 print(f"Temperature manually set to {T}.")
             if i == "-v":
-                verb = int(filenames[idx + 1])
+                verb = int(arguments[idx + 1])
                 print(f"Verbosity manually set to {verb}.")
     if len(dfs) > 1:
         df = pd.concat(dfs)
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         df = dfs[0]
     assert isinstance(df, pd.DataFrame)
     if verb > 1:
-        print(f"Final database :")
+        print("Final database :")
         print(df.head())
 
 # Numpy for convenience

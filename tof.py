@@ -5,7 +5,9 @@ import scipy.constants as sc
 
 
 def calc_tof(array, Delta_G_reaction, T, coeff, exact=True, verb=0):
-    assert len(array) == len(coeff)
+    coeff = np.array(coeff)
+    array = np.array(array)
+    assert array.size == coeff.size
     # coeff = list(coeff)
     h = sc.value("Planck constant")
     k_b = sc.value("Boltzmann constant")
@@ -99,6 +101,6 @@ if __name__ == "__main__":
     a = np.array([0.0, 8.59756198, 7.1439459, 12.47470641, -27.48101312])
     dgr = -5.8
     T = 298.15
-    coeff = [0, 1, 0, 0, 1, 0]
-    print(calc_TOF(a, dgr, T, coeff, exact=True)[0])
-    print(calc_TOF(a, dgr, T, coeff, exact=False)[0])
+    coeff = [0, 1, 0, 1, 0]
+    print(calc_tof(a, dgr, T, coeff, exact=True, verb=3)[0])
+    print(calc_tof(a, dgr, T, coeff, exact=False, verb=3)[0])

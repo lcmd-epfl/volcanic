@@ -161,7 +161,7 @@ def plot_lsfer(idx, d, tags, coeff, lnsteps, verb):
 def calc_es(profile, dgr, esp=False):
     imax = np.argmax(profile)
     imin = np.argmin(profile)
-    if (imax > imin or imax < imin) and esp:
+    if (imax < imin) and esp:
         profile[0:imin] += dgr
         imax = np.argmax(profile)
     return profile[imax] - profile[imin]
@@ -222,12 +222,14 @@ def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, verb):
         dgs[:, i] = yint
     ymin = np.zeros_like(yint)
     for i in range(ymin.shape[0]):
-        ymin[i] = -calc_es(dgs[i, :], dgr, esp=False)
+        profile = np.append(np.append(0, dgs[i, :]), dgr)
+        ymin[i] = -calc_es(profile, dgr, esp=True)
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
+        profile = np.append(np.append(0, d[i, :]), dgr)
         px[i] = d[i, idx].reshape(-1)
-        py[i] = -calc_es(d[i, :], dgr, esp=False)
+        py[i] = -calc_es(profile, dgr, esp=True)
     xlabel = f"{tags[idx]} [kcal/mol]"
     ylabel = "-ΔG(pds) [kcal/mol]"
     filename = f"volcano_{tags[idx]}.png"
