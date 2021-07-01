@@ -87,12 +87,12 @@ def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
         * s_err
         * np.sqrt(1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
     )
-    ax.fill_between(x2, y2 + ci, y2 - ci, color="#b9cfe7", alpha=0.3)
+    ax.fill_between(x2, y2 + ci, y2 - ci, color="#b9cfe7", alpha=0.6)
 
     return ax
 
 
-def plot_lsfer(idx, d, tags, coeff, lnsteps, verb):
+def plot_lsfer(idx, d, tags, coeff, lnsteps, cb="white", verb=0):
     tags = [str(tag) for tag in tags]
     X = d[:, idx].reshape(-1)
     xmax = bround(X.max() + 10)
@@ -117,18 +117,7 @@ def plot_lsfer(idx, d, tags, coeff, lnsteps, verb):
         fig, ax = plt.subplots(
             frameon=False, figsize=[3, 3], dpi=300, constrained_layout=True
         )
-
-        ax.plot(
-            X,
-            Y,
-            "o",
-            color="black",
-            markersize=2.0,
-            markeredgewidth=0.5,
-            markerfacecolor="None",
-        )
         yint = np.polyval(p, xint)
-        ax.plot(xint, yint, "-", linewidth=1.2)
         plot_ci_manual(t, s_err, n, X, xint, yint, ax=ax)
         pi = (
             t
@@ -136,6 +125,15 @@ def plot_lsfer(idx, d, tags, coeff, lnsteps, verb):
             * np.sqrt(
                 1 + 1 / n + (xint - np.mean(X)) ** 2 / np.sum((X - np.mean(X)) ** 2)
             )
+        )
+        ax.plot(xint, yint, "-", linewidth=1, color="#000a75", alpha=0.85)
+        ax.scatter(
+            X,
+            Y,
+            s=2.5,
+            c=cb,
+            linewidths=0.15,
+            edgecolors="black",
         )
         # Border
         ax.spines["top"].set_color("black")
@@ -175,20 +173,21 @@ def plot_2d(
     filename="plot.png",
     rid=None,
     rb=None,
+    cb="white",
 ):
     fig, ax = plt.subplots(
         frameon=False, figsize=[3, 3], dpi=300, constrained_layout=True
     )
-    ax.plot(
+
+    ax.plot(x, y, "-", linewidth=1, color="#000a75", alpha=0.85)
+    ax.scatter(
         px,
         py,
-        "o",
-        color="black",
-        markersize=2.0,
-        markeredgewidth=0.5,
-        markerfacecolor="None",
+        s=2.5,
+        c=cb,
+        linewidths=0.15,
+        edgecolors="black",
     )
-    ax.plot(x, y, "-", linewidth=1.0)
     # Border
     ax.spines["top"].set_color("black")
     ax.spines["bottom"].set_color("black")
@@ -229,7 +228,7 @@ def plot_2d(
     plt.savefig(filename)
 
 
-def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, verb):
+def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, cb="white", verb=0):
     tags = [str(tag) for tag in tags]
     X = d[:, idx].reshape(-1)
     xmax = bround(X.max() + 35)
@@ -241,7 +240,7 @@ def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, verb):
     dgs = np.zeros((npoints, len(lnsteps)))
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
-        p, cov = np.polyfit(X, Y, 1, cov=True)
+        p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
         Y_pred = np.polyval(p, X)
         n = Y.size
         m = p.size
@@ -285,11 +284,13 @@ def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, verb):
         np.savetxt(
             csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\DGpds"
         )
-    plot_2d(xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename, rid, rb)
+    plot_2d(xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename, rid, rb, cb=cb)
     return xint, ymin, px, py, xmin, xmax, rid, rb
 
 
-def plot_tof_volcano(idx, d, tags, coeff, lnsteps, dgr, T, verb):
+def plot_tof_volcano(
+    idx, d, tags, coeff, lnsteps, dgr, T=298.15, cb="white", verb=None
+):
     tags = [str(tag) for tag in tags]
     X = d[:, idx].reshape(-1)
     xmax = bround(X.max() + 15)
@@ -339,7 +340,7 @@ def plot_tof_volcano(idx, d, tags, coeff, lnsteps, dgr, T, verb):
         np.savetxt(
             csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, log10(TOF)"
         )
-    plot_2d(xint, ytof, px, py, xmin, xmax, xlabel, ylabel, filename)
+    plot_2d(xint, ytof, px, py, xmin, xmax, xlabel, ylabel, filename, cb=cb)
     return xint, ytof, px, py, xmin, xmax
 
 
@@ -347,8 +348,8 @@ if __name__ == "__main__":
     a = np.array([[-11.34, 2.66, -14.78, 0.14, -18.22, -13.81, -20.98, -22.26, -53.98]])
     dgr = -43.19
     lnsteps = range(a.shape[1])
-    noise1 = np.multiply(np.ones_like(a), np.random.normal(1, 0.25, a.shape[1]))
-    noise2 = np.multiply(np.ones_like(a), np.random.normal(1, 0.15, a.shape[1]))
+    noise1 = np.multiply(np.ones_like(a), np.random.normal(1, 0.1, a.shape[1]))
+    noise2 = np.multiply(np.ones_like(a), np.random.normal(1, 0.1, a.shape[1]))
     b = np.multiply(a, noise1)
     c = np.multiply(a, noise1[::-1])
     d = np.multiply(b, noise2)

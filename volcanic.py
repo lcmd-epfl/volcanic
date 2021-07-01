@@ -8,55 +8,36 @@ import sklearn as sk
 from sklearn.manifold import TSNE
 import sklearn.metrics.pairwise
 import matplotlib
+import seaborn as sns
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 from matplotlib import cm
+from itertools import cycle
 import scipy.constants as sc
 
 from dv import find_dv, plot_lsfer, plot_volcano, plot_tof_volcano
-from helpers import yesno
+from helpers import yesno, processargs
 
-excel_terms = ["xlsx", "xls"]
-verb = 0
-T = 298.15
 
 if __name__ == "__main__":
     arguments = []
     for i, arg in enumerate(sys.argv[1:]):
         arguments.append(arg)
-    dfs = []
-    for idx, i in enumerate(arguments):
-        if i[-3:] == "csv":
-            dfs.append(pd.read_csv(i))
-            print(f"Input {i} was read from csv.")
-        elif i.split(".")[-1] in excel_terms:
-            dfs.append(pd.read_excel(i))
-            print(f"Input {i} was read from excel format.")
-        else:
-            if i == "-t":
-                T = np.float(arguments[idx + 1])
-                print(f"Temperature manually set to {T}.")
-            if i == "-v":
-                verb = int(arguments[idx + 1])
-                print(f"Verbosity manually set to {verb}.")
-    if len(dfs) > 1:
-        df = pd.concat(dfs)
-    elif len(dfs) == 0:
-        print("No input profiles detected. Exiting.")
-        exit()
-    else:
-        df = dfs[0]
-    assert isinstance(df, pd.DataFrame)
-    if verb > 1:
-        print("Final database :")
-        print(df.head())
+    df, verb, T = processargs(arguments)
 
 # Numpy for convenience, brief data formatting
+names = df[df.columns[0]].values
+# Example on how to generate color labels
+metals = np.array([i[0:2] for i in names], dtype=object)
+type_tags = np.unique(metals)
+cycol = cycle("bgrcmk")
+cdict = dict(zip(metals, cycol))
+cb = [cdict[i] for i in metals]
+
 # This script assumes that a profile has a given format in the input data file
 # can be edited to work with other input formats
-names = df[df.columns[0]].values
 tags = df.columns[2:-1]
 mdf = df.to_numpy()
 d = np.float64(mdf[:, 2:-1])
@@ -97,7 +78,7 @@ if not ok:
                 break
 if ok:
     print(f"Generating plots using descriptor variable {tags[idx]}")
-    plot_lsfer(idx, d, tags, coeff, lnsteps, verb)
+    plot_lsfer(idx, d, tags, coeff, lnsteps, cb, verb)
 
 volcano = yesno("Generate volcano plot")
 
@@ -106,7 +87,7 @@ if volcano:
     # The function call also returns all the relevant information
     # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
     xint, ymin, px, py, xmin, xmax, rid, rb = plot_volcano(
-        idx, d, tags, coeff, lnsteps, dgr, verb
+        idx, d, tags, coeff, lnsteps, dgr, cb, verb
     )
 
 
@@ -114,4 +95,4 @@ tof_volcano = yesno("Generate TOF volcano plot")
 
 if tof_volcano:
     print(f"Generating TOF volcano plot using descriptor variable {tags[idx]}")
-    plot_tof_volcano(idx, d, tags, coeff, lnsteps, dgr, T, verb)
+    plot_tof_volcano(idx, d, tags, coeff, lnsteps, dgr, T, cb, verb)
