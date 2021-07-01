@@ -103,7 +103,12 @@ volcano = yesno("Generate volcano plot")
 
 if volcano:
     print(f"Generating volcano plot using descriptor variable {tags[idx]}")
-    plot_volcano(idx, d, tags, coeff, lnsteps, dgr, verb)
+    # The function call also returns all the relevant information
+    # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
+    xint, ymin, px, py, xmin, xmax, rid, rb = plot_volcano(
+        idx, d, tags, coeff, lnsteps, dgr, verb
+    )
+
 
 tof_volcano = yesno("Generate TOF volcano plot")
 

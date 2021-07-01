@@ -164,7 +164,17 @@ def calc_es(profile, dgr, esp=True):
 
 
 def plot_2d(
-    x, y, px, py, xmin, xmax, xlabel, ylabel, filename="plot.png", rid=None, rb=None
+    x,
+    y,
+    px,
+    py,
+    xmin,
+    xmax,
+    xlabel="X-axis",
+    ylabel="Y-axis",
+    filename="plot.png",
+    rid=None,
+    rb=None,
 ):
     fig, ax = plt.subplots(
         frameon=False, figsize=[3, 3], dpi=300, constrained_layout=True
@@ -178,7 +188,7 @@ def plot_2d(
         markeredgewidth=0.5,
         markerfacecolor="None",
     )
-    ax.plot(x, y, "-", linewidth=1.2)
+    ax.plot(x, y, "-", linewidth=1.0)
     # Border
     ax.spines["top"].set_color("black")
     ax.spines["bottom"].set_color("black")
@@ -276,7 +286,7 @@ def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, verb):
             csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\DGpds"
         )
     plot_2d(xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename, rid, rb)
-    return xint, ymin, px, py, xmin, xmax, xlabel, ylabel, rid, rb
+    return xint, ymin, px, py, xmin, xmax, rid, rb
 
 
 def plot_tof_volcano(idx, d, tags, coeff, lnsteps, dgr, T, verb):
@@ -330,7 +340,7 @@ def plot_tof_volcano(idx, d, tags, coeff, lnsteps, dgr, T, verb):
             csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, log10(TOF)"
         )
     plot_2d(xint, ytof, px, py, xmin, xmax, xlabel, ylabel, filename)
-    return xint, ytof, px, py, xmin, xmax, xlabel, ylabel
+    return xint, ytof, px, py, xmin, xmax
 
 
 if __name__ == "__main__":
