@@ -13,10 +13,23 @@ from helpers import bround
 from tof import calc_tof
 
 
-def find_dv(d, tags, coeff, lnsteps, verb=0):
+def find_dv(d, tags, coeff, verb=0):
     assert isinstance(d, np.ndarray)
+    assert len(tags) == len(coeff)
+    try:
+        assert np.isclose(d[:, 0].std(), 0)
+        assert np.isclose(d[:, -1].std(), 0)
+    except:
+        print(
+            "The first and last fields of every profile should be the same (reference state and reaction free energy). Exit."
+        )
+        exit()
+    tags = tags[1:-1]
+    coeff = coeff[1:-1]
+    d = d[:, 1:-1]
+
+    lnsteps = range(d.shape[1])
     # Regression diagnostics
-    tags = [str(tag) for tag in tags]
     maes = np.ones(d.shape[1])
     r2s = np.ones(d.shape[1])
     maps = np.ones(d.shape[1])
@@ -55,6 +68,7 @@ def find_dv(d, tags, coeff, lnsteps, verb=0):
     b = np.squeeze(np.where(maes == np.min(maes[~np.ma.make_mask(coeff)])))
     c = np.squeeze(np.where(maps == np.min(maps[~np.ma.make_mask(coeff)])))
     dvs = []
+    print(a, b, c)
     if a == b:
         if a == c:
             print(f"All indicators agree: best descriptor is {tags[a]}")
@@ -75,6 +89,7 @@ def find_dv(d, tags, coeff, lnsteps, verb=0):
             f"Total disagreement: best descriptors is either \n{tags[a]} or \n{tags[b]} or \n{tags[c]}"
         )
         dvs = [a, b, c]
+    dvs = [i + 1 for i in dvs]  # Recover the removed step of the reaction
     return dvs
 
 
@@ -92,8 +107,9 @@ def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
     return ax
 
 
-def plot_lsfer(idx, d, tags, coeff, lnsteps, cb="white", verb=0):
+def plot_lsfer(idx, d, tags, coeff, cb="white", verb=0):
     tags = [str(tag) for tag in tags]
+    lnsteps = range(d.shape[1])
     X = d[:, idx].reshape(-1)
     xmax = bround(X.max() + 10)
     xmin = bround(X.min() - 10)
@@ -101,7 +117,7 @@ def plot_lsfer(idx, d, tags, coeff, lnsteps, cb="white", verb=0):
     if verb > 1:
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
-    for j in lnsteps:
+    for j in lnsteps[1:-1]:
         if verb > 0:
             print(f"Plotting regression of {tags[j]}.")
         Y = d[:, j].reshape(-1)
@@ -228,8 +244,9 @@ def plot_2d(
     plt.savefig(filename)
 
 
-def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, cb="white", verb=0):
+def plot_volcano(idx, d, tags, coeff, dgr, cb="white", verb=0):
     tags = [str(tag) for tag in tags]
+    lnsteps = range(d.shape[1])
     X = d[:, idx].reshape(-1)
     xmax = bround(X.max() + 35)
     xmin = bround(X.min() - 35)
@@ -256,13 +273,11 @@ def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, cb="white", verb=0):
     ridmin = np.zeros_like(yint, dtype=int)
     rid = []
     rb = []
-    # We must take the initial and ending states into account here
-    tagsp = ["R"] + tags + ["P"]
     for i in range(ymin.shape[0]):
-        profile = np.append(np.append(0, dgs[i, :]), dgr)
-        ymin[i], ridmax[i], ridmin[i] = calc_es(profile, dgr, esp=True)
+        profile = dgs[i, :]
+        ymin[i], ridmax[i], ridmin[i] = calc_es(profile, dgr, esp=False)
         if ridmax[i] != ridmax[i - 1] or ridmin[i] != ridmin[i - 1]:
-            rid.append(f"{tagsp[ridmin[i]]} ➜ {tagsp[ridmax[i]]}")
+            rid.append(f"{tags[ridmin[i]]} ➜ {tags[ridmax[i]]}")
             rb.append(xint[i])
     if verb > 0:
         print(f"Identified {len(rid)} different determining states.")
@@ -271,9 +286,9 @@ def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, cb="white", verb=0):
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
-        profile = np.append(np.append(0, d[i, :]), dgr)
+        profile = d[i, :]
         px[i] = d[i, idx].reshape(-1)
-        py[i] = calc_es(profile, dgr, esp=True)[0]
+        py[i] = calc_es(profile, dgr, esp=False)[0]
     xlabel = f"{tags[idx]} [kcal/mol]"
     ylabel = "-ΔG(pds) [kcal/mol]"
     filename = f"volcano_{tags[idx]}.png"
@@ -288,10 +303,9 @@ def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, cb="white", verb=0):
     return xint, ymin, px, py, xmin, xmax, rid, rb
 
 
-def plot_tof_volcano(
-    idx, d, tags, coeff, lnsteps, dgr, T=298.15, cb="white", verb=None
-):
+def plot_tof_volcano(idx, d, tags, coeff, dgr, T=298.15, cb="white", verb=None):
     tags = [str(tag) for tag in tags]
+    lnsteps = range(d.shape[1])
     X = d[:, idx].reshape(-1)
     xmax = bround(X.max() + 15)
     xmin = bround(X.min() - 15)
@@ -315,17 +329,15 @@ def plot_tof_volcano(
         dgs[:, i] = yint
     ytof = np.zeros_like(yint)
     # We must take the initial and ending states into account here
-    coeff = np.append(0, coeff)
-    coeff = np.append(coeff, 0)
     for i in range(ytof.shape[0]):
-        profile = np.append(np.append(0, dgs[i, :]), dgr)
+        profile = dgs[i, :]
         tof = np.log10(calc_tof(profile, dgr, T, coeff, exact=True)[0])
         ytof[i] = tof
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
         px[i] = d[i, idx].reshape(-1)
-        profile = np.append(np.append(0, d[i, :]), dgr)
+        profile = d[i, :]
         tof = np.log10(calc_tof(profile, dgr, T, coeff, exact=True)[0])
         py[i] = tof
         if verb > 2:
@@ -345,22 +357,38 @@ def plot_tof_volcano(
 
 
 if __name__ == "__main__":
-    a = np.array([[-11.34, 2.66, -14.78, 0.14, -18.22, -13.81, -20.98, -22.26, -53.98]])
+    a = np.array(
+        [
+            [
+                0,
+                -11.34,
+                2.66,
+                -14.78,
+                0.14,
+                -18.22,
+                -13.81,
+                -20.98,
+                -22.26,
+                -53.98,
+                -43.19,
+            ]
+        ]
+    )
     dgr = -43.19
-    lnsteps = range(a.shape[1])
-    noise1 = np.multiply(np.ones_like(a), np.random.normal(1, 0.1, a.shape[1]))
-    noise2 = np.multiply(np.ones_like(a), np.random.normal(1, 0.1, a.shape[1]))
-    b = np.multiply(a, noise1)
-    c = np.multiply(a, noise1[::-1])
-    d = np.multiply(b, noise2)
-    e = np.multiply(b, noise2[::-1])
-    f = np.multiply(d, noise1)
-    g = np.multiply(e, noise2)
+    noise = np.multiply(np.ones_like(a), np.random.normal(1, 0.1, a.shape[1]))
+    noise[0] = 1.0
+    noise[-1] = 1.0
+    b = np.multiply(a, noise)
+    c = np.multiply(a, noise[::-1])
+    d = np.multiply(b, noise)
+    e = np.multiply(b, noise[::-1])
+    f = np.multiply(d, noise)
+    g = np.multiply(e, noise)
     profiles = np.concatenate([a, b, c, d, e, f, g], axis=0)
-    coeff_tof = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0], dtype=int)
-    coeff_dv = np.array(coeff_tof[1:-1])
+    coeff = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0], dtype=int)
     tags = np.array(
         [
+            "Reactants",
             "Struc2",
             "TS1",
             "Struc3",
@@ -370,12 +398,14 @@ if __name__ == "__main__":
             "Struc5",
             "TS4",
             "Struc6-NM",
+            "Product",
         ]
     )
-    find_dv(profiles, tags, coeff_dv, lnsteps, verb=3)
-    profile = np.append(np.append(0, profiles[0, :]), dgr)
-    tof0 = np.log10(calc_tof(profile, dgr, 298.15, coeff_tof, exact=True, verb=3)[0])
-    tof1 = np.log10(calc_tof(profile, dgr, 298.15, coeff_tof, exact=False, verb=3)[0])
+    assert len(profiles[0, :]) == len(tags) == len(coeff)
+    find_dv(profiles, tags, coeff, verb=3)
+    profile = profiles[0, :]
+    tof0 = np.log10(calc_tof(profile, dgr, 298.15, coeff, exact=True, verb=3)[0])
+    tof1 = np.log10(calc_tof(profile, dgr, 298.15, coeff, exact=False, verb=3)[0])
     print(
         f"Profile {profile} corresponds with log10(TOF) of {tof0} or approximately {tof1}"
     )
