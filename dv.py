@@ -64,11 +64,10 @@ def find_dv(d, tags, coeff, verb=0):
         print(
             f"\nWith {tags[i]} as descriptor,\n the mean r2 is : {np.round(r2s[i],2)},\n the mean MAE is :  {np.round(maes[i],2)}\n the std MAPE is : {np.round(maps[i],2)}\n"
         )
-    a = np.squeeze(np.where(r2s == np.max(r2s[~np.ma.make_mask(coeff)])))
-    b = np.squeeze(np.where(maes == np.min(maes[~np.ma.make_mask(coeff)])))
-    c = np.squeeze(np.where(maps == np.min(maps[~np.ma.make_mask(coeff)])))
+    a = np.squeeze(np.where(r2s == np.max(r2s[~np.ma.make_mask(coeff)])))[0]
+    b = np.squeeze(np.where(maes == np.min(maes[~np.ma.make_mask(coeff)])))[0]
+    c = np.squeeze(np.where(maps == np.min(maps[~np.ma.make_mask(coeff)])))[0]
     dvs = []
-    print(a, b, c)
     if a == b:
         if a == c:
             print(f"All indicators agree: best descriptor is {tags[a]}")
