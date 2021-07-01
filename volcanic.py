@@ -43,6 +43,9 @@ if __name__ == "__main__":
                 print(f"Verbosity manually set to {verb}.")
     if len(dfs) > 1:
         df = pd.concat(dfs)
+    elif len(dfs) == 0:
+        print("No input profiles detected. Exiting.")
+        exit()
     else:
         df = dfs[0]
     assert isinstance(df, pd.DataFrame)
@@ -50,12 +53,16 @@ if __name__ == "__main__":
         print("Final database :")
         print(df.head())
 
-# Numpy for convenience
+# Numpy for convenience, brief data formatting
+# This script assumes that a profile has a given format in the input data file
+# can be edited to work with other input formats
 names = df[df.columns[0]].values
 tags = df.columns[2:-1]
-tags = [str(tag) for tag in tags]
 mdf = df.to_numpy()
 d = np.float64(mdf[:, 2:-1])
+tags = [str(tag) for tag in tags]
+
+# The last field of a profile is the reaction \DeltaG
 dgr = np.float64(mdf[0, -1])
 print(f"ΔG of the reaction set to {dgr}.")
 lnsteps = range(d.shape[1])
@@ -75,9 +82,7 @@ coeff = np.array(coeffs)
 dvs = find_dv(d, tags, coeff, lnsteps, verb)
 
 for dv in dvs:
-    print(
-        f"\n{tags[dv].format()} has been identified as a suitable descriptor variable."
-    )
+    print(f"\n{tags[dv]} has been identified as a suitable descriptor variable.")
     ok = yesno("Continue using this variable?")
     if ok:
         idx = dv
@@ -90,18 +95,18 @@ if not ok:
             if ok:
                 idx = i
                 break
-    elif not ok:
-        exit()
-
-print(f"Generating plots using descriptor variable {tags[idx]}")
-plot_lsfer(idx, d, tags, coeff, lnsteps, verb)
+if ok:
+    print(f"Generating plots using descriptor variable {tags[idx]}")
+    plot_lsfer(idx, d, tags, coeff, lnsteps, verb)
 
 volcano = yesno("Generate volcano plot")
 
 if volcano:
+    print(f"Generating volcano plot using descriptor variable {tags[idx]}")
     plot_volcano(idx, d, tags, coeff, lnsteps, dgr, verb)
 
 tof_volcano = yesno("Generate TOF volcano plot")
 
 if tof_volcano:
+    print(f"Generating TOF volcano plot using descriptor variable {tags[idx]}")
     plot_tof_volcano(idx, d, tags, coeff, lnsteps, dgr, T, verb)

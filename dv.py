@@ -51,11 +51,6 @@ def find_dv(d, tags, coeff, lnsteps, verb=0):
         print(
             f"\nWith {tags[i]} as descriptor,\n the mean r2 is : {np.round(r2s[i],2)},\n the mean MAE is :  {np.round(maes[i],2)}\n the std MAPE is : {np.round(maps[i],2)}\n"
         )
-    if verb > 2:
-        assert isinstance(np.ma.make_mask(coeff), np.ndarray)
-        # print(
-        #    f"{tags[~np.ma.make_mask(coeff)]}\n {r2s[~np.ma.make_mask(coeff)]}\n {maes[~np.ma.make_mask(coeff)]}\n {maps[~np.ma.make_mask(coeff)]}"
-        # )
     a = np.squeeze(np.where(r2s == np.max(r2s[~np.ma.make_mask(coeff)])))
     b = np.squeeze(np.where(maes == np.min(maes[~np.ma.make_mask(coeff)])))
     c = np.squeeze(np.where(maps == np.min(maps[~np.ma.make_mask(coeff)])))
@@ -103,7 +98,7 @@ def plot_lsfer(idx, d, tags, coeff, lnsteps, verb):
     xmax = bround(X.max() + 10)
     xmin = bround(X.min() - 10)
     npoints = 500
-    if verb > 0:
+    if verb > 1:
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
     for j in lnsteps:
@@ -203,7 +198,7 @@ def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, verb):
     xmax = bround(X.max() + 35)
     xmin = bround(X.min() - 35)
     npoints = 250
-    if verb > 0:
+    if verb > 1:
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
     dgs = np.zeros((npoints, len(lnsteps)))
@@ -233,16 +228,23 @@ def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, verb):
     xlabel = f"{tags[idx]} [kcal/mol]"
     ylabel = "-ΔG(pds) [kcal/mol]"
     filename = f"volcano_{tags[idx]}.png"
+    if verb > 0:
+        csvname = f"volcano_{tags[idx]}.csv"
+        print(f"Saving volcano data to file {csvname}")
+        zdata = list(zip(xint, ymin))
+        np.savetxt(
+            csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\DGpds"
+        )
     plot_2d(xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename)
 
 
 def plot_tof_volcano(idx, d, tags, coeff, lnsteps, dgr, T, verb):
     tags = [str(tag) for tag in tags]
     X = d[:, idx].reshape(-1)
-    xmax = bround(X.max() + 35)
-    xmin = bround(X.min() - 35)
+    xmax = bround(X.max() + 15)
+    xmin = bround(X.min() - 15)
     npoints = 250
-    if verb > 0:
+    if verb > 1:
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
     dgs = np.zeros((npoints, len(lnsteps)))
@@ -274,11 +276,18 @@ def plot_tof_volcano(idx, d, tags, coeff, lnsteps, dgr, T, verb):
         profile = np.append(np.append(0, d[i, :]), dgr)
         tof = np.log10(calc_tof(profile, dgr, T, coeff, exact=True)[0])
         py[i] = tof
-        if verb > 1:
+        if verb > 2:
             print(f"Profile {profile} corresponds with log10(TOF) of {tof}")
     xlabel = f"{tags[idx]} [kcal/mol]"
-    ylabel = "TOF [1/s]"
+    ylabel = "log(TOF) [1/s]"
     filename = f"tof_volcano_{tags[idx]}.png"
+    if verb > 0:
+        csvname = f"tof_volcano_{tags[idx]}.csv"
+        print(f"Saving TOF volcano data to file {csvname}")
+        zdata = list(zip(xint, ytof))
+        np.savetxt(
+            csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, log10(TOF)"
+        )
     plot_2d(xint, ytof, px, py, xmin, xmax, xlabel, ylabel, filename)
 
 
@@ -289,11 +298,11 @@ if __name__ == "__main__":
     noise1 = np.multiply(np.ones_like(a), np.random.normal(1, 0.25, a.shape[1]))
     noise2 = np.multiply(np.ones_like(a), np.random.normal(1, 0.15, a.shape[1]))
     b = np.multiply(a, noise1)
-    c = np.multiply(b, noise1[::-1])
+    c = np.multiply(a, noise1[::-1])
     d = np.multiply(b, noise2)
-    e = np.multiply(d, noise1)
-    f = np.multiply(e, noise2[::-1])
-    g = np.multiply(f, noise1)
+    e = np.multiply(b, noise2[::-1])
+    f = np.multiply(d, noise1)
+    g = np.multiply(e, noise2)
     profiles = np.concatenate([a, b, c, d, e, f, g], axis=0)
     coeff_tof = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0], dtype=int)
     coeff_dv = np.array(coeff_tof[1:-1])
