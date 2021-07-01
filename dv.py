@@ -153,16 +153,19 @@ def plot_lsfer(idx, d, tags, coeff, lnsteps, verb):
         plt.savefig(f"{tags[j]}.png")
 
 
-def calc_es(profile, dgr, esp=False):
+def calc_es(profile, dgr, esp=True):
     imax = np.argmax(profile)
     imin = np.argmin(profile)
     if (imax < imin) and esp:
         profile[0:imin] += dgr
         imax = np.argmax(profile)
-    return profile[imax] - profile[imin]
+    es = -(profile[imax] - profile[imin])
+    return [es, imax, imin]
 
 
-def plot_2d(x, y, px, py, xmin, xmax, xlabel, ylabel, filename="plot.png"):
+def plot_2d(
+    x, y, px, py, xmin, xmax, xlabel, ylabel, filename="plot.png", rid=None, rb=None
+):
     fig, ax = plt.subplots(
         frameon=False, figsize=[3, 3], dpi=300, constrained_layout=True
     )
@@ -189,6 +192,30 @@ def plot_2d(x, y, px, py, xmin, xmax, xlabel, ylabel, filename="plot.png"):
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.xlim(xmin, xmax)
+    if rid is not None and rb is not None:
+        avgs = []
+        rb.append(xmax)
+        for i in range(len(rb) - 1):
+            avgs.append((rb[i] + rb[i + 1]) / 2)
+        for i in rb:
+            ax.axvline(
+                i,
+                linestyle="dashed",
+                color="black",
+                linewidth=0.5,
+                alpha=0.75,
+            )
+        yavg = (y.max() + y.min()) / 2
+        for i, j in zip(rid, avgs):
+            plt.text(
+                j,
+                yavg,
+                i,
+                fontsize=6,
+                horizontalalignment="center",
+                verticalalignment="center",
+                rotation="vertical",
+            )
     plt.savefig(filename)
 
 
@@ -216,15 +243,28 @@ def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, verb):
         yint = np.polyval(p, xint)
         dgs[:, i] = yint
     ymin = np.zeros_like(yint)
+    ridmax = np.zeros_like(yint, dtype=int)
+    ridmin = np.zeros_like(yint, dtype=int)
+    rid = []
+    rb = []
+    # We must take the initial and ending states into account here
+    tagsp = ["R"] + tags + ["P"]
     for i in range(ymin.shape[0]):
         profile = np.append(np.append(0, dgs[i, :]), dgr)
-        ymin[i] = -calc_es(profile, dgr, esp=True)
+        ymin[i], ridmax[i], ridmin[i] = calc_es(profile, dgr, esp=True)
+        if ridmax[i] != ridmax[i - 1] or ridmin[i] != ridmin[i - 1]:
+            rid.append(f"{tagsp[ridmin[i]]} ➜ {tagsp[ridmax[i]]}")
+            rb.append(xint[i])
+    if verb > 0:
+        print(f"Identified {len(rid)} different determining states.")
+        for i, j in zip(rid, rb):
+            print(f"{i} starting at {j}")
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
         profile = np.append(np.append(0, d[i, :]), dgr)
         px[i] = d[i, idx].reshape(-1)
-        py[i] = -calc_es(profile, dgr, esp=True)
+        py[i] = calc_es(profile, dgr, esp=True)[0]
     xlabel = f"{tags[idx]} [kcal/mol]"
     ylabel = "-ΔG(pds) [kcal/mol]"
     filename = f"volcano_{tags[idx]}.png"
@@ -235,7 +275,8 @@ def plot_volcano(idx, d, tags, coeff, lnsteps, dgr, verb):
         np.savetxt(
             csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\DGpds"
         )
-    plot_2d(xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename)
+    plot_2d(xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename, rid, rb)
+    return xint, ymin, px, py, xmin, xmax, xlabel, ylabel, rid, rb
 
 
 def plot_tof_volcano(idx, d, tags, coeff, lnsteps, dgr, T, verb):
@@ -289,6 +330,7 @@ def plot_tof_volcano(idx, d, tags, coeff, lnsteps, dgr, T, verb):
             csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, log10(TOF)"
         )
     plot_2d(xint, ytof, px, py, xmin, xmax, xlabel, ylabel, filename)
+    return xint, ytof, px, py, xmin, xmax, xlabel, ylabel
 
 
 if __name__ == "__main__":
