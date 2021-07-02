@@ -4,6 +4,7 @@ import numpy as np
 import scipy as sp
 import scipy.stats as stats
 import matplotlib
+import copy
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -64,9 +65,9 @@ def find_dv(d, tags, coeff, verb=0):
         print(
             f"\nWith {tags[i]} as descriptor,\n the mean r2 is : {np.round(r2s[i],2)},\n the mean MAE is :  {np.round(maes[i],2)}\n the std MAPE is : {np.round(maps[i],2)}\n"
         )
-    a = np.squeeze(np.where(r2s == np.max(r2s[~np.ma.make_mask(coeff)])))[0]
-    b = np.squeeze(np.where(maes == np.min(maes[~np.ma.make_mask(coeff)])))[0]
-    c = np.squeeze(np.where(maps == np.min(maps[~np.ma.make_mask(coeff)])))[0]
+    a = np.squeeze(np.where(r2s == np.max(r2s[~np.ma.make_mask(coeff)])))
+    b = np.squeeze(np.where(maes == np.min(maes[~np.ma.make_mask(coeff)])))
+    c = np.squeeze(np.where(maps == np.min(maps[~np.ma.make_mask(coeff)])))
     dvs = []
     if a == b:
         if a == c:
@@ -167,13 +168,18 @@ def plot_lsfer(idx, d, tags, coeff, cb="white", verb=0):
 
 
 def calc_es(profile, dgr, esp=True):
-    imax = np.argmax(profile)
-    imin = np.argmin(profile)
-    if (imax < imin) and esp:
-        profile[0:imin] += dgr
-        imax = np.argmax(profile)
-    es = -(profile[imax] - profile[imin])
-    return [es, imax, imin]
+    es1 = 0
+    for i, lower in enumerate(profile):
+        view = copy.deepcopy(profile)
+        view[:i] += dgr
+        j = np.argmax(view)
+        upper = view[j]
+        es2 = upper - lower
+        if es2 > es1:
+            es1 = es2
+            imax = j
+            imin = i
+    return [-es1, imax, imin]
 
 
 def plot_2d(
@@ -274,7 +280,7 @@ def plot_volcano(idx, d, tags, coeff, dgr, cb="white", verb=0):
     rb = []
     for i in range(ymin.shape[0]):
         profile = dgs[i, :]
-        ymin[i], ridmax[i], ridmin[i] = calc_es(profile, dgr, esp=False)
+        ymin[i], ridmax[i], ridmin[i] = calc_es(profile, dgr, esp=True)
         if ridmax[i] != ridmax[i - 1] or ridmin[i] != ridmin[i - 1]:
             rid.append(f"{tags[ridmin[i]]} ➜ {tags[ridmax[i]]}")
             rb.append(xint[i])
@@ -287,7 +293,7 @@ def plot_volcano(idx, d, tags, coeff, dgr, cb="white", verb=0):
     for i in range(d.shape[0]):
         profile = d[i, :]
         px[i] = d[i, idx].reshape(-1)
-        py[i] = calc_es(profile, dgr, esp=False)[0]
+        py[i] = calc_es(profile, dgr, esp=True)[0]
     xlabel = f"{tags[idx]} [kcal/mol]"
     ylabel = "-ΔG(pds) [kcal/mol]"
     filename = f"volcano_{tags[idx]}.png"
@@ -358,32 +364,35 @@ def plot_tof_volcano(idx, d, tags, coeff, dgr, T=298.15, cb="white", verb=None):
 if __name__ == "__main__":
     a = np.array(
         [
-            [
-                0,
-                -11.34,
-                2.66,
-                -14.78,
-                0.14,
-                -18.22,
-                -13.81,
-                -20.98,
-                -22.26,
-                -53.98,
-                -43.19,
-            ]
+            0,
+            -11.34,
+            2.66,
+            -14.78,
+            0.14,
+            -18.22,
+            -13.81,
+            -20.98,
+            -22.26,
+            -53.98,
+            -43.19,
+        ]
+    )
+    b = np.array(
+        [
+            0,
+            -11.34,
+            2.66,
+            -14.78,
+            0.14,
+            -18.22,
+            -3.81,
+            -20.98,
+            -22.26,
+            -53.98,
+            -43.19,
         ]
     )
     dgr = -43.19
-    noise = np.multiply(np.ones_like(a), np.random.normal(1, 0.1, a.shape[1]))
-    noise[0] = 1.0
-    noise[-1] = 1.0
-    b = np.multiply(a, noise)
-    c = np.multiply(a, noise[::-1])
-    d = np.multiply(b, noise)
-    e = np.multiply(b, noise[::-1])
-    f = np.multiply(d, noise)
-    g = np.multiply(e, noise)
-    profiles = np.concatenate([a, b, c, d, e, f, g], axis=0)
     coeff = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0], dtype=int)
     tags = np.array(
         [
@@ -400,11 +409,14 @@ if __name__ == "__main__":
             "Product",
         ]
     )
-    assert len(profiles[0, :]) == len(tags) == len(coeff)
-    find_dv(profiles, tags, coeff, verb=3)
-    profile = profiles[0, :]
-    tof0 = np.log10(calc_tof(profile, dgr, 298.15, coeff, exact=True, verb=3)[0])
-    tof1 = np.log10(calc_tof(profile, dgr, 298.15, coeff, exact=False, verb=3)[0])
-    print(
-        f"Profile {profile} corresponds with log10(TOF) of {tof0} or approximately {tof1}"
-    )
+    # find_dv(profiles, tags, coeff, verb=3)
+    tof0 = np.log10(calc_tof(a, dgr, 298.15, coeff, exact=True, verb=3)[0])
+    tof1 = np.log10(calc_tof(a, dgr, 298.15, coeff, exact=False, verb=3)[0])
+    k1, k2, k3 = calc_es(a, dgr, esp=True)
+    print(f"For profile {a}, ES is {k1} with indices {k2} and {k3}")
+    print(f"Profile {a} corresponds with log10(TOF) of {tof0} or approximately {tof1}")
+    tof0 = np.log10(calc_tof(b, dgr, 298.15, coeff, exact=True, verb=3)[0])
+    tof1 = np.log10(calc_tof(b, dgr, 298.15, coeff, exact=False, verb=3)[0])
+    k1, k2, k3 = calc_es(b, dgr, esp=True)
+    print(f"For profile {b}, ES is {k1} with indices {k2} and {k3}")
+    print(f"Profile {b} corresponds with log10(TOF) of {tof0} or approximately {tof1}")
