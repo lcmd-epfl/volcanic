@@ -20,7 +20,7 @@ def find_dv(d, tags, coeff, verb=0):
     try:
         assert np.isclose(d[:, 0].std(), 0)
         assert np.isclose(d[:, -1].std(), 0)
-    except:
+    except AssertionError as m:
         print(
             "The first and last fields of every profile should be the same (reference state and reaction free energy). Exit."
         )
@@ -89,8 +89,9 @@ def find_dv(d, tags, coeff, verb=0):
             f"Total disagreement: best descriptors is either \n{tags[a]} or \n{tags[b]} or \n{tags[c]}"
         )
         dvs = [a, b, c]
+    r2 = [r2s[i] for i in dvs]
     dvs = [i + 1 for i in dvs]  # Recover the removed step of the reaction
-    return dvs
+    return dvs, r2
 
 
 def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
@@ -269,7 +270,8 @@ def plot_volcano(idx, d, tags, coeff, dgr, cb="white", verb=0):
         dof = n - m
         t = stats.t.ppf(0.95, dof)
         resid = Y - Y_pred
-        chi2 = np.sum((resid / Y_pred) ** 2)
+        with np.errstate(invalid="ignore"):
+            chi2 = np.sum((resid / Y_pred) ** 2)
         s_err = np.sqrt(np.sum(resid ** 2) / dof)
         yint = np.polyval(p, xint)
         dgs[:, i] = yint
@@ -328,7 +330,8 @@ def plot_tof_volcano(idx, d, tags, coeff, dgr, T=298.15, cb="white", verb=None):
         dof = n - m
         t = stats.t.ppf(0.95, dof)
         resid = Y - Y_pred
-        chi2 = np.sum((resid / Y_pred) ** 2)
+        with np.errstate(invalid="ignore"):
+            chi2 = np.sum((resid / Y_pred) ** 2)
         s_err = np.sqrt(np.sum(resid ** 2) / dof)
         yint = np.polyval(p, xint)
         dgs[:, i] = yint

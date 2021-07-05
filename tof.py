@@ -12,7 +12,6 @@ def calc_tof(array, Delta_G_reaction, T, coeff, exact=True, verb=0):
     h = sc.value("Planck constant")
     k_b = sc.value("Boltzmann constant")
     R = sc.value("molar gas constant")
-    # n_I = coeff.count(0)
     n_TS = np.count_nonzero(coeff)
     n_I = np.count_nonzero(coeff == 0)
     if verb > 2:

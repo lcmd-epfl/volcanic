@@ -63,10 +63,13 @@ coeff = np.array(coeffs)
 
 # All set, here we go!
 # Will find best non-TS \DeltaG that correlates with all others
-dvs = find_dv(d, tags, coeff, verb)
+dvs, r2s = find_dv(d, tags, coeff, verb)
 
-for dv in dvs:
-    print(f"\n{tags[dv]} has been identified as a suitable descriptor variable.")
+
+for dv, r2 in zip(dvs, r2s):
+    print(
+        f"\n{tags[dv]} has been identified as a suitable descriptor variable with r2={np.round(r2,4)}."
+    )
     ok = yesno("Continue using this variable?")
     if ok:
         idx = dv
