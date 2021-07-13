@@ -101,4 +101,8 @@ tof_volcano = yesno("Generate TOF volcano plot")
 
 if tof_volcano:
     print(f"Generating TOF volcano plot using descriptor variable {tags[idx]}")
-    plot_tof_volcano(idx, d, tags, coeff, dgr, T, cb, verb)
+    # The function call also returns all the relevant information
+    # xint is the x axis vector, ymin is the TOF vector, px and py are the original datapoints
+    xint, ytof, px, py, xmin, xmax = plot_tof_volcano(
+        idx, d, tags, coeff, dgr, T, cb, verb
+    )
