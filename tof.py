@@ -5,10 +5,13 @@ import scipy.constants as sc
 
 
 def calc_tof(array, Delta_G_reaction, T, coeff, exact=True, verb=0):
+    """Function to compute TOF using the energy span model.
+    Reproduces results from AUTOF.
+    Based on original implementation by Pit Steinbach."""
+
     coeff = np.array(coeff)
     array = np.array(array)
     assert array.size == coeff.size
-    # coeff = list(coeff)
     h = sc.value("Planck constant")
     k_b = sc.value("Boltzmann constant")
     R = sc.value("molar gas constant")

@@ -10,8 +10,68 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import sklearn as sk
 import sklearn.linear_model
+from sklearn.impute import SimpleImputer
 from helpers import bround
 from tof import calc_tof
+
+
+def call_imputer(a, imputer_strat="simple"):
+    if imputer_strat == "simple":
+        imputer = SimpleImputer()
+        return imputer.fit_transform(a[:, i].reshape(-1, 1)).flatten()
+    if imputer_strat == "none":
+        return a
+
+
+def curate_d(d, cb, ms, tags, imputer_strat="simple", verb=0):
+    assert isinstance(d, np.ndarray)
+    try:
+        assert np.isclose(d[:, 0].std(), 0)
+        assert np.isclose(d[:, -1].std(), 0)
+    except AssertionError as m:
+        print(
+            "The first and last fields of every profile should be the same (reference state and reaction free energy). Exit."
+        )
+        exit()
+    dit = d[:, 1:-1]
+    tagsit = tags[1:-1]
+    curated_d = d[:, 0].T
+    for i in range(dit.shape[1]):
+        mean = dit[:, i].mean()
+        std = dit[:, i].std()
+        maxtol = np.abs(mean) + 3 * std
+        mintol = np.abs(mean) - 3 * std
+        absd = np.abs(dit[:, i])
+        if any(absd > maxtol):
+            outlier = np.where(absd > maxtol)
+            if verb > 1:
+                print(
+                    f"Among data series {tagsit[i]} some big outliers were detected: {dit[outlier,i].flatten()} and will be skipped."
+                )
+            dit[outlier, i] = np.nan
+        if any(absd < mintol):
+            outlier = np.where(absd < mintol)
+            if verb > 1:
+                print(
+                    f"Among data series {tagsit[i]} some tiny outliers were detected: {dit[outlier,i].flatten()} and will be skipped."
+                )
+            dit[outlier, i] = np.nan
+        dit[:, i] = call_imputer(dit[:, i], imputer_strat)
+        curated_d = np.vstack([curated_d, dit[:, i]])
+    curated_d = np.vstack([curated_d, d[:, -1]]).T
+    incomplete = np.ones_like(curated_d[:, 0], dtype=bool)
+    for i in range(curated_d.shape[0]):
+        n_nans = np.count_nonzero(np.isnan(d[i, :]))
+        if n_nans > 0:
+            if verb > 1 :
+                print(
+                    f"Some of your reaction profiles contain {n_nans} undefined values and will not be considered:\n {d[i,:]}"
+                )
+            incomplete[i] = False
+    curated_d = curated_d[incomplete]
+    curated_cb = cb[incomplete]
+    curated_ms = ms[incomplete]
+    return curated_d, curated_cb, curated_ms
 
 
 def find_dv(d, tags, coeff, verb=0):
@@ -28,7 +88,6 @@ def find_dv(d, tags, coeff, verb=0):
     tags = tags[1:-1]
     coeff = coeff[1:-1]
     d = d[:, 1:-1]
-
     lnsteps = range(d.shape[1])
     # Regression diagnostics
     maes = np.ones(d.shape[1])
@@ -39,9 +98,12 @@ def find_dv(d, tags, coeff, verb=0):
         imaes = []
         imaps = []
         ir2s = []
-        X = d[:, i].reshape(-1, 1)
         for j in lnsteps:
             Y = d[:, j]
+            XY = np.vstack([d[:, i], d[:, j]]).T
+            XY = XY[~np.isnan(XY).any(axis=1)]
+            X = XY[:, 0].reshape(-1, 1)
+            Y = XY[:, 1]
             reg = sk.linear_model.LinearRegression().fit(X, Y)
             imaes.append(sk.metrics.mean_absolute_error(Y, reg.predict(X)))
             imaps.append(sk.metrics.mean_absolute_percentage_error(Y, reg.predict(X)))
@@ -108,22 +170,60 @@ def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
     return ax
 
 
-def plot_lsfer(idx, d, tags, coeff, cb="white", verb=0):
+def plot_lsfer(idx, d, tags, coeff, cb="white", ms="o", verb=0):
+    dnan = d[np.isnan(d)]
+    d_refill = np.zeros_like(d)
+    d_refill[~np.isnan(d)] = d[~np.isnan(d)]
     tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
-    X = d[:, idx].reshape(-1)
-    xmax = bround(X.max() + 10)
-    xmin = bround(X.min() - 10)
+    Xf = d[:, idx].reshape(-1)
     npoints = 500
-    if verb > 1:
-        print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
-    xint = np.linspace(xmin, xmax, npoints)
+    mape = 100
     for j in lnsteps[1:-1]:
         if verb > 0:
             print(f"Plotting regression of {tags[j]}.")
-        Y = d[:, j].reshape(-1)
+        Yf = d[:, j].reshape(-1)
+        XY = np.vstack([Xf, Yf]).T
+        if isinstance(cb, np.ndarray):
+            cbi = np.array(cb)[~np.isnan(XY).any(axis=1)]
+        else:
+            cbi = cb
+        if isinstance(ms, np.ndarray):
+            msi = np.array(ms)[~np.isnan(XY).any(axis=1)]
+        else:
+            msi = ms
+        XYm = XY[np.isnan(XY).any(axis=1)]
+        XY = XY[~np.isnan(XY).any(axis=1)]
+        Xm = XYm[:, 0].reshape(-1)
+        Ym = XYm[:, 1].reshape(-1)
+        X = XY[:, 0].reshape(-1)
+        Y = XY[:, 1].reshape(-1)
+        xmax = bround(X.max() + 10)
+        xmin = bround(X.min() - 10)
+        if verb > 1:
+            print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
+        xint = np.linspace(xmin, xmax, npoints)
         p, cov = np.polyfit(X, Y, 1, cov=True)
         Y_pred = np.polyval(p, X)
+        currmape = sk.metrics.mean_absolute_percentage_error(Y, Y_pred)
+        for k, y in enumerate(Ym):
+            print("Begin:", Xm[k], Ym[k])
+            if not np.isnan(Xm[k]) and np.isnan(Ym[k]):
+                Ym[k] = np.polyval(p, Xm[k])
+                d_refill[np.isnan(d).any(axis=1)][:, j][k] = Ym[k]
+            elif not np.isnan(Ym[k]):
+                if currmape < mape:
+                    ptemp = p
+                    ptemp[-1] -= Ym[k]
+                    Xm[k] = np.roots(ptemp)
+                    d_refill[np.isnan(d).any(axis=1)][:, idx][k] = Xm[k]
+                    mape = currmape
+            else:
+                print(
+                    f"Both descriptor and regression target are undefined. This should have been fixed before this point. Exiting."
+                )
+                exit()
+            print("End:", Xm[k], Ym[k])
         n = Y.size
         m = p.size
         dof = n - m
@@ -144,14 +244,16 @@ def plot_lsfer(idx, d, tags, coeff, cb="white", verb=0):
             )
         )
         ax.plot(xint, yint, "-", linewidth=1, color="#000a75", alpha=0.85)
-        ax.scatter(
-            X,
-            Y,
-            s=2.5,
-            c=cb,
-            linewidths=0.15,
-            edgecolors="black",
-        )
+        for i in range(len(X)):
+            ax.scatter(
+                X[i],
+                Y[i],
+                s=5,
+                c=cbi[i],
+                marker=msi[i],
+                linewidths=0.15,
+                edgecolors="black",
+            )
         # Border
         ax.spines["top"].set_color("black")
         ax.spines["bottom"].set_color("black")
@@ -166,6 +268,7 @@ def plot_lsfer(idx, d, tags, coeff, cb="white", verb=0):
         plt.ylabel(f"{tags[j]} [kcal/mol]")
         plt.xlim(xmin, xmax)
         plt.savefig(f"{tags[j]}.png")
+    return d_refill
 
 
 def calc_es(profile, dgr, esp=True):
@@ -196,20 +299,23 @@ def plot_2d(
     rid=None,
     rb=None,
     cb="white",
+    ms="o",
 ):
     fig, ax = plt.subplots(
         frameon=False, figsize=[3, 3], dpi=300, constrained_layout=True
     )
 
     ax.plot(x, y, "-", linewidth=1, color="#000a75", alpha=0.85)
-    ax.scatter(
-        px,
-        py,
-        s=2.5,
-        c=cb,
-        linewidths=0.15,
-        edgecolors="black",
-    )
+    for i in range(len(px)):
+        ax.scatter(
+            px[i],
+            py[i],
+            s=5,
+            c=cb[i],
+            marker=ms[i],
+            linewidths=0.15,
+            edgecolors="black",
+        )
     # Border
     ax.spines["top"].set_color("black")
     ax.spines["bottom"].set_color("black")
@@ -250,7 +356,7 @@ def plot_2d(
     plt.savefig(filename)
 
 
-def plot_volcano(idx, d, tags, coeff, dgr, cb="white", verb=0):
+def plot_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
     tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
     X = d[:, idx].reshape(-1)
@@ -306,11 +412,13 @@ def plot_volcano(idx, d, tags, coeff, dgr, cb="white", verb=0):
         np.savetxt(
             csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\DGpds"
         )
-    plot_2d(xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename, rid, rb, cb=cb)
+    plot_2d(
+        xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename, rid, rb, cb=cb, ms=ms
+    )
     return xint, ymin, px, py, xmin, xmax, rid, rb
 
 
-def plot_tof_volcano(idx, d, tags, coeff, dgr, T=298.15, cb="white", verb=None):
+def plot_tof_volcano(idx, d, tags, coeff, dgr, T=298.15, cb="white", ms="o", verb=0):
     tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
     X = d[:, idx].reshape(-1)
@@ -360,7 +468,7 @@ def plot_tof_volcano(idx, d, tags, coeff, dgr, T=298.15, cb="white", verb=None):
         np.savetxt(
             csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, log10(TOF)"
         )
-    plot_2d(xint, ytof, px, py, xmin, xmax, xlabel, ylabel, filename, cb=cb)
+    plot_2d(xint, ytof, px, py, xmin, xmax, xlabel, ylabel, filename, cb=cb, ms=ms)
     return xint, ytof, px, py, xmin, xmax
 
 
