@@ -2,20 +2,7 @@
 
 import sys
 import numpy as np
-import scipy as sp
-import pandas as pd
-import sklearn as sk
-from sklearn.manifold import TSNE
-import sklearn.metrics.pairwise
-import matplotlib
-import seaborn as sns
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib.ticker import NullFormatter
-from matplotlib import cm
 from itertools import cycle
-import scipy.constants as sc
 
 from dv import curate_d, find_dv, plot_lsfer, plot_volcano, plot_tof_volcano
 from helpers import yesno, processargs
@@ -25,7 +12,7 @@ if __name__ == "__main__":
     arguments = []
     for i, arg in enumerate(sys.argv[1:]):
         arguments.append(arg)
-    df, verb, T, imputer_strat = processargs(arguments)
+    df, verb, T, imputer_strat, refill, bc, ec = processargs(arguments)
 
 # Numpy for convenience, brief data formatting
 # It is assumed that the first column of the input contains names!
@@ -33,7 +20,11 @@ names = df[df.columns[0]].values
 
 # Example on how to generate color labels from data column. Totally optional.
 # In this case, assumes that the first two characters of the name label are groups.
-groups = np.array([i[0:2] for i in names], dtype=object)
+try:
+    groups = np.array([i[bc:ec].upper() for i in names], dtype=object)
+except Exception as m:
+    print(f"Grouping by name characters did not work. Error m:\n {m}")
+    exit()
 type_tags = np.unique(groups)
 cycol = cycle("bgrcmky")
 cymar = cycle("^ospXDvH")
@@ -50,16 +41,19 @@ d = np.float64(df.to_numpy()[:, 1:])
 
 # We expect the last field of ANY reaction profile is the reaction \DeltaG
 dgr = np.float64(d[0, -1])
-print(f"ΔG of the reaction set to {dgr}.")
+if verb > 0:
+    print(f"ΔG of the reaction set to {dgr}.")
 
 # TS or intermediate are interpreted from column names, see tags above
 coeffs = []
 for i in tags:
     if "TS" in i.upper():
-        print(f"Assuming field {i} corresponds to a TS.")
+        if verb > 0:
+            print(f"Assuming field {i} corresponds to a TS.")
         coeffs.append(1)
     else:
-        print(f"Assuming field {i} does not correspond to a TS.")
+        if verb > 0:
+            print(f"Assuming field {i} does not correspond to a TS.")
         coeffs.append(0)
 coeff = np.array(coeffs)
 
@@ -90,7 +84,10 @@ if not ok:
                 break
 if ok:
     print(f"Generating plots using descriptor variable {tags[idx]}")
-    d = plot_lsfer(idx, d, tags, coeff, cb, ms, verb)
+    if refill:
+        d = plot_lsfer(idx, d, tags, coeff, cb, ms, verb)
+    else:
+        plot_lsfer(idx, d, tags, coeff, cb, ms, verb)
 
 volcano = yesno("Generate volcano plot")
 

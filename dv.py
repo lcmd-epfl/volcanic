@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import numpy as np
-import scipy as sp
 import scipy.stats as stats
 import matplotlib
 import copy
@@ -63,7 +62,7 @@ def curate_d(d, cb, ms, tags, imputer_strat="simple", verb=0):
     for i in range(curated_d.shape[0]):
         n_nans = np.count_nonzero(np.isnan(d[i, :]))
         if n_nans > 0:
-            if verb > 1 :
+            if verb > 1:
                 print(
                     f"Some of your reaction profiles contain {n_nans} undefined values and will not be considered:\n {d[i,:]}"
                 )
@@ -94,7 +93,8 @@ def find_dv(d, tags, coeff, verb=0):
     r2s = np.ones(d.shape[1])
     maps = np.ones(d.shape[1])
     for i in lnsteps:
-        print(f"\nTrying {tags[i]} as descriptor variable:")
+        if verb > 0:
+            print(f"\nTrying {tags[i]} as descriptor variable:")
         imaes = []
         imaps = []
         ir2s = []
@@ -124,9 +124,10 @@ def find_dv(d, tags, coeff, verb=0):
         maes[i] = np.array(imaes).mean()
         r2s[i] = np.array(ir2s).mean()
         maps[i] = np.array(imaps).std()
-        print(
-            f"\nWith {tags[i]} as descriptor,\n the mean r2 is : {np.round(r2s[i],2)},\n the mean MAE is :  {np.round(maes[i],2)}\n the std MAPE is : {np.round(maps[i],2)}\n"
-        )
+        if verb > 0:
+            print(
+                f"\nWith {tags[i]} as descriptor,\n the mean r2 is : {np.round(r2s[i],2)},\n the mean MAE is :  {np.round(maes[i],2)}\n the std MAPE is : {np.round(maps[i],2)}\n"
+            )
     a = np.squeeze(np.where(r2s == np.max(r2s[~np.ma.make_mask(coeff)])))
     b = np.squeeze(np.where(maes == np.min(maes[~np.ma.make_mask(coeff)])))
     c = np.squeeze(np.where(maps == np.min(maps[~np.ma.make_mask(coeff)])))
@@ -200,14 +201,13 @@ def plot_lsfer(idx, d, tags, coeff, cb="white", ms="o", verb=0):
         Y = XY[:, 1].reshape(-1)
         xmax = bround(X.max() + 10)
         xmin = bround(X.min() - 10)
-        if verb > 1:
+        if verb > 2:
             print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
         xint = np.linspace(xmin, xmax, npoints)
         p, cov = np.polyfit(X, Y, 1, cov=True)
         Y_pred = np.polyval(p, X)
         currmape = sk.metrics.mean_absolute_percentage_error(Y, Y_pred)
         for k, y in enumerate(Ym):
-            print("Begin:", Xm[k], Ym[k])
             if not np.isnan(Xm[k]) and np.isnan(Ym[k]):
                 Ym[k] = np.polyval(p, Xm[k])
                 d_refill[np.isnan(d).any(axis=1)][:, j][k] = Ym[k]
@@ -223,7 +223,6 @@ def plot_lsfer(idx, d, tags, coeff, cb="white", ms="o", verb=0):
                     f"Both descriptor and regression target are undefined. This should have been fixed before this point. Exiting."
                 )
                 exit()
-            print("End:", Xm[k], Ym[k])
         n = Y.size
         m = p.size
         dof = n - m
