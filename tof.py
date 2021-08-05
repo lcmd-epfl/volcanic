@@ -2,6 +2,7 @@
 
 import numpy as np
 import scipy.constants as sc
+import copy
 
 
 def calc_tof(array, Delta_G_reaction, T, coeff, exact=True, verb=0):
@@ -99,10 +100,31 @@ def calc_tof(array, Delta_G_reaction, T, coeff, exact=True, verb=0):
     return TOF, X_TOF
 
 
-if __name__ == "__main__":
+def calc_es(profile, dgr, esp=True):
+    es1 = 0
+    for i, lower in enumerate(profile):
+        view = copy.deepcopy(profile)
+        view[:i] += dgr
+        j = np.argmax(view)
+        upper = view[j]
+        es2 = upper - lower
+        if es2 > es1:
+            es1 = es2
+            imax = j
+            imin = i
+    return [-es1, imax, imin]
+
+
+def test_tof():
     a = np.array([0.0, 8.59756198, 7.1439459, 12.47470641, -27.48101312])
     dgr = -5.8
     T = 298.15
     coeff = [0, 1, 0, 1, 0]
-    print(calc_tof(a, dgr, T, coeff, exact=True, verb=3)[0])
-    print(calc_tof(a, dgr, T, coeff, exact=False, verb=3)[0])
+    exact_tof = calc_tof(a, dgr, T, coeff, exact=True, verb=3)[0]
+    approximate_tof = calc_tof(a, dgr, T, coeff, exact=False, verb=3)[0]
+    assert np.isclose(exact_tof, 4459.013411661435)
+    assert np.isclose(approximate_tof, 4459.013772732218)
+
+
+if __name__ == "__main__":
+    test_tof()
