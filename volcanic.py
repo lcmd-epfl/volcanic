@@ -2,9 +2,16 @@
 
 import sys
 import numpy as np
-from dv import curate_d, find_dv
+from dv1 import curate_d, find_1_dv
+from dv2 import find_2_dv
 from plotting import plot_lsfer, plot_2d_volcano, plot_2d_tof_volcano
-from helpers import yesno, processargs, group_data_points
+from helpers import (
+    yesno,
+    processargs,
+    group_data_points,
+    user_choose_1_dv,
+    user_choose_2_dv,
+)
 
 
 if __name__ == "__main__":
@@ -52,49 +59,38 @@ coeff = np.array(coeffs, dtype=bool)
 # We will attempt to curate your data automatically.
 d, cb, ms = curate_d(d, cb, ms, tags, imputer_strat, verb)
 
-# VOLCANIC will find best non-TS \DeltaG that correlates with all others.
-dvs, r2s = find_dv(d, tags, coeff, verb)
+if nd == 1:
+    # VOLCANIC will find best non-TS \Delt
+    dvs, r2s = find_1_dv(d, tags, coeff, verb)
+    idx = user_choose_1_dv(dvs, r2s, tags)
+    if idx is not None:
+        print(f"Generating LSFER plots using descriptor variable {tags[idx]}")
+        if refill:
+            d = plot_lsfer(idx, d, tags, coeff, cb, ms, verb)
+        else:
+            plot_lsfer(idx, d, tags, coeff, cb, ms, verb)
 
-for dv, r2 in zip(dvs, r2s):
-    print(
-        f"\n{tags[dv]} has been identified as a suitable descriptor variable with r2={np.round(r2,4)}."
-    )
-    ok = yesno("Continue using this variable?")
-    if ok:
-        idx = dv
-        break
-if not ok:
-    manual = yesno("Would you want to use some other descriptor variable instead")
-    if manual:
-        for i, tag in enumerate(tags):
-            ok = yesno(f"Use descriptor {tag}")
-            if ok:
-                idx = i
-                break
-if ok:
-    print(f"Generating LSFER plots using descriptor variable {tags[idx]}")
-    if refill:
-        d = plot_lsfer(idx, d, tags, coeff, cb, ms, verb)
-    else:
-        plot_lsfer(idx, d, tags, coeff, cb, ms, verb)
+        volcano = yesno("Generate 2D volcano plot")
+        tof_volcano = yesno("Generate 2D TOF volcano plot")
 
-volcano = yesno("Generate volcano plot")
+        if volcano:
+            print(f"Generating 2D volcano plot using descriptor variable {tags[idx]}")
+            # The function call also returns all the relevant information
+            # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
+            xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_volcano(
+                idx, d, tags, coeff, dgr, cb, ms, verb
+            )
 
-if volcano:
-    print(f"Generating volcano plot using descriptor variable {tags[idx]}")
-    # The function call also returns all the relevant information
-    # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
-    xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_volcano(
-        idx, d, tags, coeff, dgr, cb, ms, verb
-    )
-
-
-tof_volcano = yesno("Generate TOF volcano plot")
-
-if tof_volcano:
-    print(f"Generating TOF volcano plot using descriptor variable {tags[idx]}")
-    # The function call also returns all the relevant information
-    # xint is the x axis vector, ymin is the TOF vector, px and py are the original datapoints
-    xint, ytof, px, py, xmin, xmax = plot_2d_tof_volcano(
-        idx, d, tags, coeff, dgr, T, cb, ms, verb
-    )
+        if tof_volcano:
+            print(
+                f"Generating 2D TOF volcano plot using descriptor variable {tags[idx]}"
+            )
+            # The function call also returns all the relevant information
+            # xint is the x axis vector, ymin is the TOF vector, px and py are the original datapoints
+            xint, ytof, px, py, xmin, xmax = plot_2d_tof_volcano(
+                idx, d, tags, coeff, dgr, T, cb, ms, verb
+            )
+if nd == 2:
+    # VOLCANIC will find best non-TS \Delt
+    dvs, r2s = find_2_dv(d, tags, coeff, verb)
+    idx1, idx2 = user_choose_2_dv(dvs, r2s, tags)

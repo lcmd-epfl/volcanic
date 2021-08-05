@@ -38,6 +38,42 @@ def group_data_points(bc, ec, names):
     return cb, ms
 
 
+def user_choose_1_dv(dvs, r2s, tags):
+    for dv, r2 in zip(dvs, r2s):
+        print(
+            f"\n{tags[dv]} has been identified as a suitable descriptor variable with r2={np.round(r2,4)}."
+        )
+        ok = yesno("Continue using this variable")
+        if ok:
+            return dv
+    if not ok:
+        manual = yesno("Would you want to use some other descriptor variable instead")
+        if manual:
+            for i, tag in enumerate(tags):
+                ok = yesno(f"Use descriptor {tag}")
+                if ok:
+                    return i
+    return None
+
+
+def user_choose_2_dv(ddvs, r2s, tags):
+    for dv, r2 in zip(ddvs, r2s):
+        print(
+            f"\n{tags[dv]} has been identified as a suitable descriptor variable with r2={np.round(r2,4)}."
+        )
+        ok = yesno("Continue using this variable")
+        if ok:
+            return dv
+    if not ok:
+        manual = yesno("Would you want to use some other descriptor variable instead")
+        if manual:
+            for i, tag in enumerate(tags):
+                ok = yesno(f"Use descriptor {tag}")
+                if ok:
+                    return i
+    return None
+
+
 def processargs(arguments):
     nd = 1
     T = 298.15
