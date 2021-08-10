@@ -130,7 +130,8 @@ def find_1_dv(d, tags, coeff, verb=0):
     for i, criterion in enumerate(criteria):
         if isinstance(criterion, (np.ndarray)):
             if any(criterion.shape):
-                criteria[i] = criterion[rng.integers(low=0, high=criterion.shape[0])]
+                criterion = [idx for idx in criterion if ~np.ma.make_mask(coeff)[idx]]
+                criteria[i] = rng.choice(criterion, size=1)
     a = criteria[0]
     b = criteria[1]
     c = criteria[2]
@@ -162,34 +163,10 @@ def find_1_dv(d, tags, coeff, verb=0):
 
 def test_dv():
     a = np.array(
-        [
-            0,
-            -11.34,
-            2.66,
-            -14.78,
-            0.14,
-            -18.22,
-            -13.81,
-            -20.98,
-            -22.26,
-            -53.98,
-            -43.19,
-        ]
+        [0, -11.34, 2.66, -14.78, 0.14, -18.22, -13.81, -20.98, -22.26, -53.98, -43.19,]
     )
     b = np.array(
-        [
-            0,
-            -11.24,
-            3.66,
-            -16.78,
-            0.54,
-            -18.52,
-            -4.81,
-            -21.98,
-            -23.26,
-            -52.98,
-            -43.19,
-        ]
+        [0, -11.24, 3.66, -16.78, 0.54, -18.52, -4.81, -21.98, -23.26, -52.98, -43.19,]
     )
     dgr = -43.19
     coeff = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0], dtype=int)

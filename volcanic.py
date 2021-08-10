@@ -4,7 +4,7 @@ import sys
 import numpy as np
 from dv1 import curate_d, find_1_dv
 from dv2 import find_2_dv
-from plotting import plot_lsfer, plot_2d_volcano, plot_2d_tof_volcano
+from plotting import plot_lsfer, plot_mlsfer, plot_2d_volcano, plot_2d_tof_volcano
 from helpers import (
     yesno,
     processargs,
@@ -60,7 +60,7 @@ coeff = np.array(coeffs, dtype=bool)
 d, cb, ms = curate_d(d, cb, ms, tags, imputer_strat, verb)
 
 if nd == 1:
-    # VOLCANIC will find best non-TS \Delt
+    # VOLCANIC will find best non-TS descriptor variable
     dvs, r2s = find_1_dv(d, tags, coeff, verb)
     idx = user_choose_1_dv(dvs, r2s, tags)
     if idx is not None:
@@ -91,6 +91,30 @@ if nd == 1:
                 idx, d, tags, coeff, dgr, T, cb, ms, verb
             )
 if nd == 2:
-    # VOLCANIC will find best non-TS \Delt
+    # VOLCANIC will find best non-TS combination of two descriptor variables
     dvs, r2s = find_2_dv(d, tags, coeff, verb)
     idx1, idx2 = user_choose_2_dv(dvs, r2s, tags)
+    if idx1 is not None and idx2 is not None:
+        print(
+            f"Generating multivariate LSFER plots using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
+        )
+        if refill:
+            d = plot_mlsfer(idx1, idx2, d, tags, coeff, cb, ms, verb)
+        else:
+            plot_mlsfer(idx1, idx2, d, tags, coeff, cb, ms, verb)
+
+        volcano = yesno("Generate 3D volcano plot")
+        tof_volcano = yesno("Generate 3D TOF volcano plot")
+
+        if volcano:
+            print(
+                f"Generating 3D volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
+            )
+            # The function call also returns all the relevant information
+            # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
+            xint, ymin, px, py, xmin, xmax, rid, rb = plot_3d_volcano(
+                idx, d, tags, coeff, dgr, cb, ms, verb
+            )
+
+        if tof_volcano:
+            pass

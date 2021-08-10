@@ -26,6 +26,106 @@ def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
     return ax
 
 
+def plot_mlsfer(idx1, idx2, d, tags, coeff, cb="white", ms="o", verb=0):
+    dnan = d[np.isnan(d)]
+    d_refill = np.zeros_like(d)
+    d_refill[~np.isnan(d)] = d[~np.isnan(d)]
+    tags = [str(tag) for tag in tags]
+    lnsteps = range(d.shape[1])
+    npoints = 500
+    mape = 100
+    for j in lnsteps[1:-1]:
+        if verb > 0:
+            print(f"Plotting regression of {tags[j]}.")
+        XY = np.vstack([[d[:, idx1], d[:, idx2]], d[:, j]]).T
+        if isinstance(cb, np.ndarray):
+            cbi = np.array(cb)[~np.isnan(XY).any(axis=1)]
+        else:
+            cbi = cb
+        if isinstance(ms, np.ndarray):
+            msi = np.array(ms)[~np.isnan(XY).any(axis=1)]
+        else:
+            msi = ms
+        XYm = XY[np.isnan(XY).any(axis=1)]
+        XY = XY[~np.isnan(XY).any(axis=1)]
+        Xm = XYm[:, :2]
+        Ym = XYm[:, 2]
+        X = XY[:, :2]
+        Y = XY[:, 2]
+        xmax = bround(Y.max() + 10)
+        xmin = bround(Y.min() - 10)
+        xint = np.sort(Y)
+        reg = sk.linear_model.LinearRegression().fit(X, Y)
+        if verb > 2:
+            print(
+                f"Linear model has coefficients : {reg.coef_} \n and intercept {reg.intercept_}"
+            )
+        Y_pred = reg.predict(X)
+        p = reg.coef_
+        currmape = sk.metrics.mean_absolute_percentage_error(Y, Y_pred)
+        for k, y in enumerate(Ym):
+            if not np.isnan(Xm[k]) and np.isnan(Ym[k]):
+                Ym[k] = ref.predict(Xm[k])
+                d_refill[np.isnan(d).any(axis=1)][:, j][k] = Ym[k]
+            elif not np.isnan(Ym[k]):
+                if currmape < mape:
+                    ptemp = p
+                    ptemp[-1] -= Ym[k]
+                    Xm[k] = np.roots(ptemp)
+                    d_refill[np.isnan(d).any(axis=1)][:, idx][k] = Xm[k]
+                    mape = currmape
+            else:
+                print(
+                    "Both descriptor and regression target are undefined. This should have been fixed before this point. Exiting."
+                )
+                exit()
+        n = Y.size
+        m = p.size
+        dof = n - m
+        t = stats.t.ppf(0.95, dof)
+        resid = Y - Y_pred
+        chi2 = np.sum((resid / Y_pred) ** 2)
+        s_err = np.sqrt(np.sum(resid ** 2) / dof)
+        fig, ax = plt.subplots(
+            frameon=False, figsize=[3, 3], dpi=300, constrained_layout=True
+        )
+        yint = np.sort(Y_pred)
+        plot_ci_manual(t, s_err, n, X, xint, yint, ax=ax)
+        pi = (
+            t
+            * s_err
+            * np.sqrt(
+                1 + 1 / n + (xint - np.mean(X)) ** 2 / np.sum((X - np.mean(X)) ** 2)
+            )
+        )
+        ax.plot(xint, yint, "-", linewidth=1, color="#000a75", alpha=0.85)
+        for i in range(len(X)):
+            ax.scatter(
+                Y_pred[i],
+                Y[i],
+                s=5,
+                c=cbi[i],
+                marker=msi[i],
+                linewidths=0.15,
+                edgecolors="black",
+            )
+        # Border
+        ax.spines["top"].set_color("black")
+        ax.spines["bottom"].set_color("black")
+        ax.spines["left"].set_color("black")
+        ax.spines["right"].set_color("black")
+        ax.get_xaxis().set_tick_params(direction="out")
+        ax.get_yaxis().set_tick_params(direction="out")
+        ax.xaxis.tick_bottom()
+        ax.yaxis.tick_left()
+        # Labels and key
+        plt.xlabel(f"Function of {tags[idx1]} and {tags[idx2]}")
+        plt.ylabel(f"{tags[j]} [kcal/mol]")
+        plt.xlim(xmin, xmax)
+        plt.savefig(f"{tags[j]}.png")
+    return d_refill
+
+
 def plot_lsfer(idx, d, tags, coeff, cb="white", ms="o", verb=0):
     dnan = d[np.isnan(d)]
     d_refill = np.zeros_like(d)
@@ -175,11 +275,7 @@ def plot_2d(
             avgs.append((rb[i] + rb[i + 1]) / 2)
         for i in rb:
             ax.axvline(
-                i,
-                linestyle="dashed",
-                color="black",
-                linewidth=0.5,
-                alpha=0.75,
+                i, linestyle="dashed", color="black", linewidth=0.5, alpha=0.75,
             )
         yavg = (y.max() + y.min()) / 2
         for i, j in zip(rid, avgs):

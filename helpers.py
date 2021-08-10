@@ -3,6 +3,7 @@
 import sys
 import pandas as pd
 import numpy as np
+import itertools
 from itertools import cycle
 
 
@@ -50,28 +51,37 @@ def user_choose_1_dv(dvs, r2s, tags):
         manual = yesno("Would you want to use some other descriptor variable instead")
         if manual:
             for i, tag in enumerate(tags):
-                ok = yesno(f"Use descriptor {tag}")
+                ok = yesno(f"Use {tag} as descriptor")
                 if ok:
                     return i
     return None
 
 
 def user_choose_2_dv(ddvs, r2s, tags):
+    tags = tags[1:-1]
+    ptags = []
+    for pair in itertools.combinations(tags, r=2):
+        ptags.append(pair[0] + " and " + pair[1])
     for dv, r2 in zip(ddvs, r2s):
         print(
-            f"\n{tags[dv]} has been identified as a suitable descriptor variable with r2={np.round(r2,4)}."
+            f"\nThe combination of {tags[dv[0]]} and {tags[dv[1]]} has been identified as a suitable combined descriptor variable with r2={np.round(r2,4)}."
         )
-        ok = yesno("Continue using this variable")
+        ok = yesno("Continue using this combined descriptor variable")
         if ok:
-            return dv
+            return (dv[0] + 1, dv[1] + 1)
     if not ok:
-        manual = yesno("Would you want to use some other descriptor variable instead")
+        manual = yesno(
+            "Would you want to use some other descriptor variable combination instead"
+        )
         if manual:
-            for i, tag in enumerate(tags):
-                ok = yesno(f"Use descriptor {tag}")
+            for i, ptag in enumerate(ptags):
+                ok = yesno(f"Use combination of {ptag[0]} and {ptag[1]} as descriptor")
                 if ok:
-                    return i
-    return None
+                    return (
+                        np.flatten(np.where(tags == ptag[0])),
+                        np.flatten(np.where(tags == ptag[1])),
+                    )
+    return None, None
 
 
 def processargs(arguments):
