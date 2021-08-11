@@ -291,6 +291,124 @@ def plot_2d(
     plt.savefig(filename)
 
 
+def plot_3d(
+    x1,
+    x2,
+    grid,
+    px1,
+    px2,
+    py,
+    ymin,
+    ymax,
+    x1min,
+    x1max,
+    x2min,
+    x2max,
+    x1label="X1-axis",
+    x2label="X2-axis",
+    ylabel="Y-axis",
+    filename="plot.png",
+    rid=None,
+    rb=None,
+    cb="white",
+    ms="o",
+):
+    fig, ax = plt.subplots(
+        frameon=False, figsize=[3, 3], dpi=300, constrained_layout=True
+    )
+    grid = np.clip(grid, ymin, ymax)
+    plt.figure(1)
+    norm = cm.colors.Normalize(vmax=ymax, vmin=ymin)
+    levels = np.arange(ymin, grid.max() + 1.0, 5.0)
+    cset = ax.contourf(
+        x1, x2, grid, levels=levels, norm=norm, cmap=cm.get_cmap("RdYlBu", len(levels)),
+    )
+    # Border
+    ax.spines["top"].set_color("black")
+    ax.spines["bottom"].set_color("black")
+    ax.spines["left"].set_color("black")
+    ax.spines["right"].set_color("black")
+    ax.get_xaxis().set_tick_params(direction="out")
+    ax.get_yaxis().set_tick_params(direction="out")
+    ax.xaxis.tick_bottom()
+    ax.yaxis.tick_left()
+    # Labels and key
+    plt.xlabel(x1label)
+    plt.ylabel(x2label)
+    plt.xlim(x1min, x1max)
+    plt.ylim(x2min, x2max)
+    ax.contour(x1, x2, grid, cset.levels, colors="black", linewidths=0.5)
+    fig.colorbar(cset)
+    plt.savefig(filename)
+
+
+def plot_3d_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
+    tags = [str(tag) for tag in tags]
+    lnsteps = range(d.shape[1])
+    X1 = d[:, idx1].reshape(-1)
+    X2 = d[:, idx2].reshape(-1)
+    xmax1 = bround(X1.max() + 15)
+    xmin1 = bround(X1.min() - 15)
+    xmax2 = bround(X2.max() + 15)
+    xmin2 = bround(X2.min() - 15)
+    npoints = 250
+    if verb > 1:
+        print(
+            f"Range of descriptors set to [ {xmin1} , {xmax1} ] and [ {xmin2} , {xmax2} ]"
+        )
+    xint = np.linspace(xmin, xmax, npoints)
+    dgs = np.zeros((npoints, len(lnsteps)))
+    for i, j in enumerate(lnsteps):
+        Y = d[:, j].reshape(-1)
+        p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
+        Y_pred = np.polyval(p, X)
+        n = Y.size
+        m = p.size
+        dof = n - m
+        t = stats.t.ppf(0.95, dof)
+        resid = Y - Y_pred
+        with np.errstate(invalid="ignore"):
+            chi2 = np.sum((resid / Y_pred) ** 2)
+        s_err = np.sqrt(np.sum(resid ** 2) / dof)
+        yint = np.polyval(p, xint)
+        dgs[:, i] = yint
+    ymin = np.zeros_like(yint)
+    ridmax = np.zeros_like(yint, dtype=int)
+    ridmin = np.zeros_like(yint, dtype=int)
+    rid = []
+    rb = []
+    for i in range(ymin.shape[0]):
+        profile = dgs[i, :]
+        ymin[i], ridmax[i], ridmin[i] = calc_es(profile, dgr, esp=True)
+        if ridmax[i] != ridmax[i - 1] or ridmin[i] != ridmin[i - 1]:
+            rid.append(f"{tags[ridmin[i]]} ➜ {tags[ridmax[i]]}")
+            rb.append(xint[i])
+    if verb > 0:
+        print(f"Identified {len(rid)} different determining states.")
+        for i, j in zip(rid, rb):
+            print(f"{i} starting at {j}")
+    px = np.zeros_like(d[:, 0])
+    py = np.zeros_like(d[:, 0])
+    for i in range(d.shape[0]):
+        profile = d[i, :]
+        px[i] = d[i, idx].reshape(-1)
+        py[i] = calc_es(profile, dgr, esp=True)[0]
+    xlabel = f"{tags[idx]} [kcal/mol]"
+    ylabel = "-ΔG(pds) [kcal/mol]"
+    filename = f"volcano_{tags[idx]}.png"
+    if verb > 0:
+        csvname = f"volcano_{tags[idx]}.csv"
+        print(f"Saving volcano data to file {csvname}")
+        zdata = list(zip(xint, ymin))
+        np.savetxt(
+            csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\D_Gpds"
+        )
+    plot_2d(
+        xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename, rid, rb, cb=cb, ms=ms
+    )
+    return xint, ymin, px, py, xmin, xmax, rid, rb
+
+
 def plot_2d_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
     tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
