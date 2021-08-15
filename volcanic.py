@@ -4,7 +4,15 @@ import sys
 import numpy as np
 from dv1 import curate_d, find_1_dv
 from dv2 import find_2_dv
-from plotting import plot_lsfer, plot_mlsfer, plot_2d_volcano, plot_2d_tof_volcano
+from plotting import (
+    plot_lsfer,
+    plot_mlsfer,
+    plot_2d_volcano,
+    plot_2d_tof_volcano,
+    plot_3d_volcano,
+    plot_2d_tof_volcano,
+    plot_3d_tof_volcano,
+)
 from helpers import (
     yesno,
     processargs,
@@ -112,9 +120,14 @@ if nd == 2:
             )
             # The function call also returns all the relevant information
             # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
-            xint, ymin, px, py, xmin, xmax, rid, rb = plot_3d_volcano(
-                idx, d, tags, coeff, dgr, cb, ms, verb
+            x1int, x2int, grid, px, py = plot_3d_volcano(
+                idx1, idx2, d, tags, coeff, dgr, cb, ms, verb
             )
 
         if tof_volcano:
-            pass
+            print(
+                f"Generating 3D TOF volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
+            )
+            x1int, x2int, grid, px, py = plot_3d_tof_volcano(
+                idx1, idx2, d, tags, coeff, dgr, T, cb, ms, verb
+            )
