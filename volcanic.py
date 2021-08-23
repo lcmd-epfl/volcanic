@@ -8,7 +8,6 @@ from plotting import (
     plot_lsfer,
     plot_mlsfer,
     plot_2d_volcano,
-    plot_2d_tof_volcano,
     plot_3d_volcano,
     plot_2d_tof_volcano,
     plot_3d_tof_volcano,

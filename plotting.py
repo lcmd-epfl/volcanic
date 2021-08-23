@@ -277,7 +277,11 @@ def plot_2d(
             avgs.append((rb[i] + rb[i + 1]) / 2)
         for i in rb:
             ax.axvline(
-                i, linestyle="dashed", color="black", linewidth=0.5, alpha=0.75,
+                i,
+                linestyle="dashed",
+                color="black",
+                linewidth=0.5,
+                alpha=0.75,
             )
         yavg = (y.max() + y.min()) / 2
         for i, j in zip(rid, avgs):
