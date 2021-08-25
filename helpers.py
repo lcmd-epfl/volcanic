@@ -58,10 +58,10 @@ def user_choose_1_dv(dvs, r2s, tags):
 
 
 def user_choose_2_dv(ddvs, r2s, tags):
-    tags = tags[1:-1]
+    tags = np.array(tags[1:-1], dtype=np.str)
     ptags = []
     for pair in itertools.combinations(tags, r=2):
-        ptags.append(pair[0] + " and " + pair[1])
+        ptags.append([pair[0], pair[1]])
     for dv, r2 in zip(ddvs, r2s):
         print(
             f"\nThe combination of {tags[dv[0]]} and {tags[dv[1]]} has been identified as a suitable combined descriptor variable with r2={np.round(r2,4)}."
@@ -77,10 +77,10 @@ def user_choose_2_dv(ddvs, r2s, tags):
             for i, ptag in enumerate(ptags):
                 ok = yesno(f"Use combination of {ptag[0]} and {ptag[1]} as descriptor")
                 if ok:
-                    return (
-                        np.flatten(np.where(tags == ptag[0])),
-                        np.flatten(np.where(tags == ptag[1])),
-                    )
+                    print(tags, ptag[0], ptag[1])
+                    idx1 = np.where(tags == np.str(ptag[0]))[0][0] + 1
+                    idx2 = np.where(tags == np.str(ptag[1]))[0][0] + 1
+                    return idx1, idx2
     return None, None
 
 

@@ -302,11 +302,11 @@ def plot_3d_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=0)
     lnsteps = range(d.shape[1])
     X1 = d[:, idx1].reshape(-1)
     X2 = d[:, idx2].reshape(-1)
-    x1max = bround(X1.max() + 25)
-    x1min = bround(X1.min() - 25)
-    x2max = bround(X2.max() + 25)
-    x2min = bround(X2.min() - 25)
-    npoints = 250
+    x1max = bround(X1.max() + 15)
+    x1min = bround(X1.min() - 15)
+    x2max = bround(X2.max() + 15)
+    x2min = bround(X2.min() - 15)
+    npoints = 200
     if verb > 1:
         print(
             f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
@@ -394,11 +394,11 @@ def plot_3d_tof_volcano(
     lnsteps = range(d.shape[1])
     X1 = d[:, idx1].reshape(-1)
     X2 = d[:, idx2].reshape(-1)
-    x1max = bround(X1.max() + 25)
-    x1min = bround(X1.min() - 25)
-    x2max = bround(X2.max() + 25)
-    x2min = bround(X2.min() - 25)
-    npoints = 250
+    x1max = bround(X1.max() + 15)
+    x1min = bround(X1.min() - 15)
+    x2max = bround(X2.max() + 15)
+    x2min = bround(X2.min() - 15)
+    npoints = 200
     if verb > 1:
         print(
             f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
