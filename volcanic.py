@@ -4,12 +4,14 @@ import sys
 import numpy as np
 from dv1 import curate_d, find_1_dv
 from dv2 import find_2_dv
-from plotting import (
-    plot_lsfer,
-    plot_mlsfer,
+from plotting2d import (
+    plot_2d_lsfer,
     plot_2d_volcano,
-    plot_3d_volcano,
     plot_2d_tof_volcano,
+)
+from plotting3d import (
+    plot_3d_lsfer,
+    plot_3d_volcano,
     plot_3d_tof_volcano,
 )
 from helpers import (
@@ -73,9 +75,9 @@ if nd == 1:
     if idx is not None:
         print(f"Generating LSFER plots using descriptor variable {tags[idx]}")
         if refill:
-            d = plot_lsfer(idx, d, tags, coeff, cb, ms, verb)
+            d = plot_2d_lsfer(idx, d, tags, coeff, cb, ms, verb)
         else:
-            plot_lsfer(idx, d, tags, coeff, cb, ms, verb)
+            plot_2d_lsfer(idx, d, tags, coeff, cb, ms, verb)
 
         volcano = yesno("Generate 2D volcano plot")
         tof_volcano = yesno("Generate 2D TOF volcano plot")
@@ -106,9 +108,9 @@ if nd == 2:
             f"Generating multivariate LSFER plots using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
         )
         if refill:
-            d = plot_mlsfer(idx1, idx2, d, tags, coeff, cb, ms, verb)
+            d = plot_3d_lsfer(idx1, idx2, d, tags, coeff, cb, ms, verb)
         else:
-            plot_mlsfer(idx1, idx2, d, tags, coeff, cb, ms, verb)
+            plot_3d_lsfer(idx1, idx2, d, tags, coeff, cb, ms, verb)
 
         volcano = yesno("Generate 3D volcano plot")
         tof_volcano = yesno("Generate 3D TOF volcano plot")
