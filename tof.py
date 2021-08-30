@@ -111,10 +111,26 @@ def calc_es(profile, dgr, esp=True):
         upper = view[j]
         es2 = upper - lower
         if es2 > es1:
+            diff = es2 - es1
             es1 = es2
             imax = j
             imin = i
-    return [-es1, imax, imin]
+    return [-es1, imax, imin, diff]
+
+
+def calc_s_es(profile, dgr, esp=True):
+    es1 = 0
+    for i, lower in enumerate(profile):
+        if i < len(profile) - 1:
+            es2 = profile[i + 1] - lower
+        else:
+            es2 = dgr - lower
+        if es2 > es1:
+            diff = es2 - es1
+            es1 = es2
+            imax = i + 1
+            imin = i
+    return [-es1, imax, imin, diff]
 
 
 def test_tof():

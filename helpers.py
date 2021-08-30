@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import sys
 import pandas as pd
 import numpy as np
 import itertools
@@ -91,6 +90,7 @@ def processargs(arguments):
     verb = 0
     refill = False
     bc = 0
+    runmode = 3
     ec = 2
     terms = []
     filenames = []
@@ -108,8 +108,17 @@ def processargs(arguments):
             skip = True
         elif argument == "-nd":
             nd = int(arguments[idx + 1])
-            print(f"Number of descriptor variables  manually set to {nd}.")
+            print(f"Number of descriptor variablesmanually set to {nd}.")
             skip = True
+        elif argument == "-lsfer":
+            runmode = 0
+            print("Will only find and plot LSFERs.")
+        elif argument == "-thermo":
+            runmode = 1
+            print("Will only build thermodynamic volcano.")
+        elif argument == "-kinetic":
+            runmode = 2
+            print("Will only build kinetic volcanos.")
         elif argument == "-t" or argument == "-T":
             T = float(arguments[idx + 1])
             print(f"Temperature manually set to {T}.")
@@ -137,7 +146,7 @@ def processargs(arguments):
         elif argument == "-o" or argument == "-O":
             outname = str(arguments[idx + 1])
             print(
-                f"Output filename set to {outname}. However, no redirection will take place because CLI input is required."
+                f"Output filename set to {outname}. However, CLI input is currently required."
             )
             skip = True
         else:
@@ -157,7 +166,7 @@ def processargs(arguments):
     if verb > 1:
         print("Final database :")
         print(df.head())
-    return df, nd, verb, T, imputer_strat, refill, bc, ec
+    return df, nd, verb, runmode, T, imputer_strat, refill, bc, ec
 
 
 def check_input(terms, filenames, T, nd, imputer_strat, verb):

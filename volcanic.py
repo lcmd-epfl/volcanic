@@ -6,12 +6,14 @@ from dv1 import curate_d, find_1_dv
 from dv2 import find_2_dv
 from plotting2d import (
     plot_2d_lsfer,
-    plot_2d_volcano,
+    plot_2d_t_volcano,
+    plot_2d_k_volcano,
     plot_2d_tof_volcano,
 )
 from plotting3d import (
     plot_3d_lsfer,
-    plot_3d_volcano,
+    plot_3d_t_volcano,
+    plot_3d_k_volcano,
     plot_3d_tof_volcano,
 )
 from helpers import (
@@ -27,7 +29,7 @@ if __name__ == "__main__":
     arguments = []
     for i, arg in enumerate(sys.argv[1:]):
         arguments.append(arg)
-    df, nd, verb, T, imputer_strat, refill, bc, ec = processargs(arguments)
+    df, nd, verb, runmode, T, imputer_strat, refill, bc, ec = processargs(arguments)
 
 
 # Fill in reaction profile names/IDs from input data.
@@ -68,6 +70,28 @@ coeff = np.array(coeffs, dtype=bool)
 # We will attempt to curate your data automatically.
 d, cb, ms = curate_d(d, cb, ms, tags, imputer_strat, verb)
 
+
+# Runmode used to set up flags for volcano generation.
+if runmode == 0:
+    t_volcano = False
+    k_volcano = False
+    tof_volcano = False
+
+if runmode == 1:
+    t_volcano = True
+    k_volcano = False
+    tof_volcano = False
+
+if runmode == 2:
+    t_volcano = False
+    k_volcano = True
+    tof_volcano = True
+
+if runmode == 3:
+    t_volcano = yesno("Generate 2D thermodynamic volcano plot")
+    k_volcano = yesno("Generate 2D kinetic volcano plot")
+    tof_volcano = yesno("Generate 2D TOF volcano plot")
+
 if nd == 1:
     # VOLCANIC will find best non-TS descriptor variable
     dvs, r2s = find_1_dv(d, tags, coeff, verb)
@@ -79,14 +103,23 @@ if nd == 1:
         else:
             plot_2d_lsfer(idx, d, tags, coeff, cb, ms, verb)
 
-        volcano = yesno("Generate 2D volcano plot")
-        tof_volcano = yesno("Generate 2D TOF volcano plot")
-
-        if volcano:
-            print(f"Generating 2D volcano plot using descriptor variable {tags[idx]}")
+        if t_volcano:
+            print(
+                f"Generating 2D thermodynamic volcano plot using descriptor variable {tags[idx]}"
+            )
             # The function call also returns all the relevant information
             # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
-            xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_volcano(
+            xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_t_volcano(
+                idx, d, tags, coeff, dgr, cb, ms, verb
+            )
+
+        if k_volcano:
+            print(
+                f"Generating 2D kinetic volcano plot using descriptor variable {tags[idx]}"
+            )
+            # The function call also returns all the relevant information
+            # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
+            xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_k_volcano(
                 idx, d, tags, coeff, dgr, cb, ms, verb
             )
 
@@ -99,6 +132,8 @@ if nd == 1:
             xint, ytof, px, py, xmin, xmax = plot_2d_tof_volcano(
                 idx, d, tags, coeff, dgr, T, cb, ms, verb
             )
+
+
 if nd == 2:
     # VOLCANIC will find best non-TS combination of two descriptor variables
     dvs, r2s = find_2_dv(d, tags, coeff, verb)
@@ -112,16 +147,23 @@ if nd == 2:
         else:
             plot_3d_lsfer(idx1, idx2, d, tags, coeff, cb, ms, verb)
 
-        volcano = yesno("Generate 3D volcano plot")
-        tof_volcano = yesno("Generate 3D TOF volcano plot")
-
-        if volcano:
+        if t_volcano:
             print(
-                f"Generating 3D volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
+                f"Generating 3D thermodynamic volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
             )
             # The function call also returns all the relevant information
             # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
-            x1int, x2int, grid, px, py = plot_3d_volcano(
+            x1int, x2int, grid, px, py = plot_3d_t_volcano(
+                idx1, idx2, d, tags, coeff, dgr, cb, ms, verb
+            )
+
+        if k_volcano:
+            print(
+                f"Generating 3D kinetic volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
+            )
+            # The function call also returns all the relevant information
+            # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
+            x1int, x2int, grid, px, py = plot_3d_k_volcano(
                 idx1, idx2, d, tags, coeff, dgr, cb, ms, verb
             )
 

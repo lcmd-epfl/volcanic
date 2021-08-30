@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import sklearn as sk
 import sklearn.linear_model
 from helpers import bround
-from tof import calc_tof, calc_es
+from tof import calc_tof, calc_es, calc_s_es
 
 
 def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
@@ -194,7 +194,7 @@ def plot_2d(
     plt.savefig(filename)
 
 
-def plot_2d_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
+def plot_2d_k_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
     tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
     X = d[:, idx].reshape(-1)
@@ -226,10 +226,15 @@ def plot_2d_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
     rb = []
     for i in range(ymin.shape[0]):
         profile = dgs[i, :]
-        ymin[i], ridmax[i], ridmin[i] = calc_es(profile, dgr, esp=True)
-        if ridmax[i] != ridmax[i - 1] or ridmin[i] != ridmin[i - 1]:
+        ymin[i], ridmax[i], ridmin[i], diff = calc_es(profile, dgr, esp=True)
+        if (ridmax[i] != ridmax[i - 1] or ridmin[i] != ridmin[i - 1]) and np.abs(
+            diff
+        ) > 0.1:
             rid.append(f"{tags[ridmin[i]]} ➜ {tags[ridmax[i]]}")
             rb.append(xint[i])
+        else:
+            ridmax[i] = ridmax[i - 1]
+            ridmin[i] = ridmin[i - 1]
     if verb > 0:
         print(f"Identified {len(rid)} different determining states.")
         for i, j in zip(rid, rb):
@@ -242,13 +247,83 @@ def plot_2d_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
         py[i] = calc_es(profile, dgr, esp=True)[0]
     xlabel = f"{tags[idx]} [kcal/mol]"
     ylabel = "-ΔG(kds) [kcal/mol]"
-    filename = f"volcano_{tags[idx]}.png"
+    filename = f"k_volcano_{tags[idx]}.png"
     if verb > 0:
-        csvname = f"volcano_{tags[idx]}.csv"
+        csvname = f"k_volcano_{tags[idx]}.csv"
         print(f"Saving volcano data to file {csvname}")
         zdata = list(zip(xint, ymin))
         np.savetxt(
             csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\D_Gkds"
+        )
+    plot_2d(
+        xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename, rid, rb, cb=cb, ms=ms
+    )
+    return xint, ymin, px, py, xmin, xmax, rid, rb
+
+
+def plot_2d_t_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
+    tags = np.array([str(tag) for tag in tags])
+    tag = tags[idx]
+    tags = tags[~coeff]
+    lnsteps = range(np.count_nonzero(coeff == 0))
+    X = d[:, idx].reshape(-1)
+    xmax = bround(X.max() + 35)
+    xmin = bround(X.min() - 35)
+    npoints = 250
+    if verb > 1:
+        print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
+    xint = np.linspace(xmin, xmax, npoints)
+    dgs = np.zeros((npoints, len(lnsteps)))
+    d = d[:, ~coeff]
+    for i, j in enumerate(lnsteps):
+        Y = d[:, j].reshape(-1)
+        p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
+        Y_pred = np.polyval(p, X)
+        n = Y.size
+        m = p.size
+        dof = n - m
+        t = stats.t.ppf(0.95, dof)
+        resid = Y - Y_pred
+        with np.errstate(invalid="ignore"):
+            chi2 = np.sum((resid / Y_pred) ** 2)
+        s_err = np.sqrt(np.sum(resid ** 2) / dof)
+        yint = np.polyval(p, xint)
+        dgs[:, i] = yint
+    ymin = np.zeros_like(yint)
+    ridmax = np.zeros_like(yint, dtype=int)
+    ridmin = np.zeros_like(yint, dtype=int)
+    rid = []
+    rb = []
+    for i in range(ymin.shape[0]):
+        profile = dgs[i, :]
+        ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr, esp=True)
+        if (ridmax[i] != ridmax[i - 1] or ridmin[i] != ridmin[i - 1]) and np.abs(
+            diff
+        ) > 0.1:
+            rid.append(f"{tags[ridmin[i]]} ➜ {tags[ridmax[i]]}")
+            rb.append(xint[i])
+        else:
+            ridmax[i] = ridmax[i - 1]
+            ridmin[i] = ridmin[i - 1]
+    if verb > 0:
+        print(f"Identified {len(rid)} different determining states.")
+        for i, j in zip(rid, rb):
+            print(f"{i} starting at {j}")
+    px = np.zeros_like(d[:, 0])
+    py = np.zeros_like(d[:, 0])
+    for i in range(d.shape[0]):
+        profile = d[i, :]
+        px[i] = X[i].reshape(-1)
+        py[i] = calc_s_es(profile, dgr, esp=True)[0]
+    xlabel = f"{tag} [kcal/mol]"
+    ylabel = "-ΔG(pds) [kcal/mol]"
+    filename = f"t_volcano_{tag}.png"
+    if verb > 0:
+        csvname = f"t_volcano_{tag}.csv"
+        print(f"Saving volcano data to file {csvname}")
+        zdata = list(zip(xint, ymin))
+        np.savetxt(
+            csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\D_Gpds"
         )
     plot_2d(
         xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename, rid, rb, cb=cb, ms=ms

@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import sklearn as sk
 import sklearn.linear_model
 from helpers import bround
-from tof import calc_tof, calc_es
+from tof import calc_tof, calc_es, calc_s_es
 
 
 def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
@@ -133,7 +133,103 @@ def plot_3d_lsfer(idx1, idx2, d, tags, coeff, cb="white", ms="o", verb=0):
     return d_refill
 
 
-def plot_3d_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
+def plot_3d_t_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
+    tags = np.array([str(tag) for tag in tags])
+    tag1 = tags[idx1]
+    tag2 = tags[idx2]
+    tags = tags[~coeff]
+    lnsteps = range(np.count_nonzero(coeff == 0))
+    X1 = d[:, idx1].reshape(-1)
+    X2 = d[:, idx2].reshape(-1)
+    x1max = bround(X1.max() + 15)
+    x1min = bround(X1.min() - 15)
+    x2max = bround(X2.max() + 15)
+    x2min = bround(X2.min() - 15)
+    npoints = 200
+    if verb > 1:
+        print(
+            f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
+        )
+    xint = np.linspace(x1min, x1max, npoints)
+    yint = np.linspace(x2min, x2max, npoints)
+    d = d[:, ~coeff]
+    grids = []
+    for i, j in enumerate(lnsteps):
+        XY = np.vstack([X1, X2, d[:, j]]).T
+        X = XY[:, :2]
+        Y = XY[:, 2]
+        reg = sk.linear_model.LinearRegression().fit(X, Y)
+        Y_pred = reg.predict(X)
+        gridj = np.zeros((npoints, npoints))
+        for k, x1 in enumerate(xint):
+            for l, x2 in enumerate(yint):
+                x1x2 = np.vstack([x1, x2]).reshape(1, -1)
+                gridj[k, l] = reg.predict(x1x2)
+        grids.append(gridj)
+    grid = np.zeros_like(gridj)
+    ridmax = np.zeros_like(gridj, dtype=int)
+    ridmin = np.zeros_like(gridj, dtype=int)
+    rb = np.zeros_like(gridj, dtype=int)
+    for k, x1 in enumerate(xint):
+        for l, x2 in enumerate(yint):
+            profile = [gridj[k, l] for gridj in grids]
+            grid[k, l], ridmax[k, l], ridmin[k, l], diff = calc_s_es(
+                profile, dgr, esp=True
+            )
+    rid = np.hstack([ridmin, ridmax])
+    if verb > 0:
+        pass
+    ymin = grid.min()
+    ymax = grid.max()
+    px = np.zeros_like(d[:, 0])
+    py = np.zeros_like(d[:, 0])
+    for i in range(d.shape[0]):
+        profile = d[i, :]
+        px[i] = X1[i]
+        py[i] = X2[i]
+    x1label = f"{tag1} [kcal/mol]"
+    x2label = f"{tag2} [kcal/mol]"
+    ylabel = "-ΔG(kds) [kcal/mol]"
+    filename = f"t_volcano_{tag1}_{tag2}.png"
+    if verb > 0:
+        csvname = f"t_volcano_{tag1}_{tag2}.csv"
+        print(f"Saving volcano data to file {csvname}")
+        x = np.zeros_like(grid.reshape(-1))
+        y = np.zeros_like(grid.reshape(-1))
+        for i, xy in enumerate(itertools.product(xint, yint)):
+            x[i] = xy[0]
+            y[i] = xy[1]
+        zdata = list(zip(x, y, grid.reshape(-1)))
+        np.savetxt(
+            csvname,
+            zdata,
+            fmt="%.4e",
+            delimiter=",",
+            header="Descriptor 1, Descriptor 2, -\D_kds",
+        )
+    plot_3d(
+        xint,
+        yint,
+        grid,
+        px,
+        py,
+        ymin,
+        ymax,
+        x1min,
+        x1max,
+        x2min,
+        x2max,
+        x1label=x1label,
+        x2label=x2label,
+        ylabel=ylabel,
+        filename=filename,
+        cb=cb,
+        ms=ms,
+    )
+    return xint, yint, grid, px, py
+
+
+def plot_3d_k_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
     tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
     X1 = d[:, idx1].reshape(-1)
@@ -169,7 +265,9 @@ def plot_3d_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=0)
     for k, x1 in enumerate(xint):
         for l, x2 in enumerate(yint):
             profile = [gridj[k, l] for gridj in grids]
-            grid[k, l], ridmax[k, l], ridmin[k, l] = calc_es(profile, dgr, esp=True)
+            grid[k, l], ridmax[k, l], ridmin[k, l], diff = calc_es(
+                profile, dgr, esp=True
+            )
     rid = np.hstack([ridmin, ridmax])
     if verb > 0:
         pass
@@ -184,9 +282,9 @@ def plot_3d_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=0)
     x1label = f"{tags[idx1]} [kcal/mol]"
     x2label = f"{tags[idx2]} [kcal/mol]"
     ylabel = "-ΔG(kds) [kcal/mol]"
-    filename = f"volcano_{tags[idx1]}_{tags[idx2]}.png"
+    filename = f"k_volcano_{tags[idx1]}_{tags[idx2]}.png"
     if verb > 0:
-        csvname = f"volcano_{tags[idx1]}_{tags[idx2]}.csv"
+        csvname = f"k_volcano_{tags[idx1]}_{tags[idx2]}.csv"
         print(f"Saving volcano data to file {csvname}")
         x = np.zeros_like(grid.reshape(-1))
         y = np.zeros_like(grid.reshape(-1))
