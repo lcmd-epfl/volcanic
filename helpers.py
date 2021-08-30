@@ -136,11 +136,11 @@ def processargs(arguments):
             print(f"Refill option manually set to {refill}.")
             skip = True
         elif argument == "-bc":
-            refill = int(arguments[idx + 1])
+            bc = int(arguments[idx + 1])
             print(f"Initial character for grouping manually set to {bc}.")
             skip = True
         elif argument == "-ec":
-            refill = int(arguments[idx + 1])
+            ec = int(arguments[idx + 1])
             print(f"Final character for grouping manually set to {ec}.")
             skip = True
         elif argument == "-o" or argument == "-O":

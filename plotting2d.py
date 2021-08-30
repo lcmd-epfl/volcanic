@@ -143,12 +143,12 @@ def plot_2d(
         frameon=False, figsize=[3, 3], dpi=300, constrained_layout=True
     )
 
-    ax.plot(x, y, "-", linewidth=1, color="#000a75", alpha=0.85)
+    ax.plot(x, y, "-", linewidth=1.25, color="midnightblue", alpha=0.95)
     for i in range(len(px)):
         ax.scatter(
             px[i],
             py[i],
-            s=5,
+            s=7.5,
             c=cb[i],
             marker=ms[i],
             linewidths=0.15,
@@ -180,13 +180,13 @@ def plot_2d(
                 linewidth=0.5,
                 alpha=0.75,
             )
-        yavg = (y.max() + y.min()) / 2
+        yavg = (y.max() + y.min()) / 4
         for i, j in zip(rid, avgs):
             plt.text(
                 j,
                 yavg,
                 i,
-                fontsize=6,
+                fontsize=7.5,
                 horizontalalignment="center",
                 verticalalignment="center",
                 rotation="vertical",

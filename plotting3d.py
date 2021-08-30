@@ -189,7 +189,7 @@ def plot_3d_t_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=
         py[i] = X2[i]
     x1label = f"{tag1} [kcal/mol]"
     x2label = f"{tag2} [kcal/mol]"
-    ylabel = "-ΔG(kds) [kcal/mol]"
+    ylabel = "-ΔG(pds) [kcal/mol]"
     filename = f"t_volcano_{tag1}_{tag2}.png"
     if verb > 0:
         csvname = f"t_volcano_{tag1}_{tag2}.csv"
@@ -205,7 +205,7 @@ def plot_3d_t_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=
             zdata,
             fmt="%.4e",
             delimiter=",",
-            header="Descriptor 1, Descriptor 2, -\D_kds",
+            header="Descriptor 1, Descriptor 2, -\D_pds",
         )
     plot_3d(
         xint,
@@ -448,6 +448,7 @@ def plot_3d(
     ax.spines["right"].set_color("black")
     ax.get_xaxis().set_tick_params(direction="out")
     ax.get_yaxis().set_tick_params(direction="out")
+    ax.locator_params(axis="cb", integer=True)
     ax.xaxis.tick_bottom()
     ax.yaxis.tick_left()
     # Labels and key
@@ -455,14 +456,14 @@ def plot_3d(
     plt.ylabel(x2label)
     plt.xlim(x1min, x1max)
     plt.ylim(x2min, x2max)
-    ax.contour(xint, yint, grid, cset.levels, colors="black", linewidths=0.25)
+    ax.contour(xint, yint, grid, cset.levels, colors="black", linewidths=0.3)
     cbar = fig.colorbar(cset)
     cbar.set_label(ylabel, labelpad=5, rotation=270)
     for i in range(len(px)):
         ax.scatter(
             px[i],
             py[i],
-            s=5,
+            s=7.5,
             c=cb[i],
             marker=ms[i],
             linewidths=0.15,
