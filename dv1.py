@@ -40,14 +40,14 @@ def curate_d(d, cb, ms, tags, imputer_strat="simple", verb=0):
             outlier = np.where(absd > maxtol)
             if verb > 1:
                 print(
-                    f"Among data series {tagsit[i]} some big outliers were detected: {dit[outlier,i].flatten()} and will be skipped."
+                    f"Among data series {tagsit[i]} some outliers (very large values) were detected: {dit[outlier,i].flatten()} and will be skipped."
                 )
             dit[outlier, i] = np.nan
         if any(absd < mintol):
             outlier = np.where(absd < mintol)
             if verb > 1:
                 print(
-                    f"Among data series {tagsit[i]} some tiny outliers were detected: {dit[outlier,i].flatten()} and will be skipped."
+                    f"Among data series {tagsit[i]} some outliers (very small values) were detected: {dit[outlier,i].flatten()} and will be skipped."
                 )
             dit[outlier, i] = np.nan
         dit[:, i] = call_imputer(dit[:, i], imputer_strat)
@@ -210,17 +210,11 @@ def test_dv():
         ]
     )
     profiles = np.vstack((a, b))
-    find_1_dv(profiles, tags, coeff, verb=3)
-    tof0 = np.log10(calc_tof(a, dgr, 298.15, coeff, exact=True, verb=3)[0])
-    tof1 = np.log10(calc_tof(a, dgr, 298.15, coeff, exact=False, verb=3)[0])
-    k1, k2, k3 = calc_es(a, dgr, esp=True)
-    assert np.isclose(tof0, 2.9084578423093896)
-    assert np.isclose(tof1, 1.8568261739206413)
-    tof0 = np.log10(calc_tof(b, dgr, 298.15, coeff, exact=True, verb=3)[0])
-    tof1 = np.log10(calc_tof(b, dgr, 298.15, coeff, exact=False, verb=3)[0])
-    k1, k2, k3 = calc_es(b, dgr, esp=True)
-    assert np.isclose(tof0, 2.8739523646631504)
-    assert np.isclose(tof1, 0.0976139659302689)
+    find_1_dv(profiles, tags, coeff, verb=0)
+    etof, xetof = calc_tof(a, dgr, 298.15, coeff, exact=True, verb=0)
+    assert np.isclose(etof, 55.22, 4)
+    k1, k2, k3, k4 = calc_es(a, dgr, esp=True)
+    assert np.isclose(k1, -14.92, 4)
 
 
 if __name__ == "__main__":

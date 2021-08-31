@@ -2,7 +2,9 @@
 
 import pandas as pd
 import numpy as np
+import os
 import itertools
+import h5py
 from itertools import cycle
 
 
@@ -202,3 +204,47 @@ def check_input(terms, filenames, T, nd, imputer_strat, verb):
     if invalid_input:
         exit()
     return dfs
+
+
+def arraydump(path: str, descriptor: np.array, volcano_list, volcano_headers):
+    """Dump array as an hdf5 file."""
+    h5 = h5py.File(path, "w")
+    assert len(volcano_list) == len(volcano_headers)
+    # hdf5 file is like a dictionary, every dataset has a key and a data value (which can be an array)
+    h5.create_dataset("Descriptor", data=descriptor)
+    for i, j in zip(volcano_list, volcano_headers):
+        h5.create_dataset(j, data=i)
+    h5.close()
+
+
+def arrayread(path: str):
+    """Read hdf5 dataset."""
+    h5 = h5py.File(path, "r")
+    volcano_headers = []
+    volcano_list = []
+    for key in h5.keys():
+        if key == "Descriptor":
+            descriptor = h5[key]
+        else:
+            volcano_headers.append(key)
+            volcano_list.append(h5[key][()])
+    return descriptor, volcano_list, volcano_headers
+
+
+def test_filedump():
+    dv = np.linspace(0, 50, 1000)
+    tv = np.linspace(-34, 13, 1000)
+    kv = np.linspace(15, 25, 1000)
+    volcano_list = [tv, kv]
+    volcano_headers = ["Thermodynamic volcano", "Kinetic volcano"]
+    arraydump("hdf5_test.hdf5", dv, volcano_list, volcano_headers)
+    dv, volcano_list, volcano_headers = arrayread("hdf5_test.hdf5")
+    assert np.allclose(
+        tv, volcano_list[volcano_headers.index("Thermodynamic volcano")], 4
+    )
+    assert np.allclose(kv, volcano_list[volcano_headers.index("Kinetic volcano")], 4)
+    os.remove("hdf5_test.hdf5")
+
+
+if __name__ == "__main__":
+    test_filedump()
