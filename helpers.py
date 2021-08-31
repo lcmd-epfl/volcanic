@@ -113,7 +113,7 @@ def processargs(arguments):
             nd = int(arguments[idx + 1])
             print(f"Number of descriptor variables manually set to {nd}.")
             skip = True
-        elif argument == "-lsfer":
+        elif argument == "-lsfer" or argument == "-fer":
             runmode = 0
             print("Will only find and plot LSFERs.")
         elif argument == "-thermo":
@@ -125,6 +125,9 @@ def processargs(arguments):
         elif argument == "-dump":
             dump = True
             print("Will dump volcano information in hdf5 file.")
+        elif argument == "-refill" or argument == "-re":
+            refill = True
+            print(f"Will refill missing datapoints.")
         elif argument == "-t" or argument == "-T":
             T = float(arguments[idx + 1])
             print(f"Temperature manually set to {T}.")
@@ -137,10 +140,6 @@ def processargs(arguments):
             imputer_strat = str(arguments[idx + 1])
             print(f"Imputer strategy manually set to {imputer_strat}.")
             skip = True
-        elif argument == "-re":
-            refill = bool(arguments[idx + 1])
-            print(f"Refill option manually set to {refill}.")
-            skip = True
         elif argument == "-bc":
             bc = int(arguments[idx + 1])
             print(f"Initial character for grouping manually set to {bc}.")
@@ -149,7 +148,7 @@ def processargs(arguments):
             ec = int(arguments[idx + 1])
             print(f"Final character for grouping manually set to {ec}.")
             skip = True
-        elif argument == "-o" or argument == "-O":
+        elif argument == "-o" or argument == "-O" or argument == "-output":
             outname = str(arguments[idx + 1])
             print(
                 f"Output filename set to {outname}. However, CLI input is currently required."
