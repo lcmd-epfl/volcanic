@@ -5,6 +5,7 @@ import scipy.stats as stats
 import itertools
 import matplotlib
 from matplotlib import cm
+from matplotlib.ticker import FuncFormatter
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -448,7 +449,6 @@ def plot_3d(
     ax.spines["right"].set_color("black")
     ax.get_xaxis().set_tick_params(direction="out")
     ax.get_yaxis().set_tick_params(direction="out")
-    ax.locator_params(axis="cb", integer=True)
     ax.xaxis.tick_bottom()
     ax.yaxis.tick_left()
     # Labels and key
@@ -457,8 +457,9 @@ def plot_3d(
     plt.xlim(x1min, x1max)
     plt.ylim(x2min, x2max)
     ax.contour(xint, yint, grid, cset.levels, colors="black", linewidths=0.3)
-    cbar = fig.colorbar(cset)
-    cbar.set_label(ylabel, labelpad=5, rotation=270)
+    fmt = lambda x, pos: "%.0f" % x
+    cbar = fig.colorbar(cset, format=FuncFormatter(fmt))
+    cbar.set_label(ylabel, labelpad=15, rotation=270)
     for i in range(len(px)):
         ax.scatter(
             px[i],

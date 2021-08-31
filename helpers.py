@@ -91,8 +91,9 @@ def processargs(arguments):
     imputer_strat = "none"
     verb = 0
     refill = False
-    bc = 0
+    dump = False
     runmode = 3
+    bc = 0
     ec = 2
     terms = []
     filenames = []
@@ -110,7 +111,7 @@ def processargs(arguments):
             skip = True
         elif argument == "-nd":
             nd = int(arguments[idx + 1])
-            print(f"Number of descriptor variablesmanually set to {nd}.")
+            print(f"Number of descriptor variables manually set to {nd}.")
             skip = True
         elif argument == "-lsfer":
             runmode = 0
@@ -121,6 +122,9 @@ def processargs(arguments):
         elif argument == "-kinetic":
             runmode = 2
             print("Will only build kinetic volcanos.")
+        elif argument == "-dump":
+            dump = True
+            print("Will dump volcano information in hdf5 file.")
         elif argument == "-t" or argument == "-T":
             T = float(arguments[idx + 1])
             print(f"Temperature manually set to {T}.")
@@ -168,7 +172,7 @@ def processargs(arguments):
     if verb > 1:
         print("Final database :")
         print(df.head())
-    return df, nd, verb, runmode, T, imputer_strat, refill, bc, ec
+    return df, nd, verb, runmode, T, imputer_strat, refill, dump, bc, ec
 
 
 def check_input(terms, filenames, T, nd, imputer_strat, verb):

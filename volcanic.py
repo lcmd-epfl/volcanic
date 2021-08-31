@@ -22,6 +22,7 @@ from helpers import (
     group_data_points,
     user_choose_1_dv,
     user_choose_2_dv,
+    arraydump,
 )
 
 
@@ -29,7 +30,9 @@ if __name__ == "__main__":
     arguments = []
     for i, arg in enumerate(sys.argv[1:]):
         arguments.append(arg)
-    df, nd, verb, runmode, T, imputer_strat, refill, bc, ec = processargs(arguments)
+    df, nd, verb, runmode, T, imputer_strat, refill, dump, bc, ec = processargs(
+        arguments
+    )
 
 
 # Fill in reaction profile names/IDs from input data.
@@ -103,6 +106,10 @@ if nd == 1:
         else:
             plot_2d_lsfer(idx, d, tags, coeff, cb, ms, verb)
 
+        volcano_headers = []
+        volcano_list = []
+        xint = None
+
         if t_volcano:
             print(
                 f"Generating 2D thermodynamic volcano plot using descriptor variable {tags[idx]}"
@@ -112,6 +119,8 @@ if nd == 1:
             xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_t_volcano(
                 idx, d, tags, coeff, dgr, cb, ms, verb
             )
+            volcano_headers.append("Thermodynamic volcano")
+            volcano_list.append(ymin)
 
         if k_volcano:
             print(
@@ -122,6 +131,8 @@ if nd == 1:
             xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_k_volcano(
                 idx, d, tags, coeff, dgr, cb, ms, verb
             )
+            volcano_headers.append("Kinetic volcano")
+            volcano_list.append(ymin)
 
         if tof_volcano:
             print(
@@ -132,7 +143,11 @@ if nd == 1:
             xint, ytof, px, py, xmin, xmax = plot_2d_tof_volcano(
                 idx, d, tags, coeff, dgr, T, cb, ms, verb
             )
+            volcano_headers.append("TOF volcano")
+            volcano_list.append(ytof)
 
+        if dump and xint is not None:
+            arraydump("2d_volcanos.hdf5", xint, volcano_list, volcano_headers)
 
 if nd == 2:
     # VOLCANIC will find best non-TS combination of two descriptor variables
@@ -147,6 +162,11 @@ if nd == 2:
         else:
             plot_3d_lsfer(idx1, idx2, d, tags, coeff, cb, ms, verb)
 
+        volcano_headers = []
+        volcano_list = []
+        x1int = None
+        x2int = None
+
         if t_volcano:
             print(
                 f"Generating 3D thermodynamic volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
@@ -156,6 +176,8 @@ if nd == 2:
             x1int, x2int, grid, px, py = plot_3d_t_volcano(
                 idx1, idx2, d, tags, coeff, dgr, cb, ms, verb
             )
+            volcano_headers.append("Thermodynamic volcano")
+            volcano_list.append(grid)
 
         if k_volcano:
             print(
@@ -166,6 +188,8 @@ if nd == 2:
             x1int, x2int, grid, px, py = plot_3d_k_volcano(
                 idx1, idx2, d, tags, coeff, dgr, cb, ms, verb
             )
+            volcano_headers.append("Kinetic volcano")
+            volcano_list.append(grid)
 
         if tof_volcano:
             print(
@@ -173,4 +197,14 @@ if nd == 2:
             )
             x1int, x2int, grid, px, py = plot_3d_tof_volcano(
                 idx1, idx2, d, tags, coeff, dgr, T, cb, ms, verb
+            )
+            volcano_headers.append("TOF volcano")
+            volcano_list.append(grid)
+
+        if dump and x1int is not None and x2int is not None:
+            arraydump(
+                "3d_volcanos.hdf5",
+                np.vstack([x1int, x2int]),
+                volcano_list,
+                volcano_headers,
             )

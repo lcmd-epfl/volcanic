@@ -126,7 +126,7 @@ def calc_s_es(profile, dgr, esp=True):
         else:
             es2 = dgr - lower
         if es2 > es1:
-            diff = es2 - es1
+            diff = (es2 - es1,)
             es1 = es2
             imax = i + 1
             imin = i

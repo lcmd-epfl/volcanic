@@ -180,7 +180,7 @@ def plot_2d(
                 linewidth=0.5,
                 alpha=0.75,
             )
-        yavg = (y.max() + y.min()) / 4
+        yavg = (y.max() + y.min()) * 0.75
         for i, j in zip(rid, avgs):
             plt.text(
                 j,
@@ -224,14 +224,20 @@ def plot_2d_k_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
     ridmin = np.zeros_like(yint, dtype=int)
     rid = []
     rb = []
+    slope = 0
+    prevslope = 0
+    prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :]
         ymin[i], ridmax[i], ridmin[i], diff = calc_es(profile, dgr, esp=True)
-        if (ridmax[i] != ridmax[i - 1] or ridmin[i] != ridmin[i - 1]) and np.abs(
-            diff
-        ) > 0.1:
+        idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
+        slope = ymin[i] - prev
+        prev = ymin[i]
+        numchange = [np.abs(diff) > 1e-2, ~np.isclose(slope, prevslope, 1)]
+        if any(idchange) and any(numchange):
             rid.append(f"{tags[ridmin[i]]} ➜ {tags[ridmax[i]]}")
             rb.append(xint[i])
+            prevslope = slope
         else:
             ridmax[i] = ridmax[i - 1]
             ridmin[i] = ridmin[i - 1]
@@ -294,14 +300,20 @@ def plot_2d_t_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
     ridmin = np.zeros_like(yint, dtype=int)
     rid = []
     rb = []
+    slope = 0
+    prevslope = 0
+    prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :]
         ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr, esp=True)
-        if (ridmax[i] != ridmax[i - 1] or ridmin[i] != ridmin[i - 1]) and np.abs(
-            diff
-        ) > 0.1:
+        idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
+        slope = ymin[i] - prev
+        prev = ymin[i]
+        numchange = [np.abs(diff) > 1e-2, ~np.isclose(slope, prevslope, 1)]
+        if any(idchange) and any(numchange):
             rid.append(f"{tags[ridmin[i]]} ➜ {tags[ridmax[i]]}")
             rb.append(xint[i])
+            prevslope = slope
         else:
             ridmax[i] = ridmax[i - 1]
             ridmin[i] = ridmin[i - 1]
