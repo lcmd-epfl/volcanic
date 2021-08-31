@@ -180,7 +180,7 @@ def plot_2d(
                 linewidth=0.5,
                 alpha=0.75,
             )
-        yavg = (y.max() + y.min()) * 0.75
+        yavg = (y.max() + y.min()) * 0.5
         for i, j in zip(rid, avgs):
             plt.text(
                 j,
