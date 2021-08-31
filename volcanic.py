@@ -33,7 +33,8 @@ if __name__ == "__main__":
     df, nd, verb, runmode, T, imputer_strat, refill, dump, bc, ec = processargs(
         arguments
     )
-
+else:
+    exit(1)
 
 # Fill in reaction profile names/IDs from input data.
 if verb > 0:
