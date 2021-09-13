@@ -102,6 +102,9 @@ def processargs(arguments):
     dfilenames = []
     es_flags = ["-tof", "-TOF", "-es", "-ES", "--tof", "--TOF", "--es", "--ES"]
     descriptor_file = False
+    lmargin = 20
+    rmargin = 20
+    npoints = 200
     outname = None
     skip = False
     for idx, argument in enumerate(arguments):
@@ -211,7 +214,21 @@ def processargs(arguments):
             print(ddf.head())
         for column in ddf:
             df.insert(1, f"Descriptor {column}", ddf[column].values)
-    return df, nd, verb, runmode, T, imputer_strat, refill, dump, bc, ec
+    return (
+        df,
+        nd,
+        verb,
+        runmode,
+        T,
+        imputer_strat,
+        refill,
+        dump,
+        bc,
+        ec,
+        lmargin,
+        rmargin,
+        npoints,
+    )
 
 
 def check_input(terms, dterms, filenames, dfilenames, T, nd, imputer_strat, verb):

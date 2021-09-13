@@ -33,9 +33,21 @@ if __name__ == "__main__":
     arguments = []
     for i, arg in enumerate(sys.argv[1:]):
         arguments.append(arg)
-    df, nd, verb, runmode, T, imputer_strat, refill, dump, bc, ec = processargs(
-        arguments
-    )
+    (
+        df,
+        nd,
+        verb,
+        runmode,
+        T,
+        imputer_strat,
+        refill,
+        dump,
+        bc,
+        ec,
+        lmargin,
+        rmargin,
+        npoints,
+    ) = processargs(arguments)
 else:
     exit(1)
 
@@ -101,9 +113,11 @@ if nd == 1:
     if idx is not None:
         print(f"Generating LSFER plots using descriptor variable {tags[idx]}")
         if refill:
-            d = plot_2d_lsfer(idx, d, tags, coeff, cb, ms, verb)
+            d = plot_2d_lsfer(
+                idx, d, tags, coeff, cb, ms, lmargin, rmargin, npoints, verb
+            )
         else:
-            plot_2d_lsfer(idx, d, tags, coeff, cb, ms, verb)
+            plot_2d_lsfer(idx, d, tags, coeff, cb, ms, lmargin, rmargin, npoints, verb)
 
         volcano_headers = []
         volcano_list = []
@@ -114,7 +128,7 @@ if nd == 1:
                 f"Generating 2D thermodynamic volcano plot using descriptor variable {tags[idx]}"
             )
             xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_t_volcano(
-                idx, d, tags, coeff, dgr, cb, ms, verb
+                idx, d, tags, coeff, dgr, cb, ms, lmargin, rmargin, npoints, verb
             )
             volcano_headers.append("Thermodynamic volcano")
             volcano_list.append(ymin)
@@ -124,7 +138,7 @@ if nd == 1:
                 f"Generating 2D kinetic volcano plot using descriptor variable {tags[idx]}"
             )
             xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_k_volcano(
-                idx, d, tags, coeff, dgr, cb, ms, verb
+                idx, d, tags, coeff, dgr, cb, ms, lmargin, rmargin, npoints, verb
             )
             volcano_headers.append("Kinetic volcano")
             volcano_list.append(ymin)
@@ -134,7 +148,7 @@ if nd == 1:
                 f"Generating 2D energy span volcano plot using descriptor variable {tags[idx]}"
             )
             xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_es_volcano(
-                idx, d, tags, coeff, dgr, cb, ms, verb
+                idx, d, tags, coeff, dgr, cb, ms, lmargin, rmargin, npoints, verb
             )
             volcano_headers.append("ES volcano")
             volcano_list.append(ymin)
@@ -144,7 +158,7 @@ if nd == 1:
                 f"Generating 2D TOF volcano plot using descriptor variable {tags[idx]}"
             )
             xint, ytof, px, py, xmin, xmax = plot_2d_tof_volcano(
-                idx, d, tags, coeff, dgr, T, cb, ms, verb
+                idx, d, tags, coeff, dgr, T, cb, ms, lmargin, rmargin, npoints, verb
             )
             volcano_headers.append("TOF volcano")
             volcano_list.append(ytof)
@@ -161,9 +175,13 @@ if nd == 2:
             f"Generating multivariate LSFER plots using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
         )
         if refill:
-            d = plot_3d_lsfer(idx1, idx2, d, tags, coeff, cb, ms, verb)
+            d = plot_3d_lsfer(
+                idx1, idx2, d, tags, coeff, cb, ms, lmargin, rmargin, npoints, verb
+            )
         else:
-            plot_3d_lsfer(idx1, idx2, d, tags, coeff, cb, ms, verb)
+            plot_3d_lsfer(
+                idx1, idx2, d, tags, coeff, cb, ms, lmargin, rmargin, npoints, verb
+            )
 
         volcano_headers = []
         volcano_list = []
@@ -175,7 +193,7 @@ if nd == 2:
                 f"Generating 3D thermodynamic volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
             )
             x1int, x2int, grid, px, py = plot_3d_t_volcano(
-                idx1, idx2, d, tags, coeff, dgr, cb, ms, verb
+                idx1, idx2, d, tags, coeff, dgr, cb, ms, lmargin, rmargin, npoints, verb
             )
             volcano_headers.append("Thermodynamic volcano")
             volcano_list.append(grid)
@@ -185,7 +203,7 @@ if nd == 2:
                 f"Generating 3D kinetic volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
             )
             x1int, x2int, grid, px, py = plot_3d_k_volcano(
-                idx1, idx2, d, tags, coeff, dgr, cb, ms, verb
+                idx1, idx2, d, tags, coeff, dgr, cb, ms, lmargin, rmargin, npoints, verb
             )
             volcano_headers.append("Kinetic volcano")
             volcano_list.append(grid)
@@ -195,7 +213,7 @@ if nd == 2:
                 f"Generating 3D energy span volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
             )
             x1int, x2int, grid, px, py = plot_3d_es_volcano(
-                idx1, idx2, d, tags, coeff, dgr, cb, ms, verb
+                idx1, idx2, d, tags, coeff, dgr, cb, ms, lmargin, rmargin, npoints, verb
             )
             volcano_headers.append("ES volcano")
             volcano_list.append(grid)
@@ -205,7 +223,19 @@ if nd == 2:
                 f"Generating 3D TOF volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
             )
             x1int, x2int, grid, px, py = plot_3d_tof_volcano(
-                idx1, idx2, d, tags, coeff, dgr, T, cb, ms, verb
+                idx1,
+                idx2,
+                d,
+                tags,
+                coeff,
+                dgr,
+                T,
+                cb,
+                ms,
+                lmargin,
+                rmargin,
+                npoints,
+                verb,
             )
             volcano_headers.append("TOF volcano")
             volcano_list.append(grid)
