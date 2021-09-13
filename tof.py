@@ -103,7 +103,9 @@ def calc_tof(array, Delta_Gr, T, coeff, exact=True, verb=0):
 
 
 def calc_es(profile, dgr, esp=True):
-    es1 = 0
+    es1 = -np.inf
+    imax = 0
+    imin = 1
     for i, lower in enumerate(profile):
         view = copy.deepcopy(profile)
         view[:i] += dgr
@@ -119,14 +121,16 @@ def calc_es(profile, dgr, esp=True):
 
 
 def calc_s_es(profile, dgr, esp=True):
-    es1 = 0
+    es1 = -np.inf
+    imax = 0
+    imin = 1
     for i, lower in enumerate(profile):
         if i < len(profile) - 1:
             es2 = profile[i + 1] - lower
         else:
             es2 = dgr - lower
         if es2 > es1:
-            diff = (es2 - es1,)
+            diff = es2 - es1
             es1 = es2
             imax = i + 1
             imin = i

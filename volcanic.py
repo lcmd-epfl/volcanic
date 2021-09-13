@@ -8,12 +8,13 @@ from plotting2d import (
     plot_2d_lsfer,
     plot_2d_t_volcano,
     plot_2d_k_volcano,
+    plot_2d_es_volcano,
     plot_2d_tof_volcano,
 )
 from plotting3d import (
     plot_3d_lsfer,
     plot_3d_t_volcano,
-    plot_3d_k_volcano,
+    plot_3d_es_volcano,
     plot_3d_tof_volcano,
 )
 from helpers import (
@@ -23,6 +24,7 @@ from helpers import (
     user_choose_1_dv,
     user_choose_2_dv,
     arraydump,
+    setflags,
 )
 
 
@@ -46,14 +48,25 @@ names = df[df.columns[0]].values
 # Atttempts to group data points based on shared characters in names.
 cb, ms = group_data_points(bc, ec, names)
 
-# After the first column, we expect a full reaction profile with corresponding column names.
+# Collects non-energy descriptor columns separately from energy profile
+ned_tags = []
+neds = []
+for i, tag in enumerate(df.columns[1:]):
+    if "DESCRIPTOR" in str(tag).upper():
+        if verb > 0:
+            print(f"Setting a dedicate non-energy descriptor variable as {tag}")
+        ned_tags.append(tag)
+        neds.append(np.float64(df.pop(tag).values()[1:]))
+
+# After the first column and removing non-energy descriptors,
+# we expect a full reaction profile with corresponding column names.
 tags = [str(tag) for tag in df.columns[1:]]
 if verb > 0:
     print(f"Reaction profile is given by stationary points:\n {tags}")
 d = np.float64(df.to_numpy()[:, 1:])
 
 # We expect the last field of any and all reaction profiles to be the reaction \DeltaG.
-dgr = np.float64(d[0, -1])
+dgr = d[0, -1]
 if verb > 0:
     print(f"ΔG of the reaction set to {dgr}.")
 
@@ -76,25 +89,9 @@ d, cb, ms = curate_d(d, cb, ms, tags, imputer_strat, verb)
 
 
 # Runmode used to set up flags for volcano generation.
-if runmode == 0:
-    t_volcano = False
-    k_volcano = False
-    tof_volcano = False
 
-if runmode == 1:
-    t_volcano = True
-    k_volcano = False
-    tof_volcano = False
+t_volcano, k_volcano, es_volcano, tof_volcano = setflags(runmode)
 
-if runmode == 2:
-    t_volcano = False
-    k_volcano = True
-    tof_volcano = True
-
-if runmode == 3:
-    t_volcano = yesno("Generate 2D thermodynamic volcano plot")
-    k_volcano = yesno("Generate 2D kinetic volcano plot")
-    tof_volcano = yesno("Generate 2D TOF volcano plot")
 
 if nd == 1:
     # VOLCANIC will find best non-TS descriptor variable
@@ -115,8 +112,6 @@ if nd == 1:
             print(
                 f"Generating 2D thermodynamic volcano plot using descriptor variable {tags[idx]}"
             )
-            # The function call also returns all the relevant information
-            # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
             xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_t_volcano(
                 idx, d, tags, coeff, dgr, cb, ms, verb
             )
@@ -127,20 +122,26 @@ if nd == 1:
             print(
                 f"Generating 2D kinetic volcano plot using descriptor variable {tags[idx]}"
             )
-            # The function call also returns all the relevant information
-            # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
             xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_k_volcano(
                 idx, d, tags, coeff, dgr, cb, ms, verb
             )
             volcano_headers.append("Kinetic volcano")
             volcano_list.append(ymin)
 
+        if es_volcano:
+            print(
+                f"Generating 2D energy span volcano plot using descriptor variable {tags[idx]}"
+            )
+            xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_es_volcano(
+                idx, d, tags, coeff, dgr, cb, ms, verb
+            )
+            volcano_headers.append("ES volcano")
+            volcano_list.append(ymin)
+
         if tof_volcano:
             print(
                 f"Generating 2D TOF volcano plot using descriptor variable {tags[idx]}"
             )
-            # The function call also returns all the relevant information
-            # xint is the x axis vector, ymin is the TOF vector, px and py are the original datapoints
             xint, ytof, px, py, xmin, xmax = plot_2d_tof_volcano(
                 idx, d, tags, coeff, dgr, T, cb, ms, verb
             )
@@ -172,21 +173,17 @@ if nd == 2:
             print(
                 f"Generating 3D thermodynamic volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
             )
-            # The function call also returns all the relevant information
-            # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
             x1int, x2int, grid, px, py = plot_3d_t_volcano(
                 idx1, idx2, d, tags, coeff, dgr, cb, ms, verb
             )
             volcano_headers.append("Thermodynamic volcano")
             volcano_list.append(grid)
 
-        if k_volcano:
+        if es_volcano:
             print(
-                f"Generating 3D kinetic volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
+                f"Generating 3D energy span volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
             )
-            # The function call also returns all the relevant information
-            # xint is the x axis vector, ymin is the -\DGpds vector, px and py are the original datapoints, rid and rb are regions
-            x1int, x2int, grid, px, py = plot_3d_k_volcano(
+            x1int, x2int, grid, px, py = plot_3d_es_volcano(
                 idx1, idx2, d, tags, coeff, dgr, cb, ms, verb
             )
             volcano_headers.append("Kinetic volcano")

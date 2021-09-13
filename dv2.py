@@ -22,7 +22,7 @@ def dv_collinear(X, verb=0):
     u, s, vh = np.linalg.svd(X, full_matrices=True)
     c_idx = np.ones_like(s)
     c_idx = np.max(s) / s
-    if any(np.where(c_idx > 250)):
+    if np.any(np.where(c_idx > 250)):
         if verb > 1:
             print(
                 "Descriptors are likley to be linearly dependant given SVD :\n {s} \n Skipping."
@@ -129,30 +129,122 @@ def find_2_dv(d, tags, coeff, verb=0):
     c = int(criteria[2])
     if a == b:
         if a == c:
-            print(
-                f"All indicators agree: best descriptor is the combination {ptags[a]}"
-            )
+            if verb >= 0:
+                print(
+                    f"All indicators agree: best descriptor is the combination {ptags[a]}"
+                )
             dvs = [a]
         else:
-            print(
-                f"Disagreement: best descriptors is either the combination \n{ptags[a]} or \n{ptags[c]}"
-            )
+            if verb >= 0:
+                print(
+                    f"Disagreement: best descriptors is either the combination \n{ptags[a]} or \n{ptags[c]}"
+                )
             dvs = [a, c]
     elif a == c:
-        print(
-            f"Disagreement: best descriptors is either the combination \n{ptags[a]} or \n{ptags[b]}"
-        )
+        if verb >= 0:
+            print(
+                f"Disagreement: best descriptors is either the combination \n{ptags[a]} or \n{ptags[b]}"
+            )
         dvs = [a, b]
     elif b == c:
-        print(
-            f"Disagreement: best descriptors is either the combination \n{ptags[a]} or \n{ptags[b]}"
-        )
+        if verb >= 0:
+            print(
+                f"Disagreement: best descriptors is either the combination \n{ptags[a]} or \n{ptags[b]}"
+            )
         dvs = [a, b]
     else:
-        print(
-            f"Total disagreement: best descriptors is either the combination \n{ptags[a]} or \n{ptags[b]} or \n{ptags[c]}"
-        )
+        if verb >= 0:
+            print(
+                f"Total disagreement: best descriptors is either the combination \n{ptags[a]} or \n{ptags[b]} or \n{ptags[c]}"
+            )
         dvs = [a, b, c]
     r2 = [r2s[i] for i in dvs]
     dvs = [lpnsteps[i] for i in dvs]
     return dvs, r2
+
+
+def test_dv2():
+    a = np.array(
+        [
+            0,
+            -11.34,
+            2.66,
+            -14.78,
+            0.14,
+            -18.22,
+            -13.81,
+            -20.98,
+            -22.26,
+            -53.98,
+            -43.19,
+        ]
+    )
+    b = np.array(
+        [
+            0,
+            -11.24,
+            3.66,
+            -16.78,
+            0.54,
+            -18.52,
+            -4.81,
+            -21.98,
+            -23.26,
+            -52.98,
+            -43.19,
+        ]
+    )
+    c = np.array(
+        [
+            0,
+            -14.24,
+            0.66,
+            -14.78,
+            0.94,
+            -14.52,
+            -1.81,
+            -20.98,
+            -24.26,
+            -54.98,
+            -43.19,
+        ]
+    )
+    d = np.array(
+        [
+            0,
+            -18.24,
+            2.66,
+            -17.78,
+            1.14,
+            -15.52,
+            -2.81,
+            -25.98,
+            -21.26,
+            -50.98,
+            -43.19,
+        ]
+    )
+    dgr = -43.19
+    coeff = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0], dtype=int)
+    tags = np.array(
+        [
+            "Reactants",
+            "Struc2",
+            "TS1",
+            "Struc3",
+            "TS2",
+            "Struc4",
+            "TS3",
+            "Struc5",
+            "TS4",
+            "Struc6",
+            "Product",
+        ]
+    )
+    profiles = np.vstack((a, b, c, d))
+    dvs, r2s = find_2_dv(profiles, tags, coeff, verb=-1)
+    assert np.allclose(r2s, [0.8573974153281095, 0.832373403431629], 4)
+
+
+if __name__ == "__main__":
+    test_dv2()

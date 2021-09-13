@@ -78,7 +78,6 @@ def user_choose_2_dv(ddvs, r2s, tags):
             for i, ptag in enumerate(ptags):
                 ok = yesno(f"Use combination of {ptag[0]} and {ptag[1]} as descriptor")
                 if ok:
-                    print(tags, ptag[0], ptag[1])
                     idx1 = np.where(tags == np.str(ptag[0]))[0][0] + 1
                     idx2 = np.where(tags == np.str(ptag[1]))[0][0] + 1
                     return idx1, idx2
@@ -92,23 +91,36 @@ def processargs(arguments):
     verb = 0
     refill = False
     dump = False
-    runmode = 3
+    runmode = 5
     bc = 0
     ec = 2
+    input_flags = ["-i", "-I", "-input", "--i", "--I", "--input"]
     terms = []
     filenames = []
+    dinput_flags = ["-d", "-i2", "-I2", "-descriptor", "--d", "-ned", "-NED"]
+    dterms = []
+    dfilenames = []
+    es_flags = ["-tof", "-TOF", "-es", "-ES", "--tof", "--TOF", "--es", "--ES"]
+    descriptor_file = False
     outname = None
     skip = False
     for idx, argument in enumerate(arguments):
         if skip:
             skip = False
             continue
-        if argument == "-i" or argument == "-I":
+        if argument in input_flags:
             filename = str(arguments[idx + 1])
             filenames.append(filename)
             terms.append(filename.split(".")[-1])
             print(f"Input filename set to {filename}.")
             skip = True
+        elif argument in dinput_flags:
+            dfilename = str(arguments[idx + 1])
+            dfilenames.append(dfilename)
+            dterms.append(dfilename.split(".")[-1])
+            print(f"Descriptor filename set to {dfilename}.")
+            skip = True
+            descriptor_file = True
         elif argument == "-nd":
             nd = int(arguments[idx + 1])
             print(f"Number of descriptor variables manually set to {nd}.")
@@ -122,6 +134,12 @@ def processargs(arguments):
         elif argument == "-kinetic":
             runmode = 2
             print("Will only build kinetic volcanos.")
+        elif argument in es_flags:
+            runmode = 3
+            print("Will only build energy span and TOF volcanos.")
+        elif argument == "-all" or argument == "-ALL":
+            runmode = 4
+            print("Will attempt to build all available volcano_list.")
         elif argument == "-dump":
             dump = True
             print("Will dump volcano information in hdf5 file.")
@@ -159,7 +177,9 @@ def processargs(arguments):
             filenames.append(filename)
             terms.append(filename.split(".")[-1])
             print(f"Input filename set to {filename}.")
-    dfs = check_input(terms, filenames, T, nd, imputer_strat, verb)
+    dfs, ddfs = check_input(
+        terms, dterms, filenames, dfilenames, T, nd, imputer_strat, verb
+    )
     if len(dfs) > 1:
         df = pd.concat(dfs)
     elif len(dfs) == 0:
@@ -169,17 +189,38 @@ def processargs(arguments):
         df = dfs[0]
     assert isinstance(df, pd.DataFrame)
     if verb > 1:
-        print("Final database :")
+        print("Final reaction profile database (top rows):")
         print(df.head())
+
+    if descriptor_file:
+        if len(ddfs) > 1:
+            ddf = pd.concat(ddfs)
+        elif len(dfs) == 0:
+            print("No valid descriptor files were provided. Exiting.")
+            exit()
+        else:
+            ddf = ddfs[0]
+        assert isinstance(ddf, pd.DataFrame)
+        if not (df.shape[0] == ddf.shape[0]):
+            print(
+                "Different number of entries in reaction profile input file and descriptor file. Exiting."
+            )
+            exit()
+        if verb > 1 and descriptor_file:
+            print("Final descriptor database (top rows):")
+            print(ddf.head())
+        for column in ddf:
+            df.insert(1, f"Descriptor {column}", ddf[column].values)
     return df, nd, verb, runmode, T, imputer_strat, refill, dump, bc, ec
 
 
-def check_input(terms, filenames, T, nd, imputer_strat, verb):
+def check_input(terms, dterms, filenames, dfilenames, T, nd, imputer_strat, verb):
     invalid_input = False
     accepted_excel_terms = ["xls", "xlsx"]
     accepted_imputer_strats = ["simple", "none"]
     accepted_nds = [1, 2]
     dfs = []
+    ddfs = []
     for term, filename in zip(terms, filenames):
         if term in accepted_excel_terms:
             dfs.append(pd.read_excel(filename))
@@ -188,6 +229,16 @@ def check_input(terms, filenames, T, nd, imputer_strat, verb):
         else:
             print(
                 f"File termination {term} was not understood. Try csv or one of {accepted_excel_terms}."
+            )
+            invalid_input = True
+    for dterm, dfilename in zip(dterms, dfilenames):
+        if dterm in accepted_excel_terms:
+            ddfs.append(pd.read_excel(dfilename))
+        elif term == "csv":
+            ddfs.append(pd.read_csv(dfilename))
+        else:
+            print(
+                f"File termination {dterm} was not understood. Try csv or one of {accepted_excel_terms}."
             )
             invalid_input = True
     if not isinstance(T, float):
@@ -206,7 +257,7 @@ def check_input(terms, filenames, T, nd, imputer_strat, verb):
         invalid_input = True
     if invalid_input:
         exit()
-    return dfs
+    return dfs, ddfs
 
 
 def arraydump(path: str, descriptor: np.array, volcano_list, volcano_headers):
@@ -232,6 +283,40 @@ def arrayread(path: str):
             volcano_headers.append(key)
             volcano_list.append(h5[key][()])
     return descriptor, volcano_list, volcano_headers
+
+
+def setflags(runmode):
+    if runmode == 0:
+        t_volcano = False
+        k_volcano = False
+        es_volcano = False
+        tof_volcano = False
+    if runmode == 1:
+        t_volcano = True
+        k_volcano = False
+        es_volcano = False
+        tof_volcano = False
+    if runmode == 2:
+        t_volcano = False
+        k_volcano = True
+        es_volcano = False
+        tof_volcano = False
+    if runmode == 3:
+        t_volcano = False
+        k_volcano = False
+        es_volcano = True
+        tof_volcano = True
+    if runmode == 4:
+        t_volcano = True
+        k_volcano = True
+        es_volcano = True
+        tof_volcano = True
+    if runmode == 5:
+        t_volcano = yesno("Generate thermodynamic volcano plot")
+        k_volcano = yesno("Generate kinetic volcano plot")
+        es_volcano = yesno("Generate energy span volcano plot")
+        tof_volcano = yesno("Generate TOF volcano plot")
+    return t_volcano, k_volcano, es_volcano, tof_volcano
 
 
 def test_filedump():

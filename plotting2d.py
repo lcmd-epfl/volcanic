@@ -26,13 +26,14 @@ def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
     return ax
 
 
-def plot_2d_lsfer(idx, d, tags, coeff, cb="white", ms="o", verb=0):
+def plot_2d_lsfer(
+    idx, d, tags, coeff, cb="white", ms="o", lmargin=10, rmargin=10, npoints=250, verb=0
+):
     d_refill = np.zeros_like(d)
     d_refill[~np.isnan(d)] = d[~np.isnan(d)]
     tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
     Xf = d[:, idx].reshape(-1)
-    npoints = 250
     mape = 100
     for j in lnsteps[1:-1]:
         if verb > 0:
@@ -53,8 +54,8 @@ def plot_2d_lsfer(idx, d, tags, coeff, cb="white", ms="o", verb=0):
         Ym = XYm[:, 1].reshape(-1)
         X = XY[:, 0].reshape(-1)
         Y = XY[:, 1].reshape(-1)
-        xmax = bround(X.max() + 10)
-        xmin = bround(X.min() - 10)
+        xmax = bround(X.max() + rmargin)
+        xmin = bround(X.min() - lmargin)
         if verb > 2:
             print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
         xint = np.linspace(xmin, xmax, npoints)
@@ -194,13 +195,24 @@ def plot_2d(
     plt.savefig(filename)
 
 
-def plot_2d_k_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
+def plot_2d_es_volcano(
+    idx,
+    d,
+    tags,
+    coeff,
+    dgr,
+    cb="white",
+    ms="o",
+    lmargin=35,
+    rmargin=35,
+    npoints=250,
+    verb=0,
+):
     tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
     X = d[:, idx].reshape(-1)
-    xmax = bround(X.max() + 35)
-    xmin = bround(X.min() - 35)
-    npoints = 250
+    xmax = bround(X.max() + rmargin)
+    xmin = bround(X.min() - lmargin)
     if verb > 1:
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
@@ -252,10 +264,95 @@ def plot_2d_k_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
         px[i] = d[i, idx].reshape(-1)
         py[i] = calc_es(profile, dgr, esp=True)[0]
     xlabel = f"{tags[idx]} [kcal/mol]"
-    ylabel = "-ΔG(kds) [kcal/mol]"
-    filename = f"k_volcano_{tags[idx]}.png"
+    ylabel = r"-δ$G_{SPAN}$ [kcal/mol]"
+    filename = f"es_volcano_{tags[idx]}.png"
     if verb > 0:
-        csvname = f"k_volcano_{tags[idx]}.csv"
+        csvname = f"es_volcano_{tags[idx]}.csv"
+        print(f"Saving volcano data to file {csvname}")
+        zdata = list(zip(xint, ymin))
+        np.savetxt(
+            csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\d_Ges"
+        )
+    plot_2d(
+        xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename, rid, rb, cb=cb, ms=ms
+    )
+    return xint, ymin, px, py, xmin, xmax, rid, rb
+
+
+def plot_2d_k_volcano(
+    idx,
+    d,
+    tags,
+    coeff,
+    dgr,
+    cb="white",
+    ms="o",
+    lmargin=35,
+    rmargin=35,
+    npoints=250,
+    verb=0,
+):
+    tags = np.array([str(tag) for tag in tags])
+    tag = tags[idx]
+    lnsteps = range(d.shape[1])
+    X = d[:, idx].reshape(-1)
+    xmax = bround(X.max() + rmargin)
+    xmin = bround(X.min() - lmargin)
+    if verb > 1:
+        print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
+    xint = np.linspace(xmin, xmax, npoints)
+    dgs = np.zeros((npoints, len(lnsteps)))
+    for i, j in enumerate(lnsteps):
+        Y = d[:, j].reshape(-1)
+        p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
+        Y_pred = np.polyval(p, X)
+        n = Y.size
+        m = p.size
+        dof = n - m
+        t = stats.t.ppf(0.95, dof)
+        resid = Y - Y_pred
+        with np.errstate(invalid="ignore"):
+            chi2 = np.sum((resid / Y_pred) ** 2)
+        s_err = np.sqrt(np.sum(resid ** 2) / dof)
+        yint = np.polyval(p, xint)
+        dgs[:, i] = yint
+    ymin = np.zeros_like(yint)
+    ridmax = np.zeros_like(yint, dtype=int)
+    ridmin = np.zeros_like(yint, dtype=int)
+    rid = []
+    rb = []
+    slope = 0
+    prevslope = 0
+    prev = 0
+    for i in range(ymin.shape[0]):
+        profile = dgs[i, :]
+        ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr, esp=True)
+        idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
+        slope = ymin[i] - prev
+        prev = ymin[i]
+        numchange = [np.abs(diff) > 1e-2, ~np.isclose(slope, prevslope, 1)]
+        if any(idchange) and any(numchange):
+            rid.append(f"{tags[ridmin[i]]} ➜ {tags[ridmax[i]]}")
+            rb.append(xint[i])
+            prevslope = slope
+        else:
+            ridmax[i] = ridmax[i - 1]
+            ridmin[i] = ridmin[i - 1]
+    if verb > 0:
+        print(f"Identified {len(rid)} different determining states.")
+        for i, j in zip(rid, rb):
+            print(f"{i} starting at {j}")
+    px = np.zeros_like(d[:, 0])
+    py = np.zeros_like(d[:, 0])
+    for i in range(d.shape[0]):
+        profile = d[i, :]
+        px[i] = X[i].reshape(-1)
+        py[i] = calc_s_es(profile, dgr, esp=True)[0]
+    xlabel = f"{tag} [kcal/mol]"
+    ylabel = "-ΔG(kds) [kcal/mol]"
+    filename = f"k_volcano_{tag}.png"
+    if verb > 0:
+        csvname = f"k_volcano_{tag}.csv"
         print(f"Saving volcano data to file {csvname}")
         zdata = list(zip(xint, ymin))
         np.savetxt(
@@ -267,15 +364,26 @@ def plot_2d_k_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
     return xint, ymin, px, py, xmin, xmax, rid, rb
 
 
-def plot_2d_t_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
+def plot_2d_t_volcano(
+    idx,
+    d,
+    tags,
+    coeff,
+    dgr,
+    cb="white",
+    ms="o",
+    lmargin=35,
+    rmargin=35,
+    npoints=250,
+    verb=0,
+):
     tags = np.array([str(tag) for tag in tags])
     tag = tags[idx]
     tags = tags[~coeff]
     lnsteps = range(np.count_nonzero(coeff == 0))
     X = d[:, idx].reshape(-1)
-    xmax = bround(X.max() + 35)
-    xmin = bround(X.min() - 35)
-    npoints = 250
+    xmax = bround(X.max() + rmargin)
+    xmin = bround(X.min() - lmargin)
     if verb > 1:
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
@@ -343,13 +451,25 @@ def plot_2d_t_volcano(idx, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
     return xint, ymin, px, py, xmin, xmax, rid, rb
 
 
-def plot_2d_tof_volcano(idx, d, tags, coeff, dgr, T=298.15, cb="white", ms="o", verb=0):
+def plot_2d_tof_volcano(
+    idx,
+    d,
+    tags,
+    coeff,
+    dgr,
+    T=298.15,
+    cb="white",
+    ms="o",
+    lmargin=15,
+    rmargin=15,
+    npoints=250,
+    verb=0,
+):
     tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
     X = d[:, idx].reshape(-1)
-    xmax = bround(X.max() + 15)
-    xmin = bround(X.min() - 15)
-    npoints = 250
+    xmax = bround(X.max() + rmargin)
+    xmin = bround(X.min() - lmargin)
     if verb > 1:
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)

@@ -138,30 +138,39 @@ def find_1_dv(d, tags, coeff, verb=0):
     dvs = []
     if a == b:
         if a == c:
-            print(f"All indicators agree: best descriptor is {tags[a]}")
+            if verb >= 0:
+                print(f"All indicators agree: best descriptor is {tags[a]}")
             dvs.append(a)
         else:
-            print(
-                f"Disagreement: best descriptors is either \n{tags[a]} or \n{tags[c]}"
-            )
+            if verb >= 0:
+                print(
+                    f"Disagreement: best descriptors is either \n{tags[a]} or \n{tags[c]}"
+                )
             dvs = [a, c]
     elif a == c:
-        print(f"Disagreement: best descriptors is either \n{tags[a]} or \n{tags[b]}")
+        if verb >= 0:
+            print(
+                f"Disagreement: best descriptors is either \n{tags[a]} or \n{tags[b]}"
+            )
         dvs = [a, b]
     elif b == c:
-        print(f"Disagreement: best descriptors is either \n{tags[a]} or \n{tags[b]}")
+        if verb >= 0:
+            print(
+                f"Disagreement: best descriptors is either \n{tags[a]} or \n{tags[b]}"
+            )
         dvs = [a, b]
     else:
-        print(
-            f"Total disagreement: best descriptors is either \n{tags[a]} or \n{tags[b]} or \n{tags[c]}"
-        )
+        if verb >= 0:
+            print(
+                f"Total disagreement: best descriptors is either \n{tags[a]} or \n{tags[b]} or \n{tags[c]}"
+            )
         dvs = [a, b, c]
     r2 = [r2s[i] for i in dvs]
     dvs = [i + 1 for i in dvs]  # Recover the removed step of the reaction
     return dvs, r2
 
 
-def test_dv():
+def test_dv1():
     a = np.array(
         [
             0,
@@ -192,6 +201,21 @@ def test_dv():
             -43.19,
         ]
     )
+    c = np.array(
+        [
+            0,
+            -14.24,
+            0.66,
+            -14.78,
+            0.94,
+            -14.52,
+            -1.81,
+            -20.98,
+            -24.26,
+            -54.98,
+            -43.19,
+        ]
+    )
     dgr = -43.19
     coeff = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0], dtype=int)
     tags = np.array(
@@ -205,17 +229,15 @@ def test_dv():
             "TS3",
             "Struc5",
             "TS4",
-            "Struc6-NM",
+            "Struc6",
             "Product",
         ]
     )
-    profiles = np.vstack((a, b))
-    find_1_dv(profiles, tags, coeff, verb=0)
-    etof, xetof = calc_tof(a, dgr, 298.15, coeff, exact=True, verb=0)
-    assert np.isclose(etof, 55.22, 4)
-    k1, k2, k3, k4 = calc_es(a, dgr, esp=True)
-    assert np.isclose(k1, -14.92, 4)
+    profiles = np.vstack((a, b, c))
+    dvs, r2s = find_1_dv(profiles, tags, coeff, verb=-1)
+    assert np.allclose(dvs, [5, 1], 4)
+    assert np.allclose(r2s, [0.6436413778677442, 0.6419178563084623], 4)
 
 
 if __name__ == "__main__":
-    test_dv()
+    test_dv1()

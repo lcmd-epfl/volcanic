@@ -29,7 +29,19 @@ def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
     return ax
 
 
-def plot_3d_lsfer(idx1, idx2, d, tags, coeff, cb="white", ms="o", verb=0):
+def plot_3d_lsfer(
+    idx1,
+    idx2,
+    d,
+    tags,
+    coeff,
+    cb="white",
+    ms="o",
+    lmargin=5,
+    rmargin=5,
+    npoints=100,
+    verb=0,
+):
     d_refill = np.zeros_like(d)
     d_refill[~np.isnan(d)] = d[~np.isnan(d)]
     tags = [str(tag) for tag in tags]
@@ -53,8 +65,8 @@ def plot_3d_lsfer(idx1, idx2, d, tags, coeff, cb="white", ms="o", verb=0):
         Ym = XYm[:, 2]
         X = XY[:, :2]
         Y = XY[:, 2]
-        xmax = bround(Y.max() + 10)
-        xmin = bround(Y.min() - 10)
+        xmax = bround(Y.max() + rmargin)
+        xmin = bround(Y.min() - lmargin)
         xint = np.sort(Y)
         reg = sk.linear_model.LinearRegression().fit(X, Y)
         if verb > 2:
@@ -134,7 +146,20 @@ def plot_3d_lsfer(idx1, idx2, d, tags, coeff, cb="white", ms="o", verb=0):
     return d_refill
 
 
-def plot_3d_t_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
+def plot_3d_t_volcano(
+    idx1,
+    idx2,
+    d,
+    tags,
+    coeff,
+    dgr,
+    cb="white",
+    ms="o",
+    lmargin=15,
+    rmargin=15,
+    npoints=200,
+    verb=0,
+):
     tags = np.array([str(tag) for tag in tags])
     tag1 = tags[idx1]
     tag2 = tags[idx2]
@@ -142,11 +167,10 @@ def plot_3d_t_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=
     lnsteps = range(np.count_nonzero(coeff == 0))
     X1 = d[:, idx1].reshape(-1)
     X2 = d[:, idx2].reshape(-1)
-    x1max = bround(X1.max() + 15)
-    x1min = bround(X1.min() - 15)
-    x2max = bround(X2.max() + 15)
-    x2min = bround(X2.min() - 15)
-    npoints = 200
+    x1max = bround(X1.max() + rmargin)
+    x1min = bround(X1.min() - lmargin)
+    x2max = bround(X2.max() + rmargin)
+    x2min = bround(X2.min() - lmargin)
     if verb > 1:
         print(
             f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
@@ -230,16 +254,28 @@ def plot_3d_t_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=
     return xint, yint, grid, px, py
 
 
-def plot_3d_k_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=0):
+def plot_3d_es_volcano(
+    idx1,
+    idx2,
+    d,
+    tags,
+    coeff,
+    dgr,
+    cb="white",
+    ms="o",
+    lmargin=15,
+    rmargin=15,
+    npoints=200,
+    verb=0,
+):
     tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
     X1 = d[:, idx1].reshape(-1)
     X2 = d[:, idx2].reshape(-1)
-    x1max = bround(X1.max() + 15)
-    x1min = bround(X1.min() - 15)
-    x2max = bround(X2.max() + 15)
-    x2min = bround(X2.min() - 15)
-    npoints = 200
+    x1max = bround(X1.max() + rmargin)
+    x1min = bround(X1.min() - lmargin)
+    x2max = bround(X2.max() + rmargin)
+    x2min = bround(X2.min() - lmargin)
     if verb > 1:
         print(
             f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
@@ -282,10 +318,10 @@ def plot_3d_k_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=
         py[i] = d[i, idx2].reshape(-1)
     x1label = f"{tags[idx1]} [kcal/mol]"
     x2label = f"{tags[idx2]} [kcal/mol]"
-    ylabel = "-ΔG(kds) [kcal/mol]"
-    filename = f"k_volcano_{tags[idx1]}_{tags[idx2]}.png"
+    ylabel = r"-δ$G_{SPAN}$ [kcal/mol]"
+    filename = f"es_volcano_{tags[idx1]}_{tags[idx2]}.png"
     if verb > 0:
-        csvname = f"k_volcano_{tags[idx1]}_{tags[idx2]}.csv"
+        csvname = f"es_volcano_{tags[idx1]}_{tags[idx2]}.csv"
         print(f"Saving volcano data to file {csvname}")
         x = np.zeros_like(grid.reshape(-1))
         y = np.zeros_like(grid.reshape(-1))
@@ -323,17 +359,28 @@ def plot_3d_k_volcano(idx1, idx2, d, tags, coeff, dgr, cb="white", ms="o", verb=
 
 
 def plot_3d_tof_volcano(
-    idx1, idx2, d, tags, coeff, dgr, T=298.15, cb="white", ms="o", verb=0
+    idx1,
+    idx2,
+    d,
+    tags,
+    coeff,
+    dgr,
+    T=298.15,
+    cb="white",
+    ms="o",
+    lmargin=15,
+    rmargin=15,
+    npoints=200,
+    verb=0,
 ):
     tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
     X1 = d[:, idx1].reshape(-1)
     X2 = d[:, idx2].reshape(-1)
-    x1max = bround(X1.max() + 15)
-    x1min = bround(X1.min() - 15)
-    x2max = bround(X2.max() + 15)
-    x2min = bround(X2.min() - 15)
-    npoints = 200
+    x1max = bround(X1.max() + rmargin)
+    x1min = bround(X1.min() - lmargin)
+    x2max = bround(X2.max() + rmargin)
+    x2min = bround(X2.min() - lmargin)
     if verb > 1:
         print(
             f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
