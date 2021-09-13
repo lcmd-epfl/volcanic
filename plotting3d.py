@@ -254,6 +254,112 @@ def plot_3d_t_volcano(
     return xint, yint, grid, px, py
 
 
+def plot_3d_k_volcano(
+    idx1,
+    idx2,
+    d,
+    tags,
+    coeff,
+    dgr,
+    cb="white",
+    ms="o",
+    lmargin=15,
+    rmargin=15,
+    npoints=200,
+    verb=0,
+):
+    tags = np.array([str(tag) for tag in tags])
+    tag1 = tags[idx1]
+    tag2 = tags[idx2]
+    lnsteps = range(d.shape[1])
+    X1 = d[:, idx1].reshape(-1)
+    X2 = d[:, idx2].reshape(-1)
+    x1max = bround(X1.max() + rmargin)
+    x1min = bround(X1.min() - lmargin)
+    x2max = bround(X2.max() + rmargin)
+    x2min = bround(X2.min() - lmargin)
+    if verb > 1:
+        print(
+            f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
+        )
+    xint = np.linspace(x1min, x1max, npoints)
+    yint = np.linspace(x2min, x2max, npoints)
+    grids = []
+    for i, j in enumerate(lnsteps):
+        XY = np.vstack([X1, X2, d[:, j]]).T
+        X = XY[:, :2]
+        Y = XY[:, 2]
+        reg = sk.linear_model.LinearRegression().fit(X, Y)
+        Y_pred = reg.predict(X)
+        gridj = np.zeros((npoints, npoints))
+        for k, x1 in enumerate(xint):
+            for l, x2 in enumerate(yint):
+                x1x2 = np.vstack([x1, x2]).reshape(1, -1)
+                gridj[k, l] = reg.predict(x1x2)
+        grids.append(gridj)
+    grid = np.zeros_like(gridj)
+    ridmax = np.zeros_like(gridj, dtype=int)
+    ridmin = np.zeros_like(gridj, dtype=int)
+    rb = np.zeros_like(gridj, dtype=int)
+    for k, x1 in enumerate(xint):
+        for l, x2 in enumerate(yint):
+            profile = [gridj[k, l] for gridj in grids]
+            grid[k, l], ridmax[k, l], ridmin[k, l], diff = calc_s_es(
+                profile, dgr, esp=True
+            )
+    rid = np.hstack([ridmin, ridmax])
+    if verb > 0:
+        pass
+    ymin = grid.min()
+    ymax = grid.max()
+    px = np.zeros_like(d[:, 0])
+    py = np.zeros_like(d[:, 0])
+    for i in range(d.shape[0]):
+        profile = d[i, :]
+        px[i] = X1[i]
+        py[i] = X2[i]
+    x1label = f"{tag1} [kcal/mol]"
+    x2label = f"{tag2} [kcal/mol]"
+    ylabel = "-ΔG(pds) [kcal/mol]"
+    filename = f"t_volcano_{tag1}_{tag2}.png"
+    if verb > 0:
+        csvname = f"t_volcano_{tag1}_{tag2}.csv"
+        print(f"Saving volcano data to file {csvname}")
+        x = np.zeros_like(grid.reshape(-1))
+        y = np.zeros_like(grid.reshape(-1))
+        for i, xy in enumerate(itertools.product(xint, yint)):
+            x[i] = xy[0]
+            y[i] = xy[1]
+        zdata = list(zip(x, y, grid.reshape(-1)))
+        np.savetxt(
+            csvname,
+            zdata,
+            fmt="%.4e",
+            delimiter=",",
+            header="Descriptor 1, Descriptor 2, -\D_kds",
+        )
+    plot_3d(
+        xint,
+        yint,
+        grid,
+        px,
+        py,
+        ymin,
+        ymax,
+        x1min,
+        x1max,
+        x2min,
+        x2max,
+        x1label=x1label,
+        x2label=x2label,
+        ylabel=ylabel,
+        filename=filename,
+        cb=cb,
+        ms=ms,
+    )
+    return xint, yint, grid, px, py
+
+
 def plot_3d_es_volcano(
     idx1,
     idx2,
@@ -334,7 +440,7 @@ def plot_3d_es_volcano(
             zdata,
             fmt="%.4e",
             delimiter=",",
-            header="Descriptor 1, Descriptor 2, -\D_kds",
+            header="Descriptor 1, Descriptor 2, -\d_Ges",
         )
     plot_3d(
         xint,

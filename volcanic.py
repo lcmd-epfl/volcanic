@@ -14,6 +14,7 @@ from plotting2d import (
 from plotting3d import (
     plot_3d_lsfer,
     plot_3d_t_volcano,
+    plot_3d_k_volcano,
     plot_3d_es_volcano,
     plot_3d_tof_volcano,
 )
@@ -179,6 +180,16 @@ if nd == 2:
             volcano_headers.append("Thermodynamic volcano")
             volcano_list.append(grid)
 
+        if k_volcano:
+            print(
+                f"Generating 3D kinetic volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
+            )
+            x1int, x2int, grid, px, py = plot_3d_k_volcano(
+                idx1, idx2, d, tags, coeff, dgr, cb, ms, verb
+            )
+            volcano_headers.append("Kinetic volcano")
+            volcano_list.append(grid)
+
         if es_volcano:
             print(
                 f"Generating 3D energy span volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
@@ -186,7 +197,7 @@ if nd == 2:
             x1int, x2int, grid, px, py = plot_3d_es_volcano(
                 idx1, idx2, d, tags, coeff, dgr, cb, ms, verb
             )
-            volcano_headers.append("Kinetic volcano")
+            volcano_headers.append("ES volcano")
             volcano_list.append(grid)
 
         if tof_volcano:
