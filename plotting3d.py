@@ -197,8 +197,8 @@ def plot_3d_t_volcano(
     rb = np.zeros_like(gridj, dtype=int)
     for k, x1 in enumerate(xint):
         for l, x2 in enumerate(yint):
-            profile = [gridj[k, l][:-1] for gridj in grids]
-            dgr = [gridj[k, l][-1] for gridj in grids]
+            profile = [gridj[k, l] for gridj in grids][:-1]
+            dgr = [gridj[k, l] for gridj in grids][-1]
             grid[k, l], ridmax[k, l], ridmin[k, l], diff = calc_s_es(
                 profile, dgr, esp=True
             )
@@ -305,8 +305,8 @@ def plot_3d_k_volcano(
     rb = np.zeros_like(gridj, dtype=int)
     for k, x1 in enumerate(xint):
         for l, x2 in enumerate(yint):
-            profile = [gridj[k, l][:-1] for gridj in grids]
-            dgr = [gridj[k, l][-1] for gridj in grids]
+            profile = [gridj[k, l] for gridj in grids][:-1]
+            dgr = [gridj[k, l] for gridj in grids][-1]
             grid[k, l], ridmax[k, l], ridmin[k, l], diff = calc_s_es(
                 profile, dgr, esp=True
             )
@@ -410,8 +410,8 @@ def plot_3d_es_volcano(
     rb = np.zeros_like(gridj, dtype=int)
     for k, x1 in enumerate(xint):
         for l, x2 in enumerate(yint):
-            profile = [gridj[k, l][:-1] for gridj in grids]
-            dgr = [gridj[k, l][-1] for gridj in grids]
+            profile = [gridj[k, l] for gridj in grids][:-1]
+            dgr = [gridj[k, l] for gridj in grids][-1]
             grid[k, l], ridmax[k, l], ridmin[k, l], diff = calc_es(
                 profile, dgr, esp=True
             )
@@ -515,7 +515,7 @@ def plot_3d_tof_volcano(
     for k, x1 in enumerate(xint):
         for l, x2 in enumerate(yint):
             profile = [gridj[k, l] for gridj in grids]
-            dgr = [gridj[k, l][-1] for gridj in grids]
+            dgr = [gridj[k, l] for gridj in grids][-1]
             grid[k, l] = np.log10(calc_tof(profile, dgr, T, coeff, exact=True)[0])
     ymin = grid.min()
     ymax = grid.max()

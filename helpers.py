@@ -169,6 +169,14 @@ def processargs(arguments):
             ec = int(arguments[idx + 1])
             print(f"Final character for grouping manually set to {ec}.")
             skip = True
+        elif argument == "-lm":
+            lmargin = int(arguments[idx + 1])
+            print(f"Left margin manually set to {lmargin}.")
+            skip = True
+        elif argument == "-rm":
+            rmargin = int(arguments[idx + 1])
+            print(f"Right margin manually set to {rmargin}.")
+            skip = True
         elif argument == "-o" or argument == "-O" or argument == "-output":
             outname = str(arguments[idx + 1])
             print(
