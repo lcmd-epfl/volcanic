@@ -240,7 +240,8 @@ def plot_2d_es_volcano(
     prevslope = 0
     prev = 0
     for i in range(ymin.shape[0]):
-        profile = dgs[i, :]
+        profile = dgs[i, :-1]
+        dgr = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_es(profile, dgr, esp=True)
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
@@ -260,7 +261,8 @@ def plot_2d_es_volcano(
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
-        profile = d[i, :]
+        profile = d[i, :-1]
+        dgr = dgs[i][-1]
         px[i] = d[i, idx].reshape(-1)
         py[i] = calc_es(profile, dgr, esp=True)[0]
     xlabel = f"{tags[idx]} [kcal/mol]"
@@ -325,7 +327,8 @@ def plot_2d_k_volcano(
     prevslope = 0
     prev = 0
     for i in range(ymin.shape[0]):
-        profile = dgs[i, :]
+        profile = dgs[i, :-1]
+        dgr = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr, esp=True)
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
@@ -345,7 +348,8 @@ def plot_2d_k_volcano(
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
-        profile = d[i, :]
+        profile = d[i, :-1]
+        dgr = dgs[i][-1]
         px[i] = X[i].reshape(-1)
         py[i] = calc_s_es(profile, dgr, esp=True)[0]
     xlabel = f"{tag} [kcal/mol]"
@@ -412,7 +416,8 @@ def plot_2d_t_volcano(
     prevslope = 0
     prev = 0
     for i in range(ymin.shape[0]):
-        profile = dgs[i, :]
+        profile = dgs[i, :-1]
+        dgr = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr, esp=True)
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
@@ -432,7 +437,8 @@ def plot_2d_t_volcano(
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
-        profile = d[i, :]
+        profile = d[i, :-1]
+        dgr = dgs[i][-1]
         px[i] = X[i].reshape(-1)
         py[i] = calc_s_es(profile, dgr, esp=True)[0]
     xlabel = f"{tag} [kcal/mol]"
@@ -492,6 +498,7 @@ def plot_2d_tof_volcano(
     # We must take the initial and ending states into account here
     for i in range(ytof.shape[0]):
         profile = dgs[i, :]
+        dgr = dgs[i][-1]
         tof = np.log10(calc_tof(profile, dgr, T, coeff, exact=True)[0])
         ytof[i] = tof
     px = np.zeros_like(d[:, 0])
@@ -499,6 +506,7 @@ def plot_2d_tof_volcano(
     for i in range(d.shape[0]):
         px[i] = d[i, idx].reshape(-1)
         profile = d[i, :]
+        dgr = dgs[i][-1]
         tof = np.log10(calc_tof(profile, dgr, T, coeff, exact=True)[0])
         py[i] = tof
         if verb > 2:

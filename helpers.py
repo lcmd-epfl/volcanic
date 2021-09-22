@@ -26,7 +26,7 @@ def bround(x, base=5):
 
 def group_data_points(bc, ec, names):
     try:
-        groups = np.array([i[bc:ec].upper() for i in names], dtype=object)
+        groups = np.array([str(i)[bc:ec].upper() for i in names], dtype=object)
     except Exception as m:
         print(f"Grouping by name characters did not work. Error message was:\n {m}")
         exit()

@@ -79,7 +79,7 @@ if verb > 0:
 d = np.float64(df.to_numpy()[:, 1:])
 
 # We expect the last field of any and all reaction profiles to be the reaction \DeltaG.
-dgr = d[0, -1]
+dgr = d[:, -1]
 if verb > 0:
     print(f"ΔG of the reaction set to {dgr}.")
 
@@ -100,11 +100,8 @@ coeff = np.array(coeffs, dtype=bool)
 # We will attempt to curate your data automatically.
 d, cb, ms = curate_d(d, cb, ms, tags, imputer_strat, verb)
 
-
 # Runmode used to set up flags for volcano generation.
-
 t_volcano, k_volcano, es_volcano, tof_volcano = setflags(runmode)
-
 
 if nd == 1:
     # VOLCANIC will find best non-TS descriptor variable

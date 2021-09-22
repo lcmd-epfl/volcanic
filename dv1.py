@@ -4,7 +4,6 @@ import numpy as np
 import sklearn as sk
 import sklearn.linear_model
 from sklearn.impute import SimpleImputer
-from tof import calc_tof, calc_es
 
 rng = np.random.default_rng()
 
@@ -21,14 +20,13 @@ def curate_d(d, cb, ms, tags, imputer_strat="simple", verb=0):
     assert isinstance(d, np.ndarray)
     try:
         assert np.isclose(d[:, 0].std(), 0)
-        assert np.isclose(d[:, -1].std(), 0)
     except AssertionError as m:
         print(
-            "The first and last fields of every profile should be the same (reference state and reaction free energy). Exit."
+            "The first field of every profile should be the same (reference state). Exit."
         )
         exit()
-    dit = d[:, 1:-1]
-    tagsit = tags[1:-1]
+    dit = d[:, 1:]
+    tagsit = tags[1:]
     curated_d = d[:, 0].T
     for i in range(dit.shape[1]):
         mean = dit[:, i].mean()
@@ -52,7 +50,7 @@ def curate_d(d, cb, ms, tags, imputer_strat="simple", verb=0):
             dit[outlier, i] = np.nan
         dit[:, i] = call_imputer(dit[:, i], imputer_strat)
         curated_d = np.vstack([curated_d, dit[:, i]])
-    curated_d = np.vstack([curated_d, d[:, -1]]).T
+    curated_d = curated_d.T
     incomplete = np.ones_like(curated_d[:, 0], dtype=bool)
     for i in range(curated_d.shape[0]):
         n_nans = np.count_nonzero(np.isnan(d[i, :]))
@@ -73,15 +71,14 @@ def find_1_dv(d, tags, coeff, verb=0):
     assert len(tags) == len(coeff)
     try:
         assert np.isclose(d[:, 0].std(), 0)
-        assert np.isclose(d[:, -1].std(), 0)
     except AssertionError as m:
         print(
-            "The first and last fields of every profile should be the same (reference state and reaction free energy). Exit."
+            "The first field of every profile should be the same (reference state). Exit."
         )
         exit()
-    tags = tags[1:-1]
-    coeff = coeff[1:-1]
-    d = d[:, 1:-1]
+    tags = tags[1:]
+    coeff = coeff[1:]
+    d = d[:, 1:]
     lnsteps = range(d.shape[1])
     # Regression diagnostics
     maes = np.ones(d.shape[1])

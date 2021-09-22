@@ -197,7 +197,8 @@ def plot_3d_t_volcano(
     rb = np.zeros_like(gridj, dtype=int)
     for k, x1 in enumerate(xint):
         for l, x2 in enumerate(yint):
-            profile = [gridj[k, l] for gridj in grids]
+            profile = [gridj[k, l][:-1] for gridj in grids]
+            dgr = [gridj[k, l][-1] for gridj in grids]
             grid[k, l], ridmax[k, l], ridmin[k, l], diff = calc_s_es(
                 profile, dgr, esp=True
             )
@@ -209,7 +210,8 @@ def plot_3d_t_volcano(
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
-        profile = d[i, :]
+        profile = d[i, :-1]
+        dgr = d[i][-1]
         px[i] = X1[i]
         py[i] = X2[i]
     x1label = f"{tag1} [kcal/mol]"
@@ -303,7 +305,8 @@ def plot_3d_k_volcano(
     rb = np.zeros_like(gridj, dtype=int)
     for k, x1 in enumerate(xint):
         for l, x2 in enumerate(yint):
-            profile = [gridj[k, l] for gridj in grids]
+            profile = [gridj[k, l][:-1] for gridj in grids]
+            dgr = [gridj[k, l][-1] for gridj in grids]
             grid[k, l], ridmax[k, l], ridmin[k, l], diff = calc_s_es(
                 profile, dgr, esp=True
             )
@@ -315,7 +318,7 @@ def plot_3d_k_volcano(
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
-        profile = d[i, :]
+        profile = d[i, :-1]
         px[i] = X1[i]
         py[i] = X2[i]
     x1label = f"{tag1} [kcal/mol]"
@@ -407,7 +410,8 @@ def plot_3d_es_volcano(
     rb = np.zeros_like(gridj, dtype=int)
     for k, x1 in enumerate(xint):
         for l, x2 in enumerate(yint):
-            profile = [gridj[k, l] for gridj in grids]
+            profile = [gridj[k, l][:-1] for gridj in grids]
+            dgr = [gridj[k, l][-1] for gridj in grids]
             grid[k, l], ridmax[k, l], ridmin[k, l], diff = calc_es(
                 profile, dgr, esp=True
             )
@@ -419,7 +423,7 @@ def plot_3d_es_volcano(
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
-        profile = d[i, :]
+        profile = d[i, :-1]
         px[i] = d[i, idx1].reshape(-1)
         py[i] = d[i, idx2].reshape(-1)
     x1label = f"{tags[idx1]} [kcal/mol]"
@@ -511,13 +515,14 @@ def plot_3d_tof_volcano(
     for k, x1 in enumerate(xint):
         for l, x2 in enumerate(yint):
             profile = [gridj[k, l] for gridj in grids]
+            dgr = [gridj[k, l][-1] for gridj in grids]
             grid[k, l] = np.log10(calc_tof(profile, dgr, T, coeff, exact=True)[0])
     ymin = grid.min()
     ymax = grid.max()
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
-        profile = d[i, :]
+        profile = d[i, :-1]
         px[i] = d[i, idx1].reshape(-1)
         py[i] = d[i, idx2].reshape(-1)
     x1label = f"{tags[idx1]} [kcal/mol]"
