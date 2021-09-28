@@ -59,7 +59,7 @@ def user_choose_1_dv(dvs, r2s, tags):
 
 
 def user_choose_2_dv(ddvs, r2s, tags):
-    tags = np.array(tags[1:-1], dtype=np.str)
+    tags = np.array(tags[1:], dtype=np.str)
     ptags = []
     for pair in itertools.combinations(tags, r=2):
         ptags.append([pair[0], pair[1]])

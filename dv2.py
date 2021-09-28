@@ -37,15 +37,14 @@ def find_2_dv(d, tags, coeff, verb=0):
     assert len(tags) == len(coeff)
     try:
         assert np.isclose(d[:, 0].std(), 0)
-        assert np.isclose(d[:, -1].std(), 0)
     except AssertionError as m:
         print(
-            "The first and last fields of every profile should be the same (reference state and reaction free energy). Exit."
+            "The first field of every profile should be the same (reference state). Exit."
         )
         exit()
-    tags = tags[1:-1]
-    coeff = coeff[1:-1]
-    d = d[:, 1:-1]
+    tags = tags[1:]
+    coeff = coeff[1:]
+    d = d[:, 1:]
     lnsteps = range(d.shape[1])
     pnsteps = itertools.combinations(lnsteps, r=2)
     lpnsteps = [pair for pair in pnsteps]
