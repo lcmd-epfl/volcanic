@@ -159,6 +159,7 @@ def plot_3d_t_volcano(
     rmargin=15,
     npoints=200,
     verb=0,
+    plot_type="scatter",
 ):
     tags = np.array([str(tag) for tag in tags])
     tag1 = tags[idx1]
@@ -234,25 +235,46 @@ def plot_3d_t_volcano(
             delimiter=",",
             header="Descriptor 1, Descriptor 2, -\D_pds",
         )
-    plot_3d(
-        xint,
-        yint,
-        grid,
-        px,
-        py,
-        ymin,
-        ymax,
-        x1min,
-        x1max,
-        x2min,
-        x2max,
-        x1label=x1label,
-        x2label=x2label,
-        ylabel=ylabel,
-        filename=filename,
-        cb=cb,
-        ms=ms,
-    )
+    if plot_type == "contour":
+        plot_3d_contour(
+            xint,
+            yint,
+            grid,
+            px,
+            py,
+            ymin,
+            ymax,
+            x1min,
+            x1max,
+            x2min,
+            x2max,
+            x1label=x1label,
+            x2label=x2label,
+            ylabel=ylabel,
+            filename=filename,
+            cb=cb,
+            ms=ms,
+        )
+    if plot_type == "scatter":
+        plot_3d_scatter(
+            xint,
+            yint,
+            grid,
+            px,
+            py,
+            ymin,
+            ymax,
+            x1min,
+            x1max,
+            x2min,
+            x2max,
+            x1label=x1label,
+            x2label=x2label,
+            ylabel=ylabel,
+            filename=filename,
+            cb=cb,
+            ms=ms,
+        )
     return xint, yint, grid, px, py
 
 
@@ -269,6 +291,7 @@ def plot_3d_k_volcano(
     rmargin=15,
     npoints=200,
     verb=0,
+    plot_type="scatter",
 ):
     tags = np.array([str(tag) for tag in tags])
     tag1 = tags[idx1]
@@ -341,25 +364,46 @@ def plot_3d_k_volcano(
             delimiter=",",
             header="Descriptor 1, Descriptor 2, -\D_kds",
         )
-    plot_3d(
-        xint,
-        yint,
-        grid,
-        px,
-        py,
-        ymin,
-        ymax,
-        x1min,
-        x1max,
-        x2min,
-        x2max,
-        x1label=x1label,
-        x2label=x2label,
-        ylabel=ylabel,
-        filename=filename,
-        cb=cb,
-        ms=ms,
-    )
+    if plot_type == "contour":
+        plot_3d_contour(
+            xint,
+            yint,
+            grid,
+            px,
+            py,
+            ymin,
+            ymax,
+            x1min,
+            x1max,
+            x2min,
+            x2max,
+            x1label=x1label,
+            x2label=x2label,
+            ylabel=ylabel,
+            filename=filename,
+            cb=cb,
+            ms=ms,
+        )
+    if plot_type == "scatter":
+        plot_3d_scatter(
+            xint,
+            yint,
+            grid,
+            px,
+            py,
+            ymin,
+            ymax,
+            x1min,
+            x1max,
+            x2min,
+            x2max,
+            x1label=x1label,
+            x2label=x2label,
+            ylabel=ylabel,
+            filename=filename,
+            cb=cb,
+            ms=ms,
+        )
     return xint, yint, grid, px, py
 
 
@@ -376,6 +420,7 @@ def plot_3d_es_volcano(
     rmargin=15,
     npoints=200,
     verb=0,
+    plot_type="scatter",
 ):
     tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
@@ -446,25 +491,46 @@ def plot_3d_es_volcano(
             delimiter=",",
             header="Descriptor 1, Descriptor 2, -\d_Ges",
         )
-    plot_3d(
-        xint,
-        yint,
-        grid,
-        px,
-        py,
-        ymin,
-        ymax,
-        x1min,
-        x1max,
-        x2min,
-        x2max,
-        x1label=x1label,
-        x2label=x2label,
-        ylabel=ylabel,
-        filename=filename,
-        cb=cb,
-        ms=ms,
-    )
+    if plot_type == "contour":
+        plot_3d_contour(
+            xint,
+            yint,
+            grid,
+            px,
+            py,
+            ymin,
+            ymax,
+            x1min,
+            x1max,
+            x2min,
+            x2max,
+            x1label=x1label,
+            x2label=x2label,
+            ylabel=ylabel,
+            filename=filename,
+            cb=cb,
+            ms=ms,
+        )
+    if plot_type == "scatter":
+        plot_3d_scatter(
+            xint,
+            yint,
+            grid,
+            px,
+            py,
+            ymin,
+            ymax,
+            x1min,
+            x1max,
+            x2min,
+            x2max,
+            x1label=x1label,
+            x2label=x2label,
+            ylabel=ylabel,
+            filename=filename,
+            cb=cb,
+            ms=ms,
+        )
     return xint, yint, grid, px, py
 
 
@@ -482,6 +548,7 @@ def plot_3d_tof_volcano(
     rmargin=15,
     npoints=200,
     verb=0,
+    plot_type="scatter",
 ):
     tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
@@ -545,29 +612,50 @@ def plot_3d_tof_volcano(
             delimiter=",",
             header="Descriptor 1, Descriptor 2, log10(TOF)",
         )
-    plot_3d(
-        xint,
-        yint,
-        grid,
-        px,
-        py,
-        ymin,
-        ymax,
-        x1min,
-        x1max,
-        x2min,
-        x2max,
-        x1label=x1label,
-        x2label=x2label,
-        ylabel=ylabel,
-        filename=filename,
-        cb=cb,
-        ms=ms,
-    )
+    if plot_type == "contour":
+        plot_3d_contour(
+            xint,
+            yint,
+            grid,
+            px,
+            py,
+            ymin,
+            ymax,
+            x1min,
+            x1max,
+            x2min,
+            x2max,
+            x1label=x1label,
+            x2label=x2label,
+            ylabel=ylabel,
+            filename=filename,
+            cb=cb,
+            ms=ms,
+        )
+    if plot_type == "scatter":
+        plot_3d_scatter(
+            xint,
+            yint,
+            grid,
+            px,
+            py,
+            ymin,
+            ymax,
+            x1min,
+            x1max,
+            x2min,
+            x2max,
+            x1label=x1label,
+            x2label=x2label,
+            ylabel=ylabel,
+            filename=filename,
+            cb=cb,
+            ms=ms,
+        )
     return xint, yint, grid, px, py
 
 
-def plot_3d(
+def plot_3d_contour(
     xint,
     yint,
     grid,
@@ -591,14 +679,14 @@ def plot_3d(
     )
     grid = np.clip(grid, ymin, ymax)
     norm = cm.colors.Normalize(vmax=ymax, vmin=ymin)
-    levels = np.arange(ymin - 5, ymax + 5, 5.0)
+    levels = np.arange(ymin - 5, ymax + 5, 2.5)
     cset = ax.contourf(
         xint,
         yint,
         grid,
         levels=levels,
         norm=norm,
-        cmap=cm.get_cmap("RdYlBu", len(levels)),
+        cmap=cm.get_cmap("jet", len(levels)),
     )
     # Border
     ax.spines["top"].set_color("black")
@@ -615,6 +703,68 @@ def plot_3d(
     plt.xlim(x1min, x1max)
     plt.ylim(x2min, x2max)
     ax.contour(xint, yint, grid, cset.levels, colors="black", linewidths=0.3)
+    fmt = lambda x, pos: "%.0f" % x
+    cbar = fig.colorbar(cset, format=FuncFormatter(fmt))
+    cbar.set_label(ylabel, labelpad=15, rotation=270)
+    for i in range(len(px)):
+        ax.scatter(
+            px[i],
+            py[i],
+            s=7.5,
+            c=cb[i],
+            marker=ms[i],
+            linewidths=0.15,
+            edgecolors="black",
+        )
+    plt.savefig(filename)
+
+
+def plot_3d_scatter(
+    xint,
+    yint,
+    grid,
+    px,
+    py,
+    ymin,
+    ymax,
+    x1min,
+    x1max,
+    x2min,
+    x2max,
+    x1label="X1-axis",
+    x2label="X2-axis",
+    ylabel="Y-axis",
+    filename="plot.png",
+    cb="white",
+    ms="o",
+):
+    fig, ax = plt.subplots(
+        frameon=False, figsize=[4, 3], dpi=300, constrained_layout=True
+    )
+    grid = np.clip(grid, ymin, ymax)
+    norm = cm.colors.Normalize(vmax=ymax, vmin=ymin)
+    cset = ax.imshow(
+        grid,
+        interpolation="bilinear",
+        extent=[x1min, x1max, x2min, x2max],
+        origin="lower",
+        cmap=cm.jet,
+    )
+    # Border
+    ax.spines["top"].set_color("black")
+    ax.spines["bottom"].set_color("black")
+    ax.spines["left"].set_color("black")
+    ax.spines["right"].set_color("black")
+    ax.get_xaxis().set_tick_params(direction="out")
+    ax.get_yaxis().set_tick_params(direction="out")
+    ax.xaxis.tick_bottom()
+    ax.yaxis.tick_left()
+    # Labels and key
+    plt.xlabel(x1label)
+    plt.ylabel(x2label)
+    plt.xlim(x1min, x1max)
+    plt.ylim(x2min, x2max)
+    # ax.contour(xint, yint, grid, cset.levels, colors="black", linewidths=0.3)
     fmt = lambda x, pos: "%.0f" % x
     cbar = fig.colorbar(cset, format=FuncFormatter(fmt))
     cbar.set_label(ylabel, labelpad=15, rotation=270)

@@ -265,6 +265,18 @@ def plot_2d_es_volcano(
         dgr = dgs[i][-1]
         px[i] = d[i, idx].reshape(-1)
         py[i] = calc_es(profile, dgr, esp=True)[0]
+        if verb > 1:
+            pointsname = f"points_es_volcano_{tags[idx]}.csv"
+            zdata = list(zip(px, py))
+            np.savetxt(
+                pointsname,
+                zdata,
+                fmt="%.4e",
+                delimiter=",",
+                header="Descriptor, -\d_Ges",
+            )
+        if verb > 2:
+            print(f"Profile {profile} corresponds with ES of {py[i]}")
     xlabel = f"{tags[idx]} [kcal/mol]"
     ylabel = r"-δ$G_{SPAN}$ [kcal/mol]"
     filename = f"es_volcano_{tags[idx]}.png"
@@ -352,6 +364,16 @@ def plot_2d_k_volcano(
         dgr = dgs[i][-1]
         px[i] = X[i].reshape(-1)
         py[i] = calc_s_es(profile, dgr, esp=True)[0]
+        if verb > 1:
+            pointsname = f"points_es_volcano_{tags[idx]}.csv"
+            zdata = list(zip(px, py))
+            np.savetxt(
+                pointsname,
+                zdata,
+                fmt="%.4e",
+                delimiter=",",
+                header="Descriptor, -\d_Ges",
+            )
     xlabel = f"{tag} [kcal/mol]"
     ylabel = "-ΔG(kds) [kcal/mol]"
     filename = f"k_volcano_{tag}.png"
@@ -441,6 +463,16 @@ def plot_2d_t_volcano(
         dgr = dgs[i][-1]
         px[i] = X[i].reshape(-1)
         py[i] = calc_s_es(profile, dgr, esp=True)[0]
+        if verb > 1:
+            pointsname = f"points_es_volcano_{tags[idx]}.csv"
+            zdata = list(zip(px, py))
+            np.savetxt(
+                pointsname,
+                zdata,
+                fmt="%.4e",
+                delimiter=",",
+                header="Descriptor, -\d_Ges",
+            )
     xlabel = f"{tag} [kcal/mol]"
     ylabel = "-ΔG(pds) [kcal/mol]"
     filename = f"t_volcano_{tag}.png"
@@ -511,6 +543,16 @@ def plot_2d_tof_volcano(
         py[i] = tof
         if verb > 2:
             print(f"Profile {profile} corresponds with log10(TOF) of {tof}")
+        if verb > 1:
+            pointsname = f"points_es_volcano_{tags[idx]}.csv"
+            zdata = list(zip(px, py))
+            np.savetxt(
+                pointsname,
+                zdata,
+                fmt="%.4e",
+                delimiter=",",
+                header="Descriptor, -\d_Ges",
+            )
     xlabel = f"{tags[idx]} [kcal/mol]"
     ylabel = "log(TOF) [1/s]"
     filename = f"tof_volcano_{tags[idx]}.png"
