@@ -5,6 +5,7 @@ import numpy as np
 import os
 import itertools
 import h5py
+import argparse
 from itertools import cycle
 
 
@@ -85,111 +86,193 @@ def user_choose_2_dv(ddvs, r2s, tags):
 
 
 def processargs(arguments):
-    nd = 1
-    T = 298.15
-    imputer_strat = "none"
-    verb = 0
-    refill = False
-    dump = False
-    runmode = 5
-    bc = 0
-    ec = 2
-    input_flags = ["-i", "-I", "-input", "--i", "--I", "--input"]
-    terms = []
-    filenames = []
-    dinput_flags = ["-d", "-i2", "-I2", "-descriptor", "--d", "-ned", "-NED"]
-    dterms = []
-    dfilenames = []
-    es_flags = ["-tof", "-TOF", "-es", "-ES", "--tof", "--TOF", "--es", "--ES"]
-    descriptor_file = False
-    lmargin = 20
-    rmargin = 20
-    npoints = 200
-    outname = None
-    skip = False
-    for idx, argument in enumerate(arguments):
-        if skip:
-            skip = False
-            continue
-        if argument in input_flags:
-            filename = str(arguments[idx + 1])
-            filenames.append(filename)
-            terms.append(filename.split(".")[-1])
-            print(f"Input filename set to {filename}.")
-            skip = True
-        elif argument in dinput_flags:
-            dfilename = str(arguments[idx + 1])
-            dfilenames.append(dfilename)
-            dterms.append(dfilename.split(".")[-1])
-            print(f"Descriptor filename set to {dfilename}.")
-            skip = True
-            descriptor_file = True
-        elif argument == "-nd":
-            nd = int(arguments[idx + 1])
-            print(f"Number of descriptor variables manually set to {nd}.")
-            skip = True
-        elif argument == "-lsfer" or argument == "-fer":
-            runmode = 0
-            print("Will only find and plot LSFERs.")
-        elif argument == "-thermo":
-            runmode = 1
-            print("Will only build thermodynamic volcano.")
-        elif argument == "-kinetic":
-            runmode = 2
-            print("Will only build kinetic volcanos.")
-        elif argument in es_flags:
-            runmode = 3
-            print("Will only build energy span and TOF volcanos.")
-        elif argument == "-all" or argument == "-ALL":
-            runmode = 4
-            print("Will attempt to build all available volcano_list.")
-        elif argument == "-dump":
-            dump = True
-            print("Will dump volcano information in hdf5 file.")
-        elif argument == "-refill" or argument == "-re":
-            refill = True
-            print(f"Will refill missing datapoints.")
-        elif argument == "-t" or argument == "-T":
-            T = float(arguments[idx + 1])
-            print(f"Temperature manually set to {T}.")
-            skip = True
-        elif argument == "-v" or argument == "-V":
-            verb = int(arguments[idx + 1])
-            print(f"Verbosity manually set to {verb}.")
-            skip = True
-        elif argument == "-is":
-            imputer_strat = str(arguments[idx + 1])
-            print(f"Imputer strategy manually set to {imputer_strat}.")
-            skip = True
-        elif argument == "-bc":
-            bc = int(arguments[idx + 1])
-            print(f"Initial character for grouping manually set to {bc}.")
-            skip = True
-        elif argument == "-ec":
-            ec = int(arguments[idx + 1])
-            print(f"Final character for grouping manually set to {ec}.")
-            skip = True
-        elif argument == "-lm":
-            lmargin = int(arguments[idx + 1])
-            print(f"Left margin manually set to {lmargin}.")
-            skip = True
-        elif argument == "-rm":
-            rmargin = int(arguments[idx + 1])
-            print(f"Right margin manually set to {rmargin}.")
-            skip = True
-        elif argument == "-o" or argument == "-O" or argument == "-output":
-            outname = str(arguments[idx + 1])
-            print(
-                f"Output filename set to {outname}. However, CLI input is currently required."
-            )
-            skip = True
-        else:
-            filename = str(arguments[idx])
-            filenames.append(filename)
-            terms.append(filename.split(".")[-1])
-            print(f"Input filename set to {filename}.")
+
+    vbuilder = argparse.ArgumentParser(
+        prog="volcanic",
+        description="Build volcano plots from reaction energy profile data.",
+        epilog="Remember to cite the volcanic paper - and enjoy!",
+    )
+    vbuilder.add_argument(
+        "-version", "--version", action="version", version="%(prog)s 1.0"
+    )
+    runmode_arg = vbuilder.add_mutually_exclusive_group()
+    vbuilder.add_argument(
+        "-i",
+        "--i",
+        "-input",
+        dest="filenames",
+        nargs="?",
+        action="append",
+        type=str,
+        required=True,
+        help="Filename containing reaction energy data. See manual for input and file formatting questions.",
+    )
+    vbuilder.add_argument(
+        "-df",
+        "--df",
+        "-i2",
+        "--i2",
+        dest="dfilenames",
+        action="append",
+        type=str,
+        default=[],
+        help="Filename containing non-energy descriptors matching the reaction profiles. See manual for input and file formatting questions.",
+    )
+    vbuilder.add_argument(
+        "-nd",
+        "--nd",
+        dest="nd",
+        type=int,
+        default=1,
+        help="Number of descriptor variables to use. (default: 1)",
+    )
+    vbuilder.add_argument(
+        "-v",
+        "--v",
+        "--verb",
+        dest="verb",
+        type=int,
+        default=1,
+        help="Verbosity level of the code. Higher is more verbose and viceversa. (default: 1)",
+    )
+    vbuilder.add_argument(
+        "-r",
+        "--r",
+        dest="runmode",
+        type=int,
+        default=5,
+        help="Defines the volcano plots to build.\n 0: LSRs\n 1: Thermodynamic\n 2: Kinetic\n 3: Energy Span & TOF\n 4: All of the above\n 5: Ask through CLI (default)",
+    )
+    runmode_arg.add_argument(
+        "-lsfer",
+        "--lsfer",
+        "-lsr",
+        "--lsr",
+        dest="runmode",
+        action="store_const",
+        const="0",
+        help="Set runmode to 0, building only linear scaling relationships.",
+    )
+    runmode_arg.add_argument(
+        "-thermo",
+        "--thermo",
+        dest="runmode",
+        action="store_const",
+        const="1",
+        help="Set runmode to 1, building only thermodynamic volcano.",
+    )
+    runmode_arg.add_argument(
+        "-kinetic",
+        "--kinetic",
+        dest="runmode",
+        action="store_const",
+        const="2",
+        help="Set runmode to 2, building only kinetic volcano.",
+    )
+    runmode_arg.add_argument(
+        "-tof",
+        "--tof",
+        "-es",
+        "--es",
+        dest="runmode",
+        action="store_const",
+        const="3",
+        help="Set runmode to 3, building only energy span and turnover frequency volcanoes.",
+    )
+    runmode_arg.add_argument(
+        "-all",
+        "--all",
+        dest="runmode",
+        action="store_const",
+        const="4",
+        help="Set runmode to 4, building all available volcanoes.",
+    )
+    vbuilder.add_argument(
+        "-T",
+        "-t",
+        "--T",
+        "--t",
+        "--temp",
+        "-temp",
+        dest="temp",
+        type=int,
+        default=298.15,
+        help="Temperature in K. (default: 298.15)",
+    )
+    vbuilder.add_argument(
+        "-ic",
+        "--ic",
+        dest="ic",
+        type=int,
+        default=0,
+        help="Initial character for grouping based on name for visualization. (default: 0)",
+    )
+    vbuilder.add_argument(
+        "-fc",
+        "--fc",
+        dest="fc",
+        type=int,
+        default=2,
+        help="Final character for grouping based on name for visualization. (default: 2)",
+    )
+    vbuilder.add_argument(
+        "-rm",
+        "--rm",
+        dest="rmargin",
+        type=int,
+        default=20,
+        help="Right margin to pad for visualization, in descriptor variable units. (default: 20)",
+    )
+    vbuilder.add_argument(
+        "-lm",
+        "--lm",
+        dest="lmargin",
+        type=int,
+        default=20,
+        help="Left margin to pad for visualization, in descriptor variable units. (default: 20)",
+    )
+    vbuilder.add_argument(
+        "-np",
+        "--np",
+        dest="npoints",
+        type=int,
+        default=200,
+        help="Number of grid points to use for visualization. (default: 200)",
+    )
+    vbuilder.add_argument(
+        "-d",
+        "--d",
+        "-dump",
+        "--dump",
+        dest="dump",
+        action="store_true",
+        default=200,
+        help="Flag to activate h5py dumping of data. (default: False)",
+    )
+    vbuilder.add_argument(
+        "-is",
+        "--is",
+        dest="imputer_strat",
+        type=str,
+        default="none",
+        help="Imputter to refill missing datapoints. Beta version. (default: None)",
+    )
+    vbuilder.add_argument(
+        "-refill",
+        "--refill",
+        dest="refill",
+        action="store_true",
+        help="Refill missing values using LSRs. Beta version. (default: False)",
+    )
+    args = vbuilder.parse_args(arguments)
+
     dfs, ddfs = check_input(
-        terms, dterms, filenames, dfilenames, T, nd, imputer_strat, verb
+        args.filenames,
+        args.dfilenames,
+        args.temp,
+        args.nd,
+        args.imputer_strat,
+        args.verb,
     )
     if len(dfs) > 1:
         df = pd.concat(dfs)
@@ -199,11 +282,11 @@ def processargs(arguments):
     else:
         df = dfs[0]
     assert isinstance(df, pd.DataFrame)
-    if verb > 1:
+    if args.verb > 1:
         print("Final reaction profile database (top rows):")
         print(df.head())
 
-    if descriptor_file:
+    if ddfs:
         if len(ddfs) > 1:
             ddf = pd.concat(ddfs)
         elif len(dfs) == 0:
@@ -217,71 +300,62 @@ def processargs(arguments):
                 "Different number of entries in reaction profile input file and descriptor file. Exiting."
             )
             exit()
-        if verb > 1 and descriptor_file:
+        if args.verb > 1 and descriptor_file:
             print("Final descriptor database (top rows):")
             print(ddf.head())
         for column in ddf:
             df.insert(1, f"Descriptor {column}", ddf[column].values)
     return (
         df,
-        nd,
-        verb,
-        runmode,
-        T,
-        imputer_strat,
-        refill,
-        dump,
-        bc,
-        ec,
-        lmargin,
-        rmargin,
-        npoints,
+        args.nd,
+        args.verb,
+        args.runmode,
+        args.temp,
+        args.imputer_strat,
+        args.refill,
+        args.dump,
+        args.ic,
+        args.fc,
+        args.lmargin,
+        args.rmargin,
+        args.npoints,
     )
 
 
-def check_input(terms, dterms, filenames, dfilenames, T, nd, imputer_strat, verb):
-    invalid_input = False
+def check_input(filenames, dfilenames, temp, nd, imputer_strat, verb):
     accepted_excel_terms = ["xls", "xlsx"]
     accepted_imputer_strats = ["simple", "none"]
     accepted_nds = [1, 2]
     dfs = []
     ddfs = []
-    for term, filename in zip(terms, filenames):
-        if term in accepted_excel_terms:
+    for filename in filenames:
+        if filename.split(".")[-1] in accepted_excel_terms:
             dfs.append(pd.read_excel(filename))
         elif term == "csv":
             dfs.append(pd.read_csv(filename))
         else:
             print(
-                f"File termination {term} was not understood. Try csv or one of {accepted_excel_terms}."
+                f"File termination for filename {filename} was not understood. Try csv or one of {accepted_excel_terms}."
             )
-            invalid_input = True
-    for dterm, dfilename in zip(dterms, dfilenames):
-        if dterm in accepted_excel_terms:
-            ddfs.append(pd.read_excel(dfilename))
+    for dfilename in dfilenames:
+        if dfilename.split(".")[-1] in accepted_excel_terms:
+            dfs.append(pd.read_excel(dfilename))
         elif term == "csv":
-            ddfs.append(pd.read_csv(dfilename))
+            dfs.append(pd.read_csv(dfilename))
         else:
             print(
-                f"File termination {dterm} was not understood. Try csv or one of {accepted_excel_terms}."
+                f"File termination for filename {dfilename} was not understood. Try csv or one of {accepted_excel_terms}."
             )
-            invalid_input = True
-    if not isinstance(T, float):
+    if not isinstance(temp, float):
         print("Invalid temperature input! Should be a float.")
-        invalid_input = True
     if imputer_strat not in accepted_imputer_strats:
         print(
             f"Invalid imputer strat in input!\n Accepted values are:\n {accepted_imputer_strats}"
         )
-        invalid_input = True
     if not isinstance(verb, int):
         print("Invalid verbosity input! Should be a positive integer or 0.")
-        invalid_input = True
     if nd not in accepted_nds:
         print(f"Invalid number of descriptors in input!\n Accepted values ar:\n {nd}")
-        invalid_input = True
-    if invalid_input:
-        exit()
     return dfs, ddfs
 
 

@@ -28,38 +28,34 @@ from helpers import (
     setflags,
 )
 
-
 if __name__ == "__main__":
-    arguments = []
-    for i, arg in enumerate(sys.argv[1:]):
-        arguments.append(arg)
     (
         df,
         nd,
         verb,
         runmode,
-        T,
+        temp,
         imputer_strat,
         refill,
         dump,
-        bc,
-        ec,
+        ic,
+        fc,
         lmargin,
         rmargin,
         npoints,
-    ) = processargs(arguments)
+    ) = processargs(sys.argv[1:])
 else:
     exit(1)
 
 # Fill in reaction profile names/IDs from input data.
 if verb > 0:
     print(
-        f"VOLCANIC will assume that {df.columns[0]} contains names/IDs of reaction profiles."
+        f"volcanic will assume that {df.columns[0]} contains names/IDs of reaction profiles."
     )
 names = df[df.columns[0]].values
 
 # Atttempts to group data points based on shared characters in names.
-cb, ms = group_data_points(bc, ec, names)
+cb, ms = group_data_points(ic, fc, names)
 
 # Collects non-energy descriptor columns separately from energy profile
 ned_tags = []
@@ -78,9 +74,9 @@ if verb > 0:
     print(f"Reaction profile is given by stationary points:\n {tags}")
 d = np.float64(df.to_numpy()[:, 1:])
 
-# We expect the last field of any and all reaction profiles to be the reaction \DeltaG.
+# We expect the last field of the reaction profiles to be the reaction \DeltaG.
 dgr = d[:, -1]
-if verb > 0:
+if verb > 2:
     print(f"ΔG of the reaction set to {dgr}.")
 
 # TS or intermediate are interpreted from column names. Coeffs is a boolean array.
@@ -155,7 +151,7 @@ if nd == 1:
                 f"Generating 2D TOF volcano plot using descriptor variable {tags[idx]}"
             )
             xint, ytof, px, py, xmin, xmax = plot_2d_tof_volcano(
-                idx, d, tags, coeff, dgr, T, cb, ms, lmargin, rmargin, npoints, verb
+                idx, d, tags, coeff, dgr, temp, cb, ms, lmargin, rmargin, npoints, verb
             )
             volcano_headers.append("TOF volcano")
             volcano_list.append(ytof)
@@ -226,7 +222,7 @@ if nd == 2:
                 tags,
                 coeff,
                 dgr,
-                T,
+                temp,
                 cb,
                 ms,
                 lmargin,
