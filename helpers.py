@@ -7,6 +7,7 @@ import itertools
 import h5py
 import argparse
 from itertools import cycle
+from exceptions import InputError
 
 
 def yesno(question):
@@ -29,8 +30,9 @@ def group_data_points(bc, ec, names):
     try:
         groups = np.array([str(i)[bc:ec].upper() for i in names], dtype=object)
     except Exception as m:
-        print(f"Grouping by name characters did not work. Error message was:\n {m}")
-        exit()
+        raise InputError(
+            f"Grouping by name characters did not work. Error message was:\n {m}"
+        )
     type_tags = np.unique(groups)
     cycol = cycle("bgrcmky")
     cymar = cycle("^ospXDvH")
@@ -277,8 +279,7 @@ def processargs(arguments):
     if len(dfs) > 1:
         df = pd.concat(dfs)
     elif len(dfs) == 0:
-        print("No input profiles detected in file. Exiting.")
-        exit()
+        raise InputError("No input profiles detected in file. Exiting.")
     else:
         df = dfs[0]
     assert isinstance(df, pd.DataFrame)
@@ -290,16 +291,14 @@ def processargs(arguments):
         if len(ddfs) > 1:
             ddf = pd.concat(ddfs)
         elif len(dfs) == 0:
-            print("No valid descriptor files were provided. Exiting.")
-            exit()
+            raise InputError("No valid descriptor files were provided. Exiting.")
         else:
             ddf = ddfs[0]
         assert isinstance(ddf, pd.DataFrame)
         if not (df.shape[0] == ddf.shape[0]):
-            print(
+            raise InputError(
                 "Different number of entries in reaction profile input file and descriptor file. Exiting."
             )
-            exit()
         if args.verb > 1 and descriptor_file:
             print("Final descriptor database (top rows):")
             print(ddf.head())
@@ -334,7 +333,7 @@ def check_input(filenames, dfilenames, temp, nd, imputer_strat, verb):
         elif term == "csv":
             dfs.append(pd.read_csv(filename))
         else:
-            print(
+            raise InputError(
                 f"File termination for filename {filename} was not understood. Try csv or one of {accepted_excel_terms}."
             )
     for dfilename in dfilenames:
@@ -343,19 +342,21 @@ def check_input(filenames, dfilenames, temp, nd, imputer_strat, verb):
         elif term == "csv":
             dfs.append(pd.read_csv(dfilename))
         else:
-            print(
+            raise InputError(
                 f"File termination for filename {dfilename} was not understood. Try csv or one of {accepted_excel_terms}."
             )
     if not isinstance(temp, float):
-        print("Invalid temperature input! Should be a float.")
+        raise InputError("Invalid temperature input! Should be a float. Exiting.")
     if imputer_strat not in accepted_imputer_strats:
-        print(
+        raise InputError(
             f"Invalid imputer strat in input!\n Accepted values are:\n {accepted_imputer_strats}"
         )
     if not isinstance(verb, int):
-        print("Invalid verbosity input! Should be a positive integer or 0.")
+        raise InputError("Invalid verbosity input! Should be a positive integer or 0.")
     if nd not in accepted_nds:
-        print(f"Invalid number of descriptors in input!\n Accepted values ar:\n {nd}")
+        raise InputError(
+            f"Invalid number of descriptors in input!\n Accepted values ar:\n {nd}"
+        )
     return dfs, ddfs
 
 

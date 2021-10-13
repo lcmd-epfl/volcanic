@@ -5,6 +5,7 @@ import sklearn as sk
 import sklearn.linear_model
 import itertools
 from collections import deque
+from exceptions import InputError
 
 rng = np.random.default_rng()
 
@@ -38,10 +39,9 @@ def find_2_dv(d, tags, coeff, verb=0):
     try:
         assert np.isclose(d[:, 0].std(), 0)
     except AssertionError as m:
-        print(
+        raise InputError(
             "The first field of every profile should be the same (reference state). Exit."
         )
-        exit()
     tags = tags[1:]
     coeff = coeff[1:]
     d = d[:, 1:]

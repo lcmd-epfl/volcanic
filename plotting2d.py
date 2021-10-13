@@ -10,6 +10,7 @@ import sklearn as sk
 import sklearn.linear_model
 from helpers import bround
 from tof import calc_tof, calc_es, calc_s_es
+from exceptions import MissingDataError
 
 
 def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
@@ -74,10 +75,9 @@ def plot_2d_lsfer(
                     d_refill[np.isnan(d).any(axis=1)][:, idx][k] = Xm[k]
                     mape = currmape
             else:
-                print(
+                raise MissingDataError(
                     "Both descriptor and regression target are undefined. This should have been fixed before this point. Exiting."
                 )
-                exit()
         n = Y.size
         m = p.size
         dof = n - m
