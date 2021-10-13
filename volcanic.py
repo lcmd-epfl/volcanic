@@ -57,22 +57,11 @@ names = df[df.columns[0]].values
 # Atttempts to group data points based on shared characters in names.
 cb, ms = group_data_points(ic, fc, names)
 
-# Collects non-energy descriptor columns separately from energy profile
-ned_tags = []
-neds = []
-for i, tag in enumerate(df.columns[1:]):
-    if "DESCRIPTOR" in str(tag).upper():
-        if verb > 0:
-            print(f"Setting a dedicate non-energy descriptor variable as {tag}")
-        ned_tags.append(tag)
-        neds.append(np.float64(df.pop(tag).values()[1:]))
-
-# After the first column and removing non-energy descriptors,
-# we expect a full reaction profile with corresponding column names.
+# Expecting a full reaction profile with corresponding column names.
 tags = [str(tag) for tag in df.columns[1:]]
 if verb > 0:
     print(f"Reaction profile is given by stationary points:\n {tags}")
-d = np.float64(df.to_numpy()[:, 1:])
+d = np.float32(df.to_numpy()[:, 1:])
 
 # We expect the last field of the reaction profiles to be the reaction \DeltaG.
 dgr = d[:, -1]
@@ -80,31 +69,40 @@ if verb > 2:
     print(f"ΔG of the reaction set to {dgr}.")
 
 # TS or intermediate are interpreted from column names. Coeffs is a boolean array.
-coeffs = []
-for i in tags:
+coeffs = np.zeros(len(tags), dtype=bool)
+regress = np.zeros(len(tags), dtype=bool)
+for i, tag in enumerate(tags):
     if "TS" in i.upper():
         if verb > 0:
             print(f"Assuming field {i} corresponds to a TS.")
-        coeffs.append(1)
+        coeffs[i] = True
+        regress[i] = True
+    elif "DESCRIPTOR" in i.upper():
+        if verb > 0:
+            print(
+                f"Assuming field {i} corresponds to a non-energy descriptor variable."
+            )
+        coeffs[i] = False
+        regress[i] = False
     else:
         if verb > 0:
-            print(f"Assuming field {i} does not correspond to a TS.")
-        coeffs.append(0)
-coeff = np.array(coeffs, dtype=bool)
+            print(f"Assuming field {i} corresponds to a non-TS stationary point.")
+        coeffs[i] = False
+        regress[i] = True
 
 # Your data might contain outliers (human error, computation error) or missing points.
 # We will attempt to curate your data automatically.
-d, cb, ms = curate_d(d, cb, ms, tags, imputer_strat, verb)
+d, cb, ms = curate_d(d, regress, cb, ms, tags, imputer_strat, verb)
 
 # Runmode used to set up flags for volcano generation.
 t_volcano, k_volcano, es_volcano, tof_volcano = setflags(runmode)
 
 if nd == 1:
-    # VOLCANIC will find best non-TS descriptor variable
-    dvs, r2s = find_1_dv(d, tags, coeff, verb)
+    # volcanic will find best non-TS descriptor variable
+    dvs, r2s = find_1_dv(d, tags, regress, coeff, verb)
     idx = user_choose_1_dv(dvs, r2s, tags)
     if idx is not None:
-        print(f"Generating LSFER plots using descriptor variable {tags[idx]}")
+        print(f"Generating LSR plots using descriptor variable {tags[idx]}")
         if refill:
             d = plot_2d_lsfer(
                 idx, d, tags, coeff, cb, ms, lmargin, rmargin, npoints, verb
@@ -160,12 +158,12 @@ if nd == 1:
             arraydump("2d_volcanos.hdf5", xint, volcano_list, volcano_headers)
 
 if nd == 2:
-    # VOLCANIC will find best non-TS combination of two descriptor variables
-    dvs, r2s = find_2_dv(d, tags, coeff, verb)
+    # volcanic will find best non-TS combination of two descriptor variables
+    dvs, r2s = find_2_dv(d, tags, regress, coeff, verb)
     idx1, idx2 = user_choose_2_dv(dvs, r2s, tags)
     if idx1 is not None and idx2 is not None:
         print(
-            f"Generating multivariate LSFER plots using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
+            f"Generating multivariate LSR plots using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
         )
         if refill:
             d = plot_3d_lsfer(

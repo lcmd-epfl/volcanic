@@ -3,22 +3,28 @@
 import numpy as np
 import sklearn as sk
 import sklearn.linear_model
-from sklearn.impute import SimpleImputer
+from sklearn.impute import SimpleImputer, KNNImputer
 from exceptions import InputError
 
 rng = np.random.default_rng()
 
 
-def call_imputer(a, imputer_strat="simple"):
+def call_imputer(a, b, imputer_strat="simple"):
     if imputer_strat == "simple":
         imputer = SimpleImputer()
-        return imputer.fit_transform(a.reshape(-1, 1)).flatten()
+        newa = imputer.fit_transform(a.reshape(-1, 1)).flatten()
+        return newa
+    if imputer_strat == "knn":
+        imputer = KNNImputer(n_neighbors=2)
+        newa = imputer.fit_transform(np.vstack([b, a]).T)[:, 1]
+        return newa
     if imputer_strat == "none":
         return a
 
 
-def curate_d(d, cb, ms, tags, imputer_strat="simple", verb=0):
+def curate_d(d, regress, cb, ms, tags, imputer_strat="none", verb=0):
     assert isinstance(d, np.ndarray)
+    d = d[:, regress]
     try:
         assert np.isclose(d[:, 0].std(), 0)
     except AssertionError as m:
@@ -48,7 +54,7 @@ def curate_d(d, cb, ms, tags, imputer_strat="simple", verb=0):
                     f"Among data series {tagsit[i]} some outliers (very small values) were detected: {dit[outlier,i].flatten()} and will be skipped."
                 )
             dit[outlier, i] = np.nan
-        dit[:, i] = call_imputer(dit[:, i], imputer_strat)
+        dit[:, i] = call_imputer(dit[:, i], d[:, i - 1], imputer_strat)
         curated_d = np.vstack([curated_d, dit[:, i]])
     curated_d = curated_d.T
     incomplete = np.ones_like(curated_d[:, 0], dtype=bool)
@@ -66,9 +72,9 @@ def curate_d(d, cb, ms, tags, imputer_strat="simple", verb=0):
     return curated_d, curated_cb, curated_ms
 
 
-def find_1_dv(d, tags, coeff, verb=0):
+def find_1_dv(d, tags, coeff, regress, verb=0):
     assert isinstance(d, np.ndarray)
-    assert len(tags) == len(coeff)
+    assert len(tags) == len(coeff) == len(regress)
     try:
         assert np.isclose(d[:, 0].std(), 0)
     except AssertionError as m:
@@ -77,8 +83,10 @@ def find_1_dv(d, tags, coeff, verb=0):
         )
     tags = tags[1:]
     coeff = coeff[1:]
+    regress = regress[1:]
     d = d[:, 1:]
     lnsteps = range(d.shape[1])
+    regsteps = range(d[:, regress].shape[1])
     # Regression diagnostics
     maes = np.ones(d.shape[1])
     r2s = np.ones(d.shape[1])
@@ -89,8 +97,8 @@ def find_1_dv(d, tags, coeff, verb=0):
         imaes = []
         imaps = []
         ir2s = []
-        for j in lnsteps:
-            Y = d[:, j]
+        for j in regsteps:
+            Y = d[:, regress][:, j]
             XY = np.vstack([d[:, i], d[:, j]]).T
             XY = XY[~np.isnan(XY).any(axis=1)]
             X = XY[:, 0].reshape(-1, 1)
@@ -229,11 +237,53 @@ def test_dv1():
             "Product",
         ]
     )
-    profiles = np.vstack((a, b, c))
-    dvs, r2s = find_1_dv(profiles, tags, coeff, verb=-1)
+    profiles = np.vstack([a, b, c])
+    regress = np.ones((11), dtype=bool)
+    dvs, r2s = find_1_dv(profiles, tags, coeff, regress, verb=-1)
     assert np.allclose(dvs, [5, 1], 4)
     assert np.allclose(r2s, [0.6436413778677442, 0.6419178563084623], 4)
 
 
+def test_inputer():
+    coeff = [0, 0, 1, 0, 1, 0, 0, 1]
+    dgr = -28.1
+    # Ni(PMe3)
+    a = np.array([0.0, 0.2, 27.4, 10.5, 23.9, -19.9, -27.5, -0.5])
+    # Ni(SiMes3)
+    b = np.array([0.0, 6.34, 28.6, 11.42, 22.81, -17.96, -40.31, -0.07])
+    # Ni(PBu3)
+    c = np.array([0.0, 4.68, 27.95, 13.85, 25.95, -14.93, -24.80, 2.07])
+    d = np.vstack([a, b, c])
+
+    # with erased values
+    a2 = np.array([0.0, 0.2, np.nan, 10.5, 23.9, -19.9, -27.5, -0.5])
+    b2 = np.array([0.0, 6.34, 28.6, np.nan, 22.81, -17.96, -40.31, -0.07])
+    c2 = np.array([0.0, 4.68, 27.95, 13.85, 25.95, -14.93, np.nan, 2.07])
+    d2 = np.vstack([a2, b2, c2])
+    cb = np.ones((3))
+    ms = np.ones((3))
+    regress = np.ones((8), dtype=bool)
+    tags = np.array(
+        [
+            "Reactants",
+            "Struc2",
+            "TS1",
+            "Struc3",
+            "TS2",
+            "Struc4",
+            "TS3",
+            "Struc5",
+            "TS4",
+            "Struc6",
+            "Product",
+        ]
+    )
+    d_simple = curate_d(d2, regress, cb, ms, tags, imputer_strat="simple", verb=2)[0]
+    d_knn = curate_d(d2, regress, cb, ms, tags, imputer_strat="knn", verb=2)[0]
+    assert np.isclose(np.linalg.norm(d - d_simple), 9.17805398763812)
+    assert np.isclose(np.linalg.norm(d - d_knn), 9.17805398763812)
+
+
 if __name__ == "__main__":
     test_dv1()
+    test_inputer()

@@ -33,7 +33,7 @@ def dv_collinear(X, verb=0):
         return False
 
 
-def find_2_dv(d, tags, coeff, verb=0):
+def find_2_dv(d, tags, coeff, regress, verb=0):
     assert isinstance(d, np.ndarray)
     assert len(tags) == len(coeff)
     try:
@@ -44,8 +44,10 @@ def find_2_dv(d, tags, coeff, verb=0):
         )
     tags = tags[1:]
     coeff = coeff[1:]
+    regress = regress[1:]
     d = d[:, 1:]
     lnsteps = range(d.shape[1])
+    regsteps = range(d[:, regress].shape[1])
     pnsteps = itertools.combinations(lnsteps, r=2)
     lpnsteps = [pair for pair in pnsteps]
     pn = len(lpnsteps)
@@ -69,8 +71,8 @@ def find_2_dv(d, tags, coeff, verb=0):
         imaes = []
         imaps = []
         ir2s = []
-        for k in lnsteps:
-            Y = d[:, k]
+        for k in regsteps:
+            Y = d[:, regress][:, k]
             XY = np.vstack([[d[:, i], d[:, j]], d[:, k]]).T
             XY = XY[~np.isnan(XY).any(axis=1)]
             X = XY[:, :2]
@@ -224,7 +226,8 @@ def test_dv2():
         ]
     )
     dgr = -43.19
-    coeff = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0], dtype=int)
+    coeff = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0], dtype=bool)
+    regress = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype=bool)
     tags = np.array(
         [
             "Reactants",
@@ -240,8 +243,8 @@ def test_dv2():
             "Product",
         ]
     )
-    profiles = np.vstack((a, b, c, d))
-    dvs, r2s = find_2_dv(profiles, tags, coeff, verb=-1)
+    profiles = np.vstack([a, b, c, d])
+    dvs, r2s = find_2_dv(profiles, tags, coeff, regress, verb=-1)
     assert np.allclose(r2s, [0.8573974153281095, 0.832373403431629], 4)
 
 
