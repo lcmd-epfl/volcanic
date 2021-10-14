@@ -248,7 +248,6 @@ def processargs(arguments):
         "--dump",
         dest="dump",
         action="store_true",
-        default=200,
         help="Flag to activate h5py dumping of data. (default: False)",
     )
     vbuilder.add_argument(

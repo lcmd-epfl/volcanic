@@ -107,15 +107,10 @@ def find_1_dv(d, tags, coeff, regress, verb=0):
             imaes.append(sk.metrics.mean_absolute_error(Y, reg.predict(X)))
             imaps.append(sk.metrics.mean_absolute_percentage_error(Y, reg.predict(X)))
             ir2s.append(reg.score(X, Y))
-            if i == j:  # Cheap sanity check
-                assert np.isclose(imaps.pop(-1), 0)
-                assert np.isclose(imaes.pop(-1), 0)
-                assert np.isclose(ir2s.pop(-1), 1)
-            else:
-                if verb > 1:
-                    print(
-                        f"With {tags[i]} as descriptor, regressed {tags[j]} with r2 : {np.round(ir2s[-1],2)} and MAE: {np.round(imaes[-1],2)}"
-                    )
+            if verb > 1:
+                print(
+                    f"With {tags[i]} as descriptor, regressed {tags[j]} with r2 : {np.round(ir2s[-1],2)} and MAE: {np.round(imaes[-1],2)}"
+                )
         if verb > 2:
             print(
                 f"\nWith {tags[i]} as descriptor the following r2 values were obtained : {ir2s}"

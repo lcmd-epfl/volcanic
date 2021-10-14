@@ -69,25 +69,25 @@ if verb > 2:
     print(f"ΔG of the reaction set to {dgr}.")
 
 # TS or intermediate are interpreted from column names. Coeffs is a boolean array.
-coeffs = np.zeros(len(tags), dtype=bool)
+coeff = np.zeros(len(tags), dtype=bool)
 regress = np.zeros(len(tags), dtype=bool)
 for i, tag in enumerate(tags):
-    if "TS" in i.upper():
+    if "TS" in tag.upper():
         if verb > 0:
-            print(f"Assuming field {i} corresponds to a TS.")
-        coeffs[i] = True
+            print(f"Assuming field {tag} corresponds to a TS.")
+        coeff[i] = True
         regress[i] = True
-    elif "DESCRIPTOR" in i.upper():
+    elif "DESCRIPTOR" in tag.upper():
         if verb > 0:
             print(
-                f"Assuming field {i} corresponds to a non-energy descriptor variable."
+                f"Assuming field {tag} corresponds to a non-energy descriptor variable."
             )
-        coeffs[i] = False
+        coeff[i] = False
         regress[i] = False
     else:
         if verb > 0:
-            print(f"Assuming field {i} corresponds to a non-TS stationary point.")
-        coeffs[i] = False
+            print(f"Assuming field {tag} corresponds to a non-TS stationary point.")
+        coeff[i] = False
         regress[i] = True
 
 # Your data might contain outliers (human error, computation error) or missing points.
@@ -99,7 +99,7 @@ t_volcano, k_volcano, es_volcano, tof_volcano = setflags(runmode)
 
 if nd == 1:
     # volcanic will find best non-TS descriptor variable
-    dvs, r2s = find_1_dv(d, tags, regress, coeff, verb)
+    dvs, r2s = find_1_dv(d, tags, coeff, regress, verb)
     idx = user_choose_1_dv(dvs, r2s, tags)
     if idx is not None:
         print(f"Generating LSR plots using descriptor variable {tags[idx]}")
@@ -159,7 +159,7 @@ if nd == 1:
 
 if nd == 2:
     # volcanic will find best non-TS combination of two descriptor variables
-    dvs, r2s = find_2_dv(d, tags, regress, coeff, verb)
+    dvs, r2s = find_2_dv(d, tags, coeff, regress, verb)
     idx1, idx2 = user_choose_2_dv(dvs, r2s, tags)
     if idx1 is not None and idx2 is not None:
         print(
