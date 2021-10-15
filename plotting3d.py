@@ -16,6 +16,21 @@ from tof import calc_tof, calc_es, calc_s_es
 from exceptions import MissingDataError
 
 
+def get_reg_targets(idx1, idx2, d, tags, coeff, regress, mode="k"):
+    """Separate regression targets and regressor variables."""
+    tag1 = tags[idx1]
+    tag2 = tags[idx2]
+    tags = tags[regress]
+    X1 = d[:, idx1].reshape(-1)
+    X2 = d[:, idx2].reshape(-1)
+    d = d[:, regress]
+    if mode == "t":
+        coeff = coeff[regress]
+        d = d[:, ~coeff]
+        tags = tags[~coeff]
+    return X1, X2, tag1, tag2, tags, d
+
+
 def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
     if ax is None:
         ax = plt.gca()
@@ -36,6 +51,7 @@ def plot_3d_lsfer(
     d,
     tags,
     coeff,
+    regress,
     cb="white",
     ms="o",
     lmargin=5,
@@ -43,15 +59,17 @@ def plot_3d_lsfer(
     npoints=100,
     verb=0,
 ):
+    X1, X2, tag1, tag2, tags, d = get_reg_targets(
+        idx1, idx2, d, tags, coeff, regress, mode="k"
+    )
     d_refill = np.zeros_like(d)
     d_refill[~np.isnan(d)] = d[~np.isnan(d)]
-    tags = [str(tag) for tag in tags]
     lnsteps = range(d.shape[1])
     mape = 100
     for j in lnsteps[1:-1]:
         if verb > 0:
             print(f"Plotting regression of {tags[j]}.")
-        XY = np.vstack([[d[:, idx1], d[:, idx2]], d[:, j]]).T
+        XY = np.vstack([X1, X2, d[:, j]]).T
         if isinstance(cb, np.ndarray):
             cbi = np.array(cb)[~np.isnan(XY).any(axis=1)]
         else:
@@ -139,7 +157,7 @@ def plot_3d_lsfer(
         ax.xaxis.tick_bottom()
         ax.yaxis.tick_left()
         # Labels and key
-        plt.xlabel(f"Function of {tags[idx1]} and {tags[idx2]}")
+        plt.xlabel(f"Function of {tag1} and {tag2}")
         plt.ylabel(f"{tags[j]} [kcal/mol]")
         plt.xlim(xmin, xmax)
         plt.savefig(f"{tags[j]}.png")
@@ -152,6 +170,7 @@ def plot_3d_t_volcano(
     d,
     tags,
     coeff,
+    regress,
     dgr,
     cb="white",
     ms="o",
@@ -161,13 +180,10 @@ def plot_3d_t_volcano(
     verb=0,
     plot_type="scatter",
 ):
-    tags = np.array([str(tag) for tag in tags])
-    tag1 = tags[idx1]
-    tag2 = tags[idx2]
-    tags = tags[~coeff]
-    lnsteps = range(np.count_nonzero(coeff == 0))
-    X1 = d[:, idx1].reshape(-1)
-    X2 = d[:, idx2].reshape(-1)
+    X1, X2, tag1, tag2, tags, d = get_reg_targets(
+        idx1, idx2, d, tags, coeff, regress, mode="t"
+    )
+    lnsteps = range(d.shape[1])
     x1max = bround(X1.max() + rmargin)
     x1min = bround(X1.min() - lmargin)
     x2max = bround(X2.max() + rmargin)
@@ -178,7 +194,6 @@ def plot_3d_t_volcano(
         )
     xint = np.linspace(x1min, x1max, npoints)
     yint = np.linspace(x2min, x2max, npoints)
-    d = d[:, ~coeff]
     grids = []
     for i, j in enumerate(lnsteps):
         XY = np.vstack([X1, X2, d[:, j]]).T
@@ -284,6 +299,7 @@ def plot_3d_k_volcano(
     d,
     tags,
     coeff,
+    regress,
     dgr,
     cb="white",
     ms="o",
@@ -293,12 +309,10 @@ def plot_3d_k_volcano(
     verb=0,
     plot_type="scatter",
 ):
-    tags = np.array([str(tag) for tag in tags])
-    tag1 = tags[idx1]
-    tag2 = tags[idx2]
+    X1, X2, tag1, tag2, tags, d = get_reg_targets(
+        idx1, idx2, d, tags, coeff, regress, mode="k"
+    )
     lnsteps = range(d.shape[1])
-    X1 = d[:, idx1].reshape(-1)
-    X2 = d[:, idx2].reshape(-1)
     x1max = bround(X1.max() + rmargin)
     x1min = bround(X1.min() - lmargin)
     x2max = bround(X2.max() + rmargin)
@@ -413,6 +427,7 @@ def plot_3d_es_volcano(
     d,
     tags,
     coeff,
+    regress,
     dgr,
     cb="white",
     ms="o",
@@ -422,10 +437,10 @@ def plot_3d_es_volcano(
     verb=0,
     plot_type="scatter",
 ):
-    tags = [str(tag) for tag in tags]
+    X1, X2, tag1, tag2, tags, d = get_reg_targets(
+        idx1, idx2, d, tags, coeff, regress, mode="k"
+    )
     lnsteps = range(d.shape[1])
-    X1 = d[:, idx1].reshape(-1)
-    X2 = d[:, idx2].reshape(-1)
     x1max = bround(X1.max() + rmargin)
     x1min = bround(X1.min() - lmargin)
     x2max = bround(X2.max() + rmargin)
@@ -540,6 +555,7 @@ def plot_3d_tof_volcano(
     d,
     tags,
     coeff,
+    regress,
     dgr,
     T=298.15,
     cb="white",
@@ -550,10 +566,10 @@ def plot_3d_tof_volcano(
     verb=0,
     plot_type="scatter",
 ):
-    tags = [str(tag) for tag in tags]
+    X1, X2, tag1, tag2, tags, d = get_reg_targets(
+        idx1, idx2, d, tags, coeff, regress, mode="k"
+    )
     lnsteps = range(d.shape[1])
-    X1 = d[:, idx1].reshape(-1)
-    X2 = d[:, idx2].reshape(-1)
     x1max = bround(X1.max() + rmargin)
     x1min = bround(X1.min() - lmargin)
     x2max = bround(X2.max() + rmargin)
@@ -566,7 +582,7 @@ def plot_3d_tof_volcano(
     yint = np.linspace(x2min, x2max, npoints)
     grids = []
     for i, j in enumerate(lnsteps):
-        XY = np.vstack([[d[:, idx1], d[:, idx2]], d[:, j]]).T
+        XY = np.vstack([X1, X2, d[:, j]]).T
         X = XY[:, :2]
         Y = XY[:, 2]
         reg = sk.linear_model.LinearRegression().fit(X, Y)
