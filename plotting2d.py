@@ -13,6 +13,19 @@ from tof import calc_tof, calc_es, calc_s_es
 from exceptions import MissingDataError
 
 
+def get_reg_targets(idx, d, tags, coeff, regress, mode="k"):
+    """Separate regression targets and regressor variables."""
+    tag = tags[idx]
+    tags = tags[regress]
+    X = d[:, idx].reshape(-1)
+    d = d[:, regress]
+    if mode == "t":
+        coeff = coeff[regress]
+        d = d[:, ~coeff]
+        tags = tags[~coeff]
+    return X, tag, tags, d
+
+
 def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
     if ax is None:
         ax = plt.gca()
@@ -28,13 +41,22 @@ def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
 
 
 def plot_2d_lsfer(
-    idx, d, tags, coeff, cb="white", ms="o", lmargin=10, rmargin=10, npoints=250, verb=0
+    idx,
+    d,
+    tags,
+    coeff,
+    regress,
+    cb="white",
+    ms="o",
+    lmargin=10,
+    rmargin=10,
+    npoints=250,
+    verb=0,
 ):
+    Xf, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
+    lnsteps = range(d.shape[1])
     d_refill = np.zeros_like(d)
     d_refill[~np.isnan(d)] = d[~np.isnan(d)]
-    tags = [str(tag) for tag in tags]
-    lnsteps = range(d.shape[1])
-    Xf = d[:, idx].reshape(-1)
     mape = 100
     for j in lnsteps[1:-1]:
         if verb > 0:
@@ -118,7 +140,7 @@ def plot_2d_lsfer(
         ax.xaxis.tick_bottom()
         ax.yaxis.tick_left()
         # Labels and key
-        plt.xlabel(f"{tags[idx]} [kcal/mol]")
+        plt.xlabel(f"{tag} [kcal/mol]")
         plt.ylabel(f"{tags[j]} [kcal/mol]")
         plt.xlim(xmin, xmax)
         plt.savefig(f"{tags[j]}.png")
@@ -200,6 +222,7 @@ def plot_2d_es_volcano(
     d,
     tags,
     coeff,
+    regress,
     dgr,
     cb="white",
     ms="o",
@@ -208,9 +231,8 @@ def plot_2d_es_volcano(
     npoints=250,
     verb=0,
 ):
-    tags = [str(tag) for tag in tags]
+    X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
-    X = d[:, idx].reshape(-1)
     xmax = bround(X.max() + rmargin)
     xmin = bround(X.min() - lmargin)
     if verb > 1:
@@ -266,7 +288,7 @@ def plot_2d_es_volcano(
         px[i] = d[i, idx].reshape(-1)
         py[i] = calc_es(profile, dgr, esp=True)[0]
         if verb > 1:
-            pointsname = f"points_es_volcano_{tags[idx]}.csv"
+            pointsname = f"points_es_volcano_{tag}.csv"
             zdata = list(zip(px, py))
             np.savetxt(
                 pointsname,
@@ -277,11 +299,11 @@ def plot_2d_es_volcano(
             )
         if verb > 2:
             print(f"Profile {profile} corresponds with ES of {py[i]}")
-    xlabel = f"{tags[idx]} [kcal/mol]"
+    xlabel = f"{tag} [kcal/mol]"
     ylabel = r"-δ$G_{SPAN}$ [kcal/mol]"
-    filename = f"es_volcano_{tags[idx]}.png"
+    filename = f"es_volcano_{tag}.png"
     if verb > 0:
-        csvname = f"es_volcano_{tags[idx]}.csv"
+        csvname = f"es_volcano_{tag}.csv"
         print(f"Saving volcano data to file {csvname}")
         zdata = list(zip(xint, ymin))
         np.savetxt(
@@ -298,6 +320,7 @@ def plot_2d_k_volcano(
     d,
     tags,
     coeff,
+    regress,
     dgr,
     cb="white",
     ms="o",
@@ -306,10 +329,8 @@ def plot_2d_k_volcano(
     npoints=250,
     verb=0,
 ):
-    tags = np.array([str(tag) for tag in tags])
-    tag = tags[idx]
+    X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
-    X = d[:, idx].reshape(-1)
     xmax = bround(X.max() + rmargin)
     xmin = bround(X.min() - lmargin)
     if verb > 1:
@@ -365,7 +386,7 @@ def plot_2d_k_volcano(
         px[i] = X[i].reshape(-1)
         py[i] = calc_s_es(profile, dgr, esp=True)[0]
         if verb > 1:
-            pointsname = f"points_k_volcano_{tags[idx]}.csv"
+            pointsname = f"points_k_volcano_{tag}.csv"
             zdata = list(zip(px, py))
             np.savetxt(
                 pointsname,
@@ -395,6 +416,7 @@ def plot_2d_t_volcano(
     d,
     tags,
     coeff,
+    regress,
     dgr,
     cb="white",
     ms="o",
@@ -403,18 +425,14 @@ def plot_2d_t_volcano(
     npoints=250,
     verb=0,
 ):
-    tags = np.array([str(tag) for tag in tags])
-    tag = tags[idx]
-    tags = tags[~coeff]
-    lnsteps = range(np.count_nonzero(coeff == 0))
-    X = d[:, idx].reshape(-1)
+    X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="t")
+    lnsteps = range(d.shape[1])
     xmax = bround(X.max() + rmargin)
     xmin = bround(X.min() - lmargin)
     if verb > 1:
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
     dgs = np.zeros((npoints, len(lnsteps)))
-    d = d[:, ~coeff]
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
         p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
@@ -464,7 +482,7 @@ def plot_2d_t_volcano(
         px[i] = X[i].reshape(-1)
         py[i] = calc_s_es(profile, dgr, esp=True)[0]
         if verb > 1:
-            pointsname = f"points_t_volcano_{tags[idx]}.csv"
+            pointsname = f"points_t_volcano_{tag}.csv"
             zdata = list(zip(px, py))
             np.savetxt(
                 pointsname,
@@ -494,6 +512,7 @@ def plot_2d_tof_volcano(
     d,
     tags,
     coeff,
+    regress,
     dgr,
     T=298.15,
     cb="white",
@@ -503,9 +522,8 @@ def plot_2d_tof_volcano(
     npoints=250,
     verb=0,
 ):
-    tags = [str(tag) for tag in tags]
+    X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
-    X = d[:, idx].reshape(-1)
     xmax = bround(X.max() + rmargin)
     xmin = bround(X.min() - lmargin)
     if verb > 1:
@@ -544,7 +562,7 @@ def plot_2d_tof_volcano(
         if verb > 2:
             print(f"Profile {profile} corresponds with log10(TOF) of {tof}")
         if verb > 1:
-            pointsname = f"points_tof_volcano_{tags[idx]}.csv"
+            pointsname = f"points_tof_volcano_{tag}.csv"
             zdata = list(zip(px, py))
             np.savetxt(
                 pointsname,
@@ -553,11 +571,11 @@ def plot_2d_tof_volcano(
                 delimiter=",",
                 header="Descriptor, log10(TOF)",
             )
-    xlabel = f"{tags[idx]} [kcal/mol]"
+    xlabel = f"{tag} [kcal/mol]"
     ylabel = "log(TOF) [1/s]"
-    filename = f"tof_volcano_{tags[idx]}.png"
+    filename = f"tof_volcano_{tag}.png"
     if verb > 0:
-        csvname = f"tof_volcano_{tags[idx]}.csv"
+        csvname = f"tof_volcano_{tag}.csv"
         print(f"Saving TOF volcano data to file {csvname}")
         zdata = list(zip(xint, ytof))
         np.savetxt(

@@ -134,7 +134,7 @@ def processargs(arguments):
         "--verb",
         dest="verb",
         type=int,
-        default=1,
+        default=0,
         help="Verbosity level of the code. Higher is more verbose and viceversa. (default: 1)",
     )
     vbuilder.add_argument(
@@ -152,7 +152,7 @@ def processargs(arguments):
         "--lsr",
         dest="runmode",
         action="store_const",
-        const="0",
+        const=0,
         help="Set runmode to 0, building only linear scaling relationships.",
     )
     runmode_arg.add_argument(
@@ -160,7 +160,7 @@ def processargs(arguments):
         "--thermo",
         dest="runmode",
         action="store_const",
-        const="1",
+        const=1,
         help="Set runmode to 1, building only thermodynamic volcano.",
     )
     runmode_arg.add_argument(
@@ -168,7 +168,7 @@ def processargs(arguments):
         "--kinetic",
         dest="runmode",
         action="store_const",
-        const="2",
+        const=2,
         help="Set runmode to 2, building only kinetic volcano.",
     )
     runmode_arg.add_argument(
@@ -178,7 +178,7 @@ def processargs(arguments):
         "--es",
         dest="runmode",
         action="store_const",
-        const="3",
+        const=3,
         help="Set runmode to 3, building only energy span and turnover frequency volcanoes.",
     )
     runmode_arg.add_argument(
@@ -186,7 +186,7 @@ def processargs(arguments):
         "--all",
         dest="runmode",
         action="store_const",
-        const="4",
+        const=4,
         help="Set runmode to 4, building all available volcanoes.",
     )
     vbuilder.add_argument(

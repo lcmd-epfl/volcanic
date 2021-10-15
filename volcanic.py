@@ -57,16 +57,9 @@ names = df[df.columns[0]].values
 # Atttempts to group data points based on shared characters in names.
 cb, ms = group_data_points(ic, fc, names)
 
-# Expecting a full reaction profile with corresponding column names.
-tags = [str(tag) for tag in df.columns[1:]]
-if verb > 0:
-    print(f"Reaction profile is given by stationary points:\n {tags}")
+# Expecting a full reaction profile with corresponding column names. Descriptors will be identified.
+tags = np.array([str(tag) for tag in df.columns[1:]], dtype=object)
 d = np.float32(df.to_numpy()[:, 1:])
-
-# We expect the last field of the reaction profiles to be the reaction \DeltaG.
-dgr = d[:, -1]
-if verb > 2:
-    print(f"ΔG of the reaction set to {dgr}.")
 
 # TS or intermediate are interpreted from column names. Coeffs is a boolean array.
 coeff = np.zeros(len(tags), dtype=bool)
@@ -84,15 +77,25 @@ for i, tag in enumerate(tags):
             )
         coeff[i] = False
         regress[i] = False
+    elif "PRODUCT" in tag.upper():
+        if verb > 0:
+            print(f"Assuming ΔG of the reaction(s) are given in field {tag}.")
+        dgr = d[:, i]
+        coeff[i] = False
+        regress[i] = True
     else:
         if verb > 0:
             print(f"Assuming field {tag} corresponds to a non-TS stationary point.")
         coeff[i] = False
         regress[i] = True
 
+
+if verb > 0:
+    print(f"Reaction profile is given by stationary points:\n {tags[regress]}")
+
 # Your data might contain outliers (human error, computation error) or missing points.
 # We will attempt to curate your data automatically.
-d, cb, ms = curate_d(d, regress, cb, ms, tags, imputer_strat, verb)
+d, cb, ms = curate_d(d, regress, cb, ms, tags, imputer_strat, nstds=3, verb=verb)
 
 # Runmode used to set up flags for volcano generation.
 t_volcano, k_volcano, es_volcano, tof_volcano = setflags(runmode)
@@ -105,10 +108,12 @@ if nd == 1:
         print(f"Generating LSR plots using descriptor variable {tags[idx]}")
         if refill:
             d = plot_2d_lsfer(
-                idx, d, tags, coeff, cb, ms, lmargin, rmargin, npoints, verb
+                idx, d, tags, coeff, regress, cb, ms, lmargin, rmargin, npoints, verb
             )
         else:
-            plot_2d_lsfer(idx, d, tags, coeff, cb, ms, lmargin, rmargin, npoints, verb)
+            _ = plot_2d_lsfer(
+                idx, d, tags, coeff, regress, cb, ms, lmargin, rmargin, npoints, verb
+            )
 
         volcano_headers = []
         volcano_list = []
@@ -119,7 +124,18 @@ if nd == 1:
                 f"Generating 2D thermodynamic volcano plot using descriptor variable {tags[idx]}"
             )
             xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_t_volcano(
-                idx, d, tags, coeff, dgr, cb, ms, lmargin, rmargin, npoints, verb
+                idx,
+                d,
+                tags,
+                coeff,
+                regress,
+                dgr,
+                cb,
+                ms,
+                lmargin,
+                rmargin,
+                npoints,
+                verb,
             )
             volcano_headers.append("Thermodynamic volcano")
             volcano_list.append(ymin)
@@ -129,7 +145,18 @@ if nd == 1:
                 f"Generating 2D kinetic volcano plot using descriptor variable {tags[idx]}"
             )
             xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_k_volcano(
-                idx, d, tags, coeff, dgr, cb, ms, lmargin, rmargin, npoints, verb
+                idx,
+                d,
+                tags,
+                coeff,
+                regress,
+                dgr,
+                cb,
+                ms,
+                lmargin,
+                rmargin,
+                npoints,
+                verb,
             )
             volcano_headers.append("Kinetic volcano")
             volcano_list.append(ymin)
@@ -139,7 +166,18 @@ if nd == 1:
                 f"Generating 2D energy span volcano plot using descriptor variable {tags[idx]}"
             )
             xint, ymin, px, py, xmin, xmax, rid, rb = plot_2d_es_volcano(
-                idx, d, tags, coeff, dgr, cb, ms, lmargin, rmargin, npoints, verb
+                idx,
+                d,
+                tags,
+                coeff,
+                regress,
+                dgr,
+                cb,
+                ms,
+                lmargin,
+                rmargin,
+                npoints,
+                verb,
             )
             volcano_headers.append("ES volcano")
             volcano_list.append(ymin)
@@ -149,7 +187,19 @@ if nd == 1:
                 f"Generating 2D TOF volcano plot using descriptor variable {tags[idx]}"
             )
             xint, ytof, px, py, xmin, xmax = plot_2d_tof_volcano(
-                idx, d, tags, coeff, dgr, temp, cb, ms, lmargin, rmargin, npoints, verb
+                idx,
+                d,
+                tags,
+                coeff,
+                regress,
+                dgr,
+                temp,
+                cb,
+                ms,
+                lmargin,
+                rmargin,
+                npoints,
+                verb,
             )
             volcano_headers.append("TOF volcano")
             volcano_list.append(ytof)
@@ -167,11 +217,33 @@ if nd == 2:
         )
         if refill:
             d = plot_3d_lsfer(
-                idx1, idx2, d, tags, coeff, cb, ms, lmargin, rmargin, npoints, verb
+                idx1,
+                idx2,
+                d,
+                tags,
+                coeff,
+                regress,
+                cb,
+                ms,
+                lmargin,
+                rmargin,
+                npoints,
+                verb,
             )
         else:
-            plot_3d_lsfer(
-                idx1, idx2, d, tags, coeff, cb, ms, lmargin, rmargin, npoints, verb
+            _ = plot_3d_lsfer(
+                idx1,
+                idx2,
+                d,
+                tags,
+                coeff,
+                regress,
+                cb,
+                ms,
+                lmargin,
+                rmargin,
+                npoints,
+                verb,
             )
 
         volcano_headers = []
@@ -184,7 +256,19 @@ if nd == 2:
                 f"Generating 3D thermodynamic volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
             )
             x1int, x2int, grid, px, py = plot_3d_t_volcano(
-                idx1, idx2, d, tags, coeff, dgr, cb, ms, lmargin, rmargin, npoints, verb
+                idx1,
+                idx2,
+                d,
+                tags,
+                coeff,
+                regress,
+                dgr,
+                cb,
+                ms,
+                lmargin,
+                rmargin,
+                npoints,
+                verb,
             )
             volcano_headers.append("Thermodynamic volcano")
             volcano_list.append(grid)
@@ -194,7 +278,19 @@ if nd == 2:
                 f"Generating 3D kinetic volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
             )
             x1int, x2int, grid, px, py = plot_3d_k_volcano(
-                idx1, idx2, d, tags, coeff, dgr, cb, ms, lmargin, rmargin, npoints, verb
+                idx1,
+                idx2,
+                d,
+                tags,
+                coeff,
+                regress,
+                dgr,
+                cb,
+                ms,
+                lmargin,
+                rmargin,
+                npoints,
+                verb,
             )
             volcano_headers.append("Kinetic volcano")
             volcano_list.append(grid)
@@ -204,7 +300,19 @@ if nd == 2:
                 f"Generating 3D energy span volcano plot using combination of descriptor variables {tags[idx1]} and {tags[idx2]}"
             )
             x1int, x2int, grid, px, py = plot_3d_es_volcano(
-                idx1, idx2, d, tags, coeff, dgr, cb, ms, lmargin, rmargin, npoints, verb
+                idx1,
+                idx2,
+                d,
+                tags,
+                coeff,
+                regress,
+                dgr,
+                cb,
+                ms,
+                lmargin,
+                rmargin,
+                npoints,
+                verb,
             )
             volcano_headers.append("ES volcano")
             volcano_list.append(grid)
@@ -219,6 +327,7 @@ if nd == 2:
                 d,
                 tags,
                 coeff,
+                regress,
                 dgr,
                 temp,
                 cb,

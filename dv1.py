@@ -22,23 +22,19 @@ def call_imputer(a, b, imputer_strat="simple"):
         return a
 
 
-def curate_d(d, regress, cb, ms, tags, imputer_strat="none", verb=0):
+def curate_d(d, regress, cb, ms, tags, imputer_strat="none", nstds=5, verb=0):
     assert isinstance(d, np.ndarray)
-    d = d[:, regress]
-    try:
-        assert np.isclose(d[:, 0].std(), 0)
-    except AssertionError as m:
-        raise InputError(
-            "The first field of every profile should be the same (reference state). Exit."
-        )
-    dit = d[:, 1:]
-    tagsit = tags[1:]
-    curated_d = d[:, 0].T
+    dit = d[:, regress]
+    tagsit = tags[:]
+    curated_d = np.zeros_like(dit)
     for i in range(dit.shape[1]):
         mean = dit[:, i].mean()
         std = dit[:, i].std()
-        maxtol = np.abs(mean) + 3 * std
-        mintol = np.abs(mean) - 3 * std
+        moe = nstds * std
+        if verb > 2:
+            print(f"We assume a margin of error of {moe}.")
+        maxtol = np.abs(mean) + moe
+        mintol = np.abs(mean) - moe
         absd = np.abs(dit[:, i])
         if any(absd > maxtol):
             outlier = np.where(absd > maxtol)
@@ -54,22 +50,25 @@ def curate_d(d, regress, cb, ms, tags, imputer_strat="none", verb=0):
                     f"Among data series {tagsit[i]} some outliers (very small values) were detected: {dit[outlier,i].flatten()} and will be skipped."
                 )
             dit[outlier, i] = np.nan
-        dit[:, i] = call_imputer(dit[:, i], d[:, i - 1], imputer_strat)
-        curated_d = np.vstack([curated_d, dit[:, i]])
-    curated_d = curated_d.T
+        if i > 0:
+            dit[:, i] = call_imputer(dit[:, i], dit[:, i - 1], imputer_strat)
+        if i == 0:
+            dit[:, i] = call_imputer(dit[:, i], dit[:, i + 1], imputer_strat)
+        curated_d[:, i] = dit[:, i]
     incomplete = np.ones_like(curated_d[:, 0], dtype=bool)
     for i in range(curated_d.shape[0]):
-        n_nans = np.count_nonzero(np.isnan(d[i, :]))
+        n_nans = np.count_nonzero(np.isnan(curated_d[i, :]))
         if n_nans > 0:
             if verb > 1:
                 print(
-                    f"Some of your reaction profiles contain {n_nans} undefined values and will not be considered:\n {d[i,:]}"
+                    f"Some of your reaction profiles contain {n_nans} undefined values and will not be considered:\n {curated_d[:,i]}"
                 )
             incomplete[i] = False
-    curated_d = curated_d[incomplete]
     curated_cb = cb[incomplete]
     curated_ms = ms[incomplete]
-    return curated_d, curated_cb, curated_ms
+    d[:, regress] = curated_d
+    d = d[incomplete, :]
+    return d, curated_cb, curated_ms
 
 
 def find_1_dv(d, tags, coeff, regress, verb=0):
