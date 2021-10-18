@@ -172,22 +172,28 @@ def processargs(arguments):
         help="Set runmode to 2, building only kinetic volcano.",
     )
     runmode_arg.add_argument(
-        "-tof",
-        "--tof",
         "-es",
         "--es",
         dest="runmode",
         action="store_const",
         const=3,
-        help="Set runmode to 3, building only energy span and turnover frequency volcanoes.",
+        help="Set runmode to 3, building only energy span volcano.",
+    )
+    runmode_arg.add_argument(
+        "-tof",
+        "--tof",
+        dest="runmode",
+        action="store_const",
+        const=4,
+        help="Set runmode to 4, building only TOF volcano.",
     )
     runmode_arg.add_argument(
         "-all",
         "--all",
         dest="runmode",
         action="store_const",
-        const=4,
-        help="Set runmode to 4, building all available volcanoes.",
+        const=5,
+        help="Set runmode to 5, building all available volcanoes.",
     )
     vbuilder.add_argument(
         "-T",
@@ -404,17 +410,22 @@ def setflags(runmode):
         t_volcano = False
         k_volcano = False
         es_volcano = True
-        tof_volcano = True
+        tof_volcano = False
     if runmode == 4:
-        t_volcano = True
-        k_volcano = True
-        es_volcano = True
+        t_volcano = False
+        k_volcano = False
+        es_volcano = False
         tof_volcano = True
     if runmode == 5:
         t_volcano = yesno("Generate thermodynamic volcano plot")
         k_volcano = yesno("Generate kinetic volcano plot")
         es_volcano = yesno("Generate energy span volcano plot")
         tof_volcano = yesno("Generate TOF volcano plot")
+    else:
+        t_volcano = True
+        k_volcano = True
+        es_volcano = True
+        tof_volcano = True
     return t_volcano, k_volcano, es_volcano, tof_volcano
 
 

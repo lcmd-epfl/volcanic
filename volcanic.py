@@ -27,6 +27,7 @@ from helpers import (
     arraydump,
     setflags,
 )
+from exceptions import ImputError
 
 if __name__ == "__main__":
     (
@@ -347,3 +348,179 @@ if nd == 2:
                 volcano_list,
                 volcano_headers,
             )
+
+
+def volcanic_2d(
+    runmode,
+    idx,
+    d,
+    tags,
+    coeff,
+    regress,
+    dgr,
+    temp=298.15,
+    cb=None,
+    ms=None,
+    lmargin=20,
+    rmargin=20,
+    npoints=200,
+    verb=0,
+):
+    if runmode == 5:
+        raise InputError(
+            "In function mode, options requiring explicit CLI input are disabled."
+        )
+    t_volcano, k_volcano, es_volcano, tof_volcano = setflags(runmode)
+    d = plot_2d_lsfer(
+        idx, d, tags, coeff, regress, cb, ms, lmargin, rmargin, npoints, verb
+    )
+    if t_volcano:
+        return plot_2d_t_volcano(
+            idx,
+            d,
+            tags,
+            coeff,
+            regress,
+            dgr,
+            cb,
+            ms,
+            lmargin,
+            rmargin,
+            npoints,
+            verb,
+        )
+    if k_volcano:
+        return plot_2d_k_volcano(
+            idx,
+            d,
+            tags,
+            coeff,
+            regress,
+            dgr,
+            cb,
+            ms,
+            lmargin,
+            rmargin,
+            npoints,
+            verb,
+        )
+    if es_volcano:
+        return plot_2d_es_volcano(
+            idx,
+            d,
+            tags,
+            coeff,
+            regress,
+            dgr,
+            cb,
+            ms,
+            lmargin,
+            rmargin,
+            npoints,
+            verb,
+        )
+    if tof_volcano:
+        return plot_2d_tof_volcano(
+            idx,
+            d,
+            tags,
+            coeff,
+            regress,
+            dgr,
+            temp,
+            cb,
+            ms,
+            lmargin,
+            rmargin,
+            npoints,
+            verb,
+        )
+
+
+def volcanic_3d(
+    runmode,
+    idx1,
+    idx2,
+    d,
+    tags,
+    coeff,
+    regress,
+    dgr,
+    temp=298.15,
+    cb=None,
+    ms=None,
+    lmargin=20,
+    rmargin=20,
+    npoints=200,
+    verb=0,
+):
+    if runmode == 5:
+        raise InputError(
+            "In function mode, options requiring explicit CLI input are disabled."
+        )
+    t_volcano, k_volcano, es_volcano, tof_volcano = setflags(runmode)
+    if t_volcano:
+        return plot_3d_t_volcano(
+            idx1,
+            idx2,
+            d,
+            tags,
+            coeff,
+            regress,
+            dgr,
+            cb,
+            ms,
+            lmargin,
+            rmargin,
+            npoints,
+            verb,
+        )
+    if k_volcano:
+        return plot_3d_k_volcano(
+            idx1,
+            idx2,
+            d,
+            tags,
+            coeff,
+            regress,
+            dgr,
+            cb,
+            ms,
+            lmargin,
+            rmargin,
+            npoints,
+            verb,
+        )
+    if es_volcano:
+        return plot_3d_es_volcano(
+            idx1,
+            idx2,
+            d,
+            tags,
+            coeff,
+            regress,
+            dgr,
+            cb,
+            ms,
+            lmargin,
+            rmargin,
+            npoints,
+            verb,
+        )
+    if tof_volcano:
+        return plot_3d_tof_volcano(
+            idx1,
+            idx2,
+            d,
+            tags,
+            coeff,
+            regress,
+            dgr,
+            temp,
+            cb,
+            ms,
+            lmargin,
+            rmargin,
+            npoints,
+            verb,
+        )
