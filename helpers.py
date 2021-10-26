@@ -208,6 +208,16 @@ def processargs(arguments):
         help="Temperature in K. (default: 298.15)",
     )
     vbuilder.add_argument(
+        "-pm",
+        "--pm",
+        "-plotmode",
+        "--plotmode",
+        dest="plotmode",
+        type=int,
+        default=1,
+        help="Plot mode for volcano and activity map plotting. Higher is more detailed, lower is basic. (default: 1)",
+    )
+    vbuilder.add_argument(
         "-ic",
         "--ic",
         dest="ic",
@@ -323,6 +333,7 @@ def processargs(arguments):
         args.lmargin,
         args.rmargin,
         args.npoints,
+        args.plotmode,
     )
 
 
@@ -396,27 +407,27 @@ def setflags(runmode):
         k_volcano = False
         es_volcano = False
         tof_volcano = False
-    if runmode == 1:
+    elif runmode == 1:
         t_volcano = True
         k_volcano = False
         es_volcano = False
         tof_volcano = False
-    if runmode == 2:
+    elif runmode == 2:
         t_volcano = False
         k_volcano = True
         es_volcano = False
         tof_volcano = False
-    if runmode == 3:
+    elif runmode == 3:
         t_volcano = False
         k_volcano = False
         es_volcano = True
         tof_volcano = False
-    if runmode == 4:
+    elif runmode == 4:
         t_volcano = False
         k_volcano = False
         es_volcano = False
         tof_volcano = True
-    if runmode == 5:
+    elif runmode == 5:
         t_volcano = yesno("Generate thermodynamic volcano plot")
         k_volcano = yesno("Generate kinetic volcano plot")
         es_volcano = yesno("Generate energy span volcano plot")

@@ -177,6 +177,7 @@ def plot_3d_t_volcano(
     lmargin=15,
     rmargin=15,
     npoints=200,
+    plotmode=1,
     verb=0,
     plot_type="scatter",
 ):
@@ -306,6 +307,7 @@ def plot_3d_k_volcano(
     lmargin=15,
     rmargin=15,
     npoints=200,
+    plotmode=1,
     verb=0,
     plot_type="scatter",
 ):
@@ -434,6 +436,7 @@ def plot_3d_es_volcano(
     lmargin=15,
     rmargin=15,
     npoints=200,
+    plotmode=1,
     verb=0,
     plot_type="scatter",
 ):
@@ -563,6 +566,7 @@ def plot_3d_tof_volcano(
     lmargin=15,
     rmargin=15,
     npoints=200,
+    plotmode=1,
     verb=0,
     plot_type="scatter",
 ):

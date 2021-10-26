@@ -19,7 +19,6 @@ from plotting3d import (
     plot_3d_tof_volcano,
 )
 from helpers import (
-    yesno,
     processargs,
     group_data_points,
     user_choose_1_dv,
@@ -27,7 +26,7 @@ from helpers import (
     arraydump,
     setflags,
 )
-from exceptions import ImputError
+from exceptions import InputError
 
 if __name__ == "__main__":
     (
@@ -44,6 +43,7 @@ if __name__ == "__main__":
         lmargin,
         rmargin,
         npoints,
+        plotmode,
     ) = processargs(sys.argv[1:])
 else:
     exit(1)
@@ -98,6 +98,7 @@ if verb > 0:
 # We will attempt to curate your data automatically.
 d, cb, ms = curate_d(d, regress, cb, ms, tags, imputer_strat, nstds=3, verb=verb)
 
+
 # Runmode used to set up flags for volcano generation.
 t_volcano, k_volcano, es_volcano, tof_volcano = setflags(runmode)
 
@@ -109,11 +110,33 @@ if nd == 1:
         print(f"Generating LSR plots using descriptor variable {tags[idx]}")
         if refill:
             d = plot_2d_lsfer(
-                idx, d, tags, coeff, regress, cb, ms, lmargin, rmargin, npoints, verb
+                idx,
+                d,
+                tags,
+                coeff,
+                regress,
+                cb,
+                ms,
+                lmargin,
+                rmargin,
+                npoints,
+                plotmode,
+                verb,
             )
         else:
             _ = plot_2d_lsfer(
-                idx, d, tags, coeff, regress, cb, ms, lmargin, rmargin, npoints, verb
+                idx,
+                d,
+                tags,
+                coeff,
+                regress,
+                cb,
+                ms,
+                lmargin,
+                rmargin,
+                npoints,
+                plotmode,
+                verb,
             )
 
         volcano_headers = []
@@ -136,6 +159,7 @@ if nd == 1:
                 lmargin,
                 rmargin,
                 npoints,
+                plotmode,
                 verb,
             )
             volcano_headers.append("Thermodynamic volcano")
@@ -157,6 +181,7 @@ if nd == 1:
                 lmargin,
                 rmargin,
                 npoints,
+                plotmode,
                 verb,
             )
             volcano_headers.append("Kinetic volcano")
@@ -178,6 +203,7 @@ if nd == 1:
                 lmargin,
                 rmargin,
                 npoints,
+                plotmode,
                 verb,
             )
             volcano_headers.append("ES volcano")
@@ -200,6 +226,7 @@ if nd == 1:
                 lmargin,
                 rmargin,
                 npoints,
+                plotmode,
                 verb,
             )
             volcano_headers.append("TOF volcano")
@@ -229,6 +256,7 @@ if nd == 2:
                 lmargin,
                 rmargin,
                 npoints,
+                plotmode,
                 verb,
             )
         else:
@@ -244,6 +272,7 @@ if nd == 2:
                 lmargin,
                 rmargin,
                 npoints,
+                plotmode,
                 verb,
             )
 
@@ -269,6 +298,7 @@ if nd == 2:
                 lmargin,
                 rmargin,
                 npoints,
+                plotmode,
                 verb,
             )
             volcano_headers.append("Thermodynamic volcano")
@@ -291,6 +321,7 @@ if nd == 2:
                 lmargin,
                 rmargin,
                 npoints,
+                plotmode,
                 verb,
             )
             volcano_headers.append("Kinetic volcano")
@@ -313,6 +344,7 @@ if nd == 2:
                 lmargin,
                 rmargin,
                 npoints,
+                plotmode,
                 verb,
             )
             volcano_headers.append("ES volcano")
@@ -336,6 +368,7 @@ if nd == 2:
                 lmargin,
                 rmargin,
                 npoints,
+                plotmode,
                 verb,
             )
             volcano_headers.append("TOF volcano")
@@ -364,6 +397,7 @@ def volcanic_2d(
     lmargin=20,
     rmargin=20,
     npoints=200,
+    plotmode=1,
     verb=0,
 ):
     if runmode == 5:
@@ -372,7 +406,7 @@ def volcanic_2d(
         )
     t_volcano, k_volcano, es_volcano, tof_volcano = setflags(runmode)
     d = plot_2d_lsfer(
-        idx, d, tags, coeff, regress, cb, ms, lmargin, rmargin, npoints, verb
+        idx, d, tags, coeff, regress, cb, ms, lmargin, rmargin, npoints, plotmode, verb
     )
     if t_volcano:
         return plot_2d_t_volcano(
@@ -387,6 +421,7 @@ def volcanic_2d(
             lmargin,
             rmargin,
             npoints,
+            plotmode,
             verb,
         )
     if k_volcano:
@@ -402,6 +437,7 @@ def volcanic_2d(
             lmargin,
             rmargin,
             npoints,
+            plotmode,
             verb,
         )
     if es_volcano:
@@ -417,6 +453,7 @@ def volcanic_2d(
             lmargin,
             rmargin,
             npoints,
+            plotmode,
             verb,
         )
     if tof_volcano:
@@ -433,6 +470,7 @@ def volcanic_2d(
             lmargin,
             rmargin,
             npoints,
+            plotmode,
             verb,
         )
 
@@ -452,6 +490,7 @@ def volcanic_3d(
     lmargin=20,
     rmargin=20,
     npoints=200,
+    plotmode=1,
     verb=0,
 ):
     if runmode == 5:
@@ -473,6 +512,7 @@ def volcanic_3d(
             lmargin,
             rmargin,
             npoints,
+            plotmode,
             verb,
         )
     if k_volcano:
@@ -489,6 +529,7 @@ def volcanic_3d(
             lmargin,
             rmargin,
             npoints,
+            plotmode,
             verb,
         )
     if es_volcano:
@@ -505,6 +546,7 @@ def volcanic_3d(
             lmargin,
             rmargin,
             npoints,
+            plotmode,
             verb,
         )
     if tof_volcano:
@@ -522,5 +564,6 @@ def volcanic_3d(
             lmargin,
             rmargin,
             npoints,
+            plotmode,
             verb,
         )

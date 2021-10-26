@@ -51,6 +51,7 @@ def plot_2d_lsfer(
     lmargin=10,
     rmargin=10,
     npoints=250,
+    plotmode=1,
     verb=0,
 ):
     Xf, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
@@ -147,6 +148,38 @@ def plot_2d_lsfer(
     return d_refill
 
 
+def beautify_ax(ax):
+    # Border
+    ax.spines["top"].set_color("black")
+    ax.spines["bottom"].set_color("black")
+    ax.spines["left"].set_color("black")
+    ax.spines["right"].set_color("black")
+    ax.get_xaxis().set_tick_params(direction="out")
+    ax.get_yaxis().set_tick_params(direction="out")
+    ax.xaxis.tick_bottom()
+    ax.yaxis.tick_left()
+    return ax
+
+
+def plotpoints(ax, px, py, cb, ms, plotmode):
+    if plotmode == 1:
+        s = 7.5
+        lw = 0.15
+    else:
+        s = (10,)
+        lw = 0.2
+    for i in range(len(px)):
+        ax.scatter(
+            px[i],
+            py[i],
+            s=s,
+            c=cb[i],
+            marker=ms[i],
+            linewidths=lw,
+            edgecolors="black",
+        )
+
+
 def plot_2d(
     x,
     y,
@@ -161,59 +194,88 @@ def plot_2d(
     rb=None,
     cb="white",
     ms="o",
+    plotmode=1,
 ):
+    print(f"Plotmode set to {plotmode}")
     fig, ax = plt.subplots(
         frameon=False, figsize=[3, 3], dpi=300, constrained_layout=True
     )
-
-    ax.plot(x, y, "-", linewidth=1.25, color="midnightblue", alpha=0.95)
-    for i in range(len(px)):
-        ax.scatter(
-            px[i],
-            py[i],
-            s=7.5,
-            c=cb[i],
-            marker=ms[i],
-            linewidths=0.15,
-            edgecolors="black",
-        )
-    # Border
-    ax.spines["top"].set_color("black")
-    ax.spines["bottom"].set_color("black")
-    ax.spines["left"].set_color("black")
-    ax.spines["right"].set_color("black")
-    ax.get_xaxis().set_tick_params(direction="out")
-    ax.get_yaxis().set_tick_params(direction="out")
-    ax.xaxis.tick_bottom()
-    ax.yaxis.tick_left()
     # Labels and key
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.xlim(xmin, xmax)
-    if rid is not None and rb is not None:
-        avgs = []
-        rb.append(xmax)
-        for i in range(len(rb) - 1):
-            avgs.append((rb[i] + rb[i + 1]) / 2)
-        for i in rb:
-            ax.axvline(
-                i,
-                linestyle="dashed",
-                color="black",
-                linewidth=0.5,
-                alpha=0.75,
-            )
-        yavg = (y.max() + y.min()) * 0.5
-        for i, j in zip(rid, avgs):
-            plt.text(
-                j,
-                yavg,
-                i,
-                fontsize=7.5,
-                horizontalalignment="center",
-                verticalalignment="center",
-                rotation="vertical",
-            )
+    if plotmode == 0:
+        ax.plot(x, y, "-", linewidth=1.5, color="midnightblue", alpha=1.0)
+        ax = beautify_ax(ax)
+        if rid is not None and rb is not None:
+            avgs = []
+            rb.append(xmax)
+            for i in range(len(rb) - 1):
+                avgs.append((rb[i] + rb[i + 1]) / 2)
+            for i in rb:
+                ax.axvline(
+                    i,
+                    linestyle="dashed",
+                    color="black",
+                    linewidth=0.5,
+                    alpha=0.75,
+                )
+    elif plotmode == 1:
+        ax.plot(x, y, "-", linewidth=1.25, color="midnightblue", alpha=0.95)
+        ax = beautify_ax(ax)
+        plotpoints(ax, px, py, cb, ms, plotmode)
+        if rid is not None and rb is not None:
+            avgs = []
+            rb.append(xmax)
+            for i in range(len(rb) - 1):
+                avgs.append((rb[i] + rb[i + 1]) / 2)
+            for i in rb:
+                ax.axvline(
+                    i,
+                    linestyle="dashed",
+                    color="black",
+                    linewidth=0.5,
+                    alpha=0.75,
+                )
+            yavg = (y.max() + y.min()) * 0.5
+            for i, j in zip(rid, avgs):
+                plt.text(
+                    j,
+                    yavg,
+                    i,
+                    fontsize=7.5,
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                    rotation="vertical",
+                )
+    else:
+        ax.plot(x, y, "-", linewidth=1.5, color="midnightblue", alpha=0.75)
+        ax = beautify_ax(ax)
+        plotpoints(ax, px, py, cb, ms, plotmode)
+        if rid is not None and rb is not None:
+            avgs = []
+            rb.append(xmax)
+            for i in range(len(rb) - 1):
+                avgs.append((rb[i] + rb[i + 1]) / 2)
+            for i in rb:
+                ax.axvline(
+                    i,
+                    linestyle="dashed",
+                    color="black",
+                    linewidth=0.5,
+                    alpha=0.5,
+                )
+            yavg = (y.max() + y.min()) * 0.45
+            for i, j in zip(rid, avgs):
+                plt.text(
+                    j,
+                    yavg,
+                    i,
+                    fontsize=5,
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                    rotation="vertical",
+                )
     plt.savefig(filename)
 
 
@@ -229,6 +291,7 @@ def plot_2d_es_volcano(
     lmargin=35,
     rmargin=35,
     npoints=250,
+    plotmode=1,
     verb=0,
 ):
     X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
@@ -310,7 +373,20 @@ def plot_2d_es_volcano(
             csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\d_Ges"
         )
     plot_2d(
-        xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename, rid, rb, cb=cb, ms=ms
+        xint,
+        ymin,
+        px,
+        py,
+        xmin,
+        xmax,
+        xlabel,
+        ylabel,
+        filename,
+        rid,
+        rb,
+        cb=cb,
+        ms=ms,
+        plotmode=plotmode,
     )
     return xint, ymin, px, py, xmin, xmax, rid, rb
 
@@ -327,6 +403,7 @@ def plot_2d_k_volcano(
     lmargin=35,
     rmargin=35,
     npoints=250,
+    plotmode=1,
     verb=0,
 ):
     X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
@@ -406,7 +483,20 @@ def plot_2d_k_volcano(
             csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\D_Gkds"
         )
     plot_2d(
-        xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename, rid, rb, cb=cb, ms=ms
+        xint,
+        ymin,
+        px,
+        py,
+        xmin,
+        xmax,
+        xlabel,
+        ylabel,
+        filename,
+        rid,
+        rb,
+        cb=cb,
+        ms=ms,
+        plotmode=plotmode,
     )
     return xint, ymin, px, py, xmin, xmax, rid, rb
 
@@ -423,6 +513,7 @@ def plot_2d_t_volcano(
     lmargin=35,
     rmargin=35,
     npoints=250,
+    plotmode=1,
     verb=0,
 ):
     X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="t")
@@ -502,7 +593,20 @@ def plot_2d_t_volcano(
             csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\D_Gpds"
         )
     plot_2d(
-        xint, ymin, px, py, xmin, xmax, xlabel, ylabel, filename, rid, rb, cb=cb, ms=ms
+        xint,
+        ymin,
+        px,
+        py,
+        xmin,
+        xmax,
+        xlabel,
+        ylabel,
+        filename,
+        rid,
+        rb,
+        cb=cb,
+        ms=ms,
+        plotmode=plotmode,
     )
     return xint, ymin, px, py, xmin, xmax, rid, rb
 
@@ -520,6 +624,7 @@ def plot_2d_tof_volcano(
     lmargin=15,
     rmargin=15,
     npoints=250,
+    plotmode=1,
     verb=0,
 ):
     X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
@@ -581,5 +686,18 @@ def plot_2d_tof_volcano(
         np.savetxt(
             csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, log10(TOF)"
         )
-    plot_2d(xint, ytof, px, py, xmin, xmax, xlabel, ylabel, filename, cb=cb, ms=ms)
+    plot_2d(
+        xint,
+        ytof,
+        px,
+        py,
+        xmin,
+        xmax,
+        xlabel,
+        ylabel,
+        filename,
+        cb=cb,
+        ms=ms,
+        plotmode=plotmode,
+    )
     return xint, ytof, px, py, xmin, xmax
