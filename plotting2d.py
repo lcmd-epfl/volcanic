@@ -196,7 +196,6 @@ def plot_2d(
     ms="o",
     plotmode=1,
 ):
-    print(f"Plotmode set to {plotmode}")
     fig, ax = plt.subplots(
         frameon=False, figsize=[3, 3], dpi=300, constrained_layout=True
     )
