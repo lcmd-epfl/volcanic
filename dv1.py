@@ -90,6 +90,9 @@ def find_1_dv(d, tags, coeff, regress, verb=0):
     maes = np.ones(d.shape[1])
     r2s = np.ones(d.shape[1])
     maps = np.ones(d.shape[1])
+    r2s_mat = np.zeros((d.shape[1], d[:, regress].shape[1]))
+    maes_mat = np.zeros_like(r2s_mat)
+    maps_mat = np.zeros_like(maes_mat)
     for i in lnsteps:
         if verb > 0:
             print(f"\nTrying {tags[i]} as descriptor variable:")
@@ -106,6 +109,9 @@ def find_1_dv(d, tags, coeff, regress, verb=0):
             imaes.append(sk.metrics.mean_absolute_error(Y, reg.predict(X)))
             imaps.append(sk.metrics.mean_absolute_percentage_error(Y, reg.predict(X)))
             ir2s.append(reg.score(X, Y))
+            r2s_mat[i, j] = ir2s[-1]
+            maes_mat[i, j] = imaes[-1]
+            maps_mat[i, j] = imaps[-1]
             if verb > 1:
                 print(
                     f"With {tags[i]} as descriptor, regressed {tags[j]} with r2 : {np.round(ir2s[-1],2)} and MAE: {np.round(imaes[-1],2)}"
@@ -121,6 +127,9 @@ def find_1_dv(d, tags, coeff, regress, verb=0):
             print(
                 f"\nWith {tags[i]} as descriptor,\n the mean r2 is : {np.round(r2s[i],2)},\n the mean MAE is :  {np.round(maes[i],2)}\n the std MAPE is : {np.round(maps[i],2)}\n"
             )
+    np.save("r2smatrix.npy", r2s_mat)
+    np.save("maematrix.npy", maes_mat)
+    np.save("mapematrix.npy", mape_mat)
     criteria = []
     criteria.append(np.squeeze(np.where(r2s == np.max(r2s[~np.ma.make_mask(coeff)]))))
     criteria.append(np.squeeze(np.where(maes == np.min(maes[~np.ma.make_mask(coeff)]))))
