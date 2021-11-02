@@ -76,6 +76,10 @@ for i, tag in enumerate(tags):
             print(
                 f"Assuming field {tag} corresponds to a non-energy descriptor variable."
             )
+        start_des = tag.upper().find("DESCRIPTOR")
+        tags[i] = "".join(
+            [i for i in tag[:start_des]] + [i for i in tag[start_des + 10 :]]
+        )
         coeff[i] = False
         regress[i] = False
     elif "PRODUCT" in tag.upper():
@@ -97,7 +101,6 @@ if verb > 0:
 # Your data might contain outliers (human error, computation error) or missing points.
 # We will attempt to curate your data automatically.
 d, cb, ms = curate_d(d, regress, cb, ms, tags, imputer_strat, nstds=3, verb=verb)
-
 
 # Runmode used to set up flags for volcano generation.
 t_volcano, k_volcano, es_volcano, tof_volcano = setflags(runmode)

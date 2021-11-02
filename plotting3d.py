@@ -255,7 +255,7 @@ def plot_3d_t_volcano(
         plot_3d_contour(
             xint,
             yint,
-            grid,
+            grid.T,
             px,
             py,
             ymin,
@@ -275,7 +275,7 @@ def plot_3d_t_volcano(
         plot_3d_scatter(
             xint,
             yint,
-            grid,
+            grid.T,
             px,
             py,
             ymin,
@@ -383,7 +383,7 @@ def plot_3d_k_volcano(
         plot_3d_contour(
             xint,
             yint,
-            grid,
+            grid.T,
             px,
             py,
             ymin,
@@ -403,7 +403,7 @@ def plot_3d_k_volcano(
         plot_3d_scatter(
             xint,
             yint,
-            grid,
+            grid.T,
             px,
             py,
             ymin,
@@ -511,7 +511,7 @@ def plot_3d_es_volcano(
         plot_3d_contour(
             xint,
             yint,
-            grid,
+            grid.T,
             px,
             py,
             ymin,
@@ -531,7 +531,7 @@ def plot_3d_es_volcano(
         plot_3d_scatter(
             xint,
             yint,
-            grid,
+            grid.T,
             px,
             py,
             ymin,
@@ -633,7 +633,7 @@ def plot_3d_tof_volcano(
         plot_3d_contour(
             xint,
             yint,
-            grid,
+            grid.T,
             px,
             py,
             ymin,
@@ -653,7 +653,7 @@ def plot_3d_tof_volcano(
         plot_3d_scatter(
             xint,
             yint,
-            grid,
+            grid.T,
             px,
             py,
             ymin,

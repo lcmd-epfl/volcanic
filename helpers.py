@@ -299,8 +299,8 @@ def processargs(arguments):
         df = dfs[0]
     assert isinstance(df, pd.DataFrame)
     if args.verb > 1:
-        print("Final reaction profile database (top rows):")
-        print(df.head())
+        print("Final reaction profile database (10 top rows):")
+        print(df.head(10))
 
     if ddfs:
         if len(ddfs) > 1:
