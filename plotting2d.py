@@ -204,8 +204,9 @@ def plot_2d(
     plt.ylabel(ylabel)
     plt.xlim(xmin, xmax)
     if plotmode == 0:
-        ax.plot(x, y, "-", linewidth=1.5, color="midnightblue", alpha=1.0)
+        ax.plot(x, y, "-", linewidth=1.5, color="midnightblue", alpha=0.95)
         ax = beautify_ax(ax)
+        plotpoints(ax, px, py, cb, ms, plotmode)
         if rid is not None and rb is not None:
             avgs = []
             rb.append(xmax)
@@ -247,8 +248,8 @@ def plot_2d(
                     verticalalignment="center",
                     rotation="vertical",
                 )
-    else:
-        ax.plot(x, y, "-", linewidth=1.5, color="midnightblue", alpha=0.75)
+    elif plotmode == 2:
+        ax.plot(x, y, "-", linewidth=1.25, color="midnightblue", alpha=0.95)
         ax = beautify_ax(ax)
         plotpoints(ax, px, py, cb, ms, plotmode)
         if rid is not None and rb is not None:
@@ -262,15 +263,15 @@ def plot_2d(
                     linestyle="dashed",
                     color="black",
                     linewidth=0.5,
-                    alpha=0.5,
+                    alpha=0.75,
                 )
-            yavg = (y.max() + y.min()) * 0.45
+            yavg = (y.max() + y.min()) * 0.5
             for i, j in zip(rid, avgs):
                 plt.text(
                     j,
                     yavg,
                     i,
-                    fontsize=5,
+                    fontsize=7.5,
                     horizontalalignment="center",
                     verticalalignment="center",
                     rotation="vertical",

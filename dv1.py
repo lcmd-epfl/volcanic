@@ -106,9 +106,6 @@ def find_1_dv(d, tags, coeff, regress, verb=0):
             imaes.append(sk.metrics.mean_absolute_error(Y, reg.predict(X)))
             imaps.append(sk.metrics.mean_absolute_percentage_error(Y, reg.predict(X)))
             ir2s.append(reg.score(X, Y))
-            r2s_mat[i, j] = ir2s[-1]
-            maes_mat[i, j] = imaes[-1]
-            maps_mat[i, j] = imaps[-1]
             if verb > 1:
                 print(
                     f"With {tags[i]} as descriptor, regressed {tags[j]} with r2 : {np.round(ir2s[-1],2)} and MAE: {np.round(imaes[-1],2)}"
@@ -122,13 +119,13 @@ def find_1_dv(d, tags, coeff, regress, verb=0):
                 f"\nWith {tags[i]} as descriptor,\n the mean r2 is : {np.round(r2s[i],2)},\n the mean MAE is :  {np.round(maes[i],2)}\n the std MAPE is : {np.round(maps[i],2)}\n"
             )
     criteria = []
-    criteria.append(np.squeeze(np.where(r2s == np.max(r2s[~np.ma.make_mask(coeff)]))))
-    criteria.append(np.squeeze(np.where(maes == np.min(maes[~np.ma.make_mask(coeff)]))))
-    criteria.append(np.squeeze(np.where(maps == np.min(maps[~np.ma.make_mask(coeff)]))))
+    criteria.append(np.squeeze(np.where(r2s == np.max(r2s[~coeff]))))
+    criteria.append(np.squeeze(np.where(maes == np.min(maes[~coeff]))))
+    criteria.append(np.squeeze(np.where(maps == np.min(maps[~coeff]))))
     for i, criterion in enumerate(criteria):
         if isinstance(criterion, (np.ndarray)):
             if any(criterion.shape):
-                criterion = [idx for idx in criterion if ~np.ma.make_mask(coeff)[idx]]
+                criterion = [idx for idx in criterion if ~coeff[idx]]
                 criteria[i] = rng.choice(criterion, size=1)
     a = criteria[0]
     b = criteria[1]
