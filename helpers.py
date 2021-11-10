@@ -346,7 +346,7 @@ def check_input(filenames, dfilenames, temp, nd, imputer_strat, verb):
     for filename in filenames:
         if filename.split(".")[-1] in accepted_excel_terms:
             dfs.append(pd.read_excel(filename))
-        elif term == "csv":
+        elif filename.split(".")[-1] == "csv":
             dfs.append(pd.read_csv(filename))
         else:
             raise InputError(

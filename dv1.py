@@ -114,6 +114,9 @@ def find_1_dv(d, tags, coeff, regress, verb=0):
             print(
                 f"\nWith {tags[i]} as descriptor the following r2 values were obtained : {ir2s}"
             )
+        maes[i] = np.array(imaes).mean()
+        r2s[i] = np.array(ir2s).mean()
+        maps[i] = np.array(imaps).mean()
         if verb > 0:
             print(
                 f"\nWith {tags[i]} as descriptor,\n the mean r2 is : {np.round(r2s[i],2)},\n the mean MAE is :  {np.round(maes[i],2)}\n the std MAPE is : {np.round(maps[i],2)}\n"
@@ -231,8 +234,8 @@ def test_dv1():
     profiles = np.vstack([a, b, c])
     regress = np.ones((11), dtype=bool)
     dvs, r2s = find_1_dv(profiles, tags, coeff, regress, verb=2)
-    print(dvs)
-    assert len(dvs) < 4
+    assert dvs == [9]
+    assert tags[9] == "Struc6"
     assert np.allclose(r2s, [0.6436413778677442, 0.6419178563084623], 4)
 
 

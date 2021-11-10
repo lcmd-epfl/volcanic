@@ -379,7 +379,7 @@ def plot_3d_k_volcano(
             delimiter=",",
             header="Descriptor 1, Descriptor 2, -\D_kds",
         )
-    if plot_type == 0:
+    if plotmode == 0:
         plot_3d_contour(
             xint,
             yint,
@@ -399,7 +399,7 @@ def plot_3d_k_volcano(
             cb=cb,
             ms=ms,
         )
-    if plot_type == 1:
+    if plotmode == 1:
         plot_3d_scatter(
             xint,
             yint,
@@ -507,7 +507,7 @@ def plot_3d_es_volcano(
             delimiter=",",
             header="Descriptor 1, Descriptor 2, -\d_Ges",
         )
-    if plot_type == 0:
+    if plotmode == 0:
         plot_3d_contour(
             xint,
             yint,
@@ -527,7 +527,7 @@ def plot_3d_es_volcano(
             cb=cb,
             ms=ms,
         )
-    if plot_type == 1:
+    if plotmode == 1:
         plot_3d_scatter(
             xint,
             yint,
@@ -629,7 +629,7 @@ def plot_3d_tof_volcano(
             delimiter=",",
             header="Descriptor 1, Descriptor 2, log10(TOF)",
         )
-    if plot_type == 0:
+    if plotmode == 0:
         plot_3d_contour(
             xint,
             yint,
@@ -649,7 +649,7 @@ def plot_3d_tof_volcano(
             cb=cb,
             ms=ms,
         )
-    if plot_type == 1:
+    if plotmode == 1:
         plot_3d_scatter(
             xint,
             yint,
