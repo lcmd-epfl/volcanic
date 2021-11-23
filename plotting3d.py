@@ -392,6 +392,8 @@ def plot_3d_k_volcano(
             x1max,
             x2min,
             x2max,
+            x1base,
+            x2base,
             x1label=x1label,
             x2label=x2label,
             ylabel=ylabel,
@@ -412,6 +414,8 @@ def plot_3d_k_volcano(
             x1max,
             x2min,
             x2max,
+            x1base,
+            x2base,
             x1label=x1label,
             x2label=x2label,
             ylabel=ylabel,
@@ -489,7 +493,7 @@ def plot_3d_es_volcano(
         py[i] = d[i, idx2].reshape(-1)
     x1label = f"{tags[idx1]} [kcal/mol]"
     x2label = f"{tags[idx2]} [kcal/mol]"
-    ylabel = r"-δ$G_{SPAN}$ [kcal/mol]"
+    ylabel = r"-δ$E_{span}$ [kcal/mol]"
     filename = f"es_volcano_{tags[idx1]}_{tags[idx2]}.png"
     if verb > 0:
         csvname = f"es_volcano_{tags[idx1]}_{tags[idx2]}.csv"
@@ -520,6 +524,8 @@ def plot_3d_es_volcano(
             x1max,
             x2min,
             x2max,
+            x1base,
+            x2base,
             x1label=x1label,
             x2label=x2label,
             ylabel=ylabel,
@@ -540,6 +546,8 @@ def plot_3d_es_volcano(
             x1max,
             x2min,
             x2max,
+            x1base,
+            x2base,
             x1label=x1label,
             x2label=x2label,
             ylabel=ylabel,
@@ -642,6 +650,8 @@ def plot_3d_tof_volcano(
             x1max,
             x2min,
             x2max,
+            x1base,
+            x2base,
             x1label=x1label,
             x2label=x2label,
             ylabel=ylabel,
@@ -662,6 +672,8 @@ def plot_3d_tof_volcano(
             x1max,
             x2min,
             x2max,
+            x1base,
+            x2base,
             x1label=x1label,
             x2label=x2label,
             ylabel=ylabel,
@@ -697,6 +709,8 @@ def plot_3d_contour(
     x1max,
     x2min,
     x2max,
+    x1base,
+    x2base,
     x1label="X1-axis",
     x2label="X2-axis",
     ylabel="Y-axis",
@@ -706,7 +720,7 @@ def plot_3d_contour(
     plotmode=0,
 ):
     fig, ax = plt.subplots(
-        frameon=False, figsize=[4, 3], dpi=300, constrained_layout=True
+        frameon=False, figsize=[3, 5], dpi=300, constrained_layout=True
     )
     grid = np.clip(grid, ymin, ymax)
     norm = cm.colors.Normalize(vmax=ymax, vmin=ymin)
@@ -725,6 +739,8 @@ def plot_3d_contour(
     plt.ylabel(x2label)
     plt.xlim(x1min, x1max)
     plt.ylim(x2min, x2max)
+    plt.xticks(np.arange(x1min, x1max + 0.1, xbase))
+    plt.yticks(np.arange(x2min, x2max + 0.1, xbase))
     ax.contour(xint, yint, grid, cset.levels, colors="black", linewidths=0.3)
     fmt = lambda x, pos: "%.0f" % x
     cbar = fig.colorbar(cset, format=FuncFormatter(fmt))
@@ -754,6 +770,8 @@ def plot_3d_scatter(
     x1max,
     x2min,
     x2max,
+    x1base,
+    x2base,
     x1label="X1-axis",
     x2label="X2-axis",
     ylabel="Y-axis",
@@ -763,7 +781,7 @@ def plot_3d_scatter(
     plotmode=1,
 ):
     fig, ax = plt.subplots(
-        frameon=False, figsize=[4, 3], dpi=300, constrained_layout=True
+        frameon=False, figsize=[3, 5], dpi=300, constrained_layout=True
     )
     grid = np.clip(grid, ymin, ymax)
     norm = cm.colors.Normalize(vmax=ymax, vmin=ymin)
@@ -780,7 +798,8 @@ def plot_3d_scatter(
     plt.ylabel(x2label)
     plt.xlim(x1min, x1max)
     plt.ylim(x2min, x2max)
-    # ax.contour(xint, yint, grid, cset.levels, colors="black", linewidths=0.3)
+    plt.xticks(np.arange(x1min, x1max + 0.1, xbase))
+    plt.yticks(np.arange(x2min, x2max + 0.1, xbase))
     fmt = lambda x, pos: "%.0f" % x
     cbar = fig.colorbar(cset, format=FuncFormatter(fmt))
     cbar.set_label(ylabel, labelpad=15, rotation=270)

@@ -54,6 +54,8 @@ def plot_2d_lsfer(
     plotmode=1,
     verb=0,
 ):
+    xbase = 20
+    ybase = 10
     Xf, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
     d_refill = np.zeros_like(d)
@@ -78,8 +80,8 @@ def plot_2d_lsfer(
         Ym = XYm[:, 1].reshape(-1)
         X = XY[:, 0].reshape(-1)
         Y = XY[:, 1].reshape(-1)
-        xmax = bround(X.max() + rmargin)
-        xmin = bround(X.min() - lmargin)
+        xmax = bround(X.max() + rmargin, xbase)
+        xmin = bround(X.min() - lmargin, xbase)
         if verb > 2:
             print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
         xint = np.linspace(xmin, xmax, npoints)
@@ -109,7 +111,7 @@ def plot_2d_lsfer(
         chi2 = np.sum((resid / Y_pred) ** 2)
         s_err = np.sqrt(np.sum(resid ** 2) / dof)
         fig, ax = plt.subplots(
-            frameon=False, figsize=[3, 3], dpi=300, constrained_layout=True
+            frameon=False, figsize=[4.2, 3], dpi=300, constrained_layout=True
         )
         yint = np.polyval(p, xint)
         plot_ci_manual(t, s_err, n, X, xint, yint, ax=ax)
@@ -120,30 +122,14 @@ def plot_2d_lsfer(
                 1 + 1 / n + (xint - np.mean(X)) ** 2 / np.sum((X - np.mean(X)) ** 2)
             )
         )
-        ax.plot(xint, yint, "-", linewidth=1, color="#000a75", alpha=0.85)
-        for i in range(len(X)):
-            ax.scatter(
-                X[i],
-                Y[i],
-                s=5,
-                c=cbi[i],
-                marker=msi[i],
-                linewidths=0.15,
-                edgecolors="black",
-            )
-        # Border
-        ax.spines["top"].set_color("black")
-        ax.spines["bottom"].set_color("black")
-        ax.spines["left"].set_color("black")
-        ax.spines["right"].set_color("black")
-        ax.get_xaxis().set_tick_params(direction="out")
-        ax.get_yaxis().set_tick_params(direction="out")
-        ax.xaxis.tick_bottom()
-        ax.yaxis.tick_left()
+        ax.plot(xint, yint, "-", linewidth=1, color="#000a75", alpha=0.85, zorder=1)
+        plotpoints(ax, X, Y, cbi, msi, plotmode=1)
+        beautify_ax(ax)
         # Labels and key
         plt.xlabel(f"{tag} [kcal/mol]")
         plt.ylabel(f"{tags[j]} [kcal/mol]")
         plt.xlim(xmin, xmax)
+        plt.xticks(np.arange(xmin, xmax + 0.1, xbase))
         plt.savefig(f"{tags[j]}.png")
     return d_refill
 
@@ -163,11 +149,11 @@ def beautify_ax(ax):
 
 def plotpoints(ax, px, py, cb, ms, plotmode):
     if plotmode == 1:
-        s = 7.5
-        lw = 0.15
+        s = 30
+        lw = 0.3
     else:
-        s = (10,)
-        lw = 0.2
+        s = 15
+        lw = 0.25
     for i in range(len(px)):
         ax.scatter(
             px[i],
@@ -177,6 +163,7 @@ def plotpoints(ax, px, py, cb, ms, plotmode):
             marker=ms[i],
             linewidths=lw,
             edgecolors="black",
+            zorder=2,
         )
 
 
@@ -187,6 +174,8 @@ def plot_2d(
     py,
     xmin,
     xmax,
+    xbase=20,
+    ybase=10,
     xlabel="X-axis",
     ylabel="Y-axis",
     filename="plot.png",
@@ -197,16 +186,16 @@ def plot_2d(
     plotmode=1,
 ):
     fig, ax = plt.subplots(
-        frameon=False, figsize=[3, 3], dpi=300, constrained_layout=True
+        frameon=False, figsize=[4.2, 3], dpi=300, constrained_layout=True
     )
     # Labels and key
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.xlim(xmin, xmax)
+    plt.xticks(np.arange(xmin, xmax + 0.1, xbase))
     if plotmode == 0:
         ax.plot(x, y, "-", linewidth=1.5, color="midnightblue", alpha=0.95)
         ax = beautify_ax(ax)
-        plotpoints(ax, px, py, cb, ms, plotmode)
         if rid is not None and rb is not None:
             avgs = []
             rb.append(xmax)
@@ -217,13 +206,12 @@ def plot_2d(
                     i,
                     linestyle="dashed",
                     color="black",
-                    linewidth=0.5,
+                    linewidth=0.75,
                     alpha=0.75,
                 )
     elif plotmode == 1:
-        ax.plot(x, y, "-", linewidth=1.25, color="midnightblue", alpha=0.95)
+        ax.plot(x, y, "-", linewidth=1.5, color="midnightblue", alpha=0.95, zorder=1)
         ax = beautify_ax(ax)
-        plotpoints(ax, px, py, cb, ms, plotmode)
         if rid is not None and rb is not None:
             avgs = []
             rb.append(xmax)
@@ -234,24 +222,14 @@ def plot_2d(
                     i,
                     linestyle="dashed",
                     color="black",
-                    linewidth=0.5,
+                    linewidth=0.75,
                     alpha=0.75,
+                    zorder=3,
                 )
-            yavg = (y.max() + y.min()) * 0.5
-            for i, j in zip(rid, avgs):
-                plt.text(
-                    j,
-                    yavg,
-                    i,
-                    fontsize=7.5,
-                    horizontalalignment="center",
-                    verticalalignment="center",
-                    rotation="vertical",
-                )
+        plotpoints(ax, px, py, cb, ms, plotmode)
     elif plotmode == 2:
-        ax.plot(x, y, "-", linewidth=1.25, color="midnightblue", alpha=0.95)
+        ax.plot(x, y, "-", linewidth=1.5, color="midnightblue", alpha=0.95, zorder=1)
         ax = beautify_ax(ax)
-        plotpoints(ax, px, py, cb, ms, plotmode)
         if rid is not None and rb is not None:
             avgs = []
             rb.append(xmax)
@@ -264,6 +242,7 @@ def plot_2d(
                     color="black",
                     linewidth=0.5,
                     alpha=0.75,
+                    zorder=3,
                 )
             yavg = (y.max() + y.min()) * 0.5
             for i, j in zip(rid, avgs):
@@ -275,7 +254,14 @@ def plot_2d(
                     horizontalalignment="center",
                     verticalalignment="center",
                     rotation="vertical",
+                    zorder=4,
                 )
+        plotpoints(ax, px, py, cb, ms, plotmode)
+    ymin, ymax = ax.get_ylim()
+    ymax = bround(ymax, ybase, type="max")
+    ymin = bround(ymin, ybase, type="min")
+    plt.ylim(ymin, ymax)
+    plt.yticks(np.arange(ymin, ymax + 0.1, ybase))
     plt.savefig(filename)
 
 
@@ -294,10 +280,12 @@ def plot_2d_es_volcano(
     plotmode=1,
     verb=0,
 ):
+    xbase = 20
+    ybase = 10
     X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
-    xmax = bround(X.max() + rmargin)
-    xmin = bround(X.min() - lmargin)
+    xmax = bround(X.max() + rmargin, xbase)
+    xmin = bround(X.min() - lmargin, xbase)
     if verb > 1:
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
@@ -363,7 +351,7 @@ def plot_2d_es_volcano(
         if verb > 2:
             print(f"Profile {profile} corresponds with ES of {py[i]}")
     xlabel = f"{tag} [kcal/mol]"
-    ylabel = r"-δ$G_{SPAN}$ [kcal/mol]"
+    ylabel = r"-δ$E_{span}$ [kcal/mol]"
     filename = f"es_volcano_{tag}.png"
     if verb > 0:
         csvname = f"es_volcano_{tag}.csv"
@@ -379,6 +367,8 @@ def plot_2d_es_volcano(
         py,
         xmin,
         xmax,
+        xbase,
+        ybase,
         xlabel,
         ylabel,
         filename,
@@ -406,10 +396,12 @@ def plot_2d_k_volcano(
     plotmode=1,
     verb=0,
 ):
+    xbase = 20
+    ybase = 10
     X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
-    xmax = bround(X.max() + rmargin)
-    xmin = bround(X.min() - lmargin)
+    xmax = bround(X.max() + rmargin, xbase)
+    xmin = bround(X.min() - lmargin, xbase)
     if verb > 1:
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
@@ -489,6 +481,8 @@ def plot_2d_k_volcano(
         py,
         xmin,
         xmax,
+        xbase,
+        ybase,
         xlabel,
         ylabel,
         filename,
@@ -516,10 +510,12 @@ def plot_2d_t_volcano(
     plotmode=1,
     verb=0,
 ):
+    xbase = 20
+    ybase = 10
     X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="t")
     lnsteps = range(d.shape[1])
-    xmax = bround(X.max() + rmargin)
-    xmin = bround(X.min() - lmargin)
+    xmax = bround(X.max() + rmargin, xbase)
+    xmin = bround(X.min() - lmargin, xbase)
     if verb > 1:
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
@@ -599,6 +595,8 @@ def plot_2d_t_volcano(
         py,
         xmin,
         xmax,
+        xbase,
+        ybase,
         xlabel,
         ylabel,
         filename,
@@ -629,8 +627,8 @@ def plot_2d_tof_volcano(
 ):
     X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
-    xmax = bround(X.max() + rmargin)
-    xmin = bround(X.min() - lmargin)
+    xmax = bround(X.max() + rmargin, xbase)
+    xmin = bround(X.min() - lmargin, xbase)
     if verb > 1:
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
@@ -693,6 +691,8 @@ def plot_2d_tof_volcano(
         py,
         xmin,
         xmax,
+        xbase,
+        ybase,
         xlabel,
         ylabel,
         filename,

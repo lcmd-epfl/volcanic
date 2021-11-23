@@ -22,8 +22,13 @@ def yesno(question):
     return False
 
 
-def bround(x, base=5):
-    return base * round(int(x) / base)
+def bround(x, base: float = 10, type=None) -> float:
+    if type == "max":
+        return base * np.ceil(x / base)
+    elif type == "min":
+        return base * np.floor(x / base)
+    else:
+        return base * np.round(x / base)
 
 
 def group_data_points(bc, ec, names):
@@ -238,7 +243,7 @@ def processargs(arguments):
         "--rm",
         dest="rmargin",
         type=int,
-        default=20,
+        default=10,
         help="Right margin to pad for visualization, in descriptor variable units. (default: 20)",
     )
     vbuilder.add_argument(
@@ -246,7 +251,7 @@ def processargs(arguments):
         "--lm",
         dest="lmargin",
         type=int,
-        default=20,
+        default=10,
         help="Left margin to pad for visualization, in descriptor variable units. (default: 20)",
     )
     vbuilder.add_argument(
