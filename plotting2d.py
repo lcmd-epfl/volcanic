@@ -18,12 +18,13 @@ def get_reg_targets(idx, d, tags, coeff, regress, mode="k"):
     tag = tags[idx]
     tags = tags[regress]
     X = d[:, idx].reshape(-1)
-    d = d[:, regress]
+    d1 = d[:, regress]
+    d2 = d[:, ~regress]
     if mode == "t":
         coeff = coeff[regress]
-        d = d[:, ~coeff]
+        d1 = d1[:, ~coeff]
         tags = tags[~coeff]
-    return X, tag, tags, d
+    return X, tag, tags, d1, d2
 
 
 def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
@@ -56,7 +57,7 @@ def plot_2d_lsfer(
 ):
     xbase = 20
     ybase = 10
-    Xf, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
+    Xf, tag, tags, d, d2 = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
     d_refill = np.zeros_like(d)
     d_refill[~np.isnan(d)] = d[~np.isnan(d)]
@@ -131,7 +132,7 @@ def plot_2d_lsfer(
         plt.xlim(xmin, xmax)
         plt.xticks(np.arange(xmin, xmax + 0.1, xbase))
         plt.savefig(f"{tags[j]}.png")
-    return d_refill
+    return np.hstack((d_refill, d2))
 
 
 def beautify_ax(ax):
@@ -282,7 +283,7 @@ def plot_2d_es_volcano(
 ):
     xbase = 20
     ybase = 10
-    X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
+    X, tag, tags, d, d2 = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
     xmax = bround(X.max() + rmargin, xbase)
     xmin = bround(X.min() - lmargin, xbase)
@@ -351,7 +352,7 @@ def plot_2d_es_volcano(
         if verb > 2:
             print(f"Profile {profile} corresponds with ES of {py[i]}")
     xlabel = f"{tag} [kcal/mol]"
-    ylabel = r"-δ$E_{span}$ [kcal/mol]"
+    ylabel = r"-δ$E$ [kcal/mol]"
     filename = f"es_volcano_{tag}.png"
     if verb > 0:
         csvname = f"es_volcano_{tag}.csv"
@@ -398,7 +399,7 @@ def plot_2d_k_volcano(
 ):
     xbase = 20
     ybase = 10
-    X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
+    X, tag, tags, d, d2 = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
     xmax = bround(X.max() + rmargin, xbase)
     xmin = bround(X.min() - lmargin, xbase)
@@ -512,7 +513,7 @@ def plot_2d_t_volcano(
 ):
     xbase = 20
     ybase = 10
-    X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="t")
+    X, tag, tags, d, d2 = get_reg_targets(idx, d, tags, coeff, regress, mode="t")
     lnsteps = range(d.shape[1])
     xmax = bround(X.max() + rmargin, xbase)
     xmin = bround(X.min() - lmargin, xbase)
@@ -625,7 +626,9 @@ def plot_2d_tof_volcano(
     plotmode=1,
     verb=0,
 ):
-    X, tag, tags, d = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
+    xbase = 20
+    ybase = 5
+    X, tag, tags, d, d2 = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
     xmax = bround(X.max() + rmargin, xbase)
     xmin = bround(X.min() - lmargin, xbase)

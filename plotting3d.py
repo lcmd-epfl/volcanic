@@ -60,6 +60,8 @@ def plot_3d_lsfer(
     plotmode=1,
     verb=0,
 ):
+    x1base = 20
+    x2base = 20
     X1, X2, tag1, tag2, tags, d = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
@@ -85,8 +87,8 @@ def plot_3d_lsfer(
         Ym = XYm[:, 2]
         X = XY[:, :2]
         Y = XY[:, 2]
-        xmax = bround(Y.max() + rmargin)
-        xmin = bround(Y.min() - lmargin)
+        xmax = bround(Y.max() + rmargin, x1base)
+        xmin = bround(Y.min() - lmargin, x1base)
         xint = np.sort(Y)
         reg = sk.linear_model.LinearRegression().fit(X, Y)
         if verb > 2:
@@ -142,7 +144,7 @@ def plot_3d_lsfer(
             ax.scatter(
                 Y_pred[i],
                 Y[i],
-                s=5,
+                s=12.5,
                 c=cbi[i],
                 marker=msi[i],
                 linewidths=0.15,
@@ -181,14 +183,16 @@ def plot_3d_t_volcano(
     plotmode=1,
     verb=0,
 ):
+    x1base = 25
+    x2base = 20
     X1, X2, tag1, tag2, tags, d = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="t"
     )
     lnsteps = range(d.shape[1])
-    x1max = bround(X1.max() + rmargin)
-    x1min = bround(X1.min() - lmargin)
-    x2max = bround(X2.max() + rmargin)
-    x2min = bround(X2.min() - lmargin)
+    x1max = bround(X1.max() + rmargin, x1base)
+    x1min = bround(X1.min() - lmargin, x1base)
+    x2max = bround(X2.max() + rmargin, x2base)
+    x2min = bround(X2.min() - lmargin, x2base)
     if verb > 1:
         print(
             f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
@@ -251,7 +255,7 @@ def plot_3d_t_volcano(
             delimiter=",",
             header="Descriptor 1, Descriptor 2, -\D_pds",
         )
-    if plotmode == 0:
+    if plotmode == 2:
         plot_3d_contour(
             xint,
             yint,
@@ -264,14 +268,17 @@ def plot_3d_t_volcano(
             x1max,
             x2min,
             x2max,
+            x1base,
+            x2base,
             x1label=x1label,
             x2label=x2label,
             ylabel=ylabel,
             filename=filename,
             cb=cb,
             ms=ms,
+            plotmode=plotmode,
         )
-    if plotmode == 1:
+    else:
         plot_3d_scatter(
             xint,
             yint,
@@ -284,12 +291,15 @@ def plot_3d_t_volcano(
             x1max,
             x2min,
             x2max,
+            x1base,
+            x2base,
             x1label=x1label,
             x2label=x2label,
             ylabel=ylabel,
             filename=filename,
             cb=cb,
             ms=ms,
+            plotmode=plotmode,
         )
     return xint, yint, grid, px, py
 
@@ -310,14 +320,16 @@ def plot_3d_k_volcano(
     plotmode=1,
     verb=0,
 ):
+    x1base = 25
+    x2base = 20
     X1, X2, tag1, tag2, tags, d = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
     lnsteps = range(d.shape[1])
-    x1max = bround(X1.max() + rmargin)
-    x1min = bround(X1.min() - lmargin)
-    x2max = bround(X2.max() + rmargin)
-    x2min = bround(X2.min() - lmargin)
+    x1max = bround(X1.max() + rmargin, x1base)
+    x1min = bround(X1.min() - lmargin, x1base)
+    x2max = bround(X2.max() + rmargin, x2base)
+    x2min = bround(X2.min() - lmargin, x2base)
     if verb > 1:
         print(
             f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
@@ -379,7 +391,7 @@ def plot_3d_k_volcano(
             delimiter=",",
             header="Descriptor 1, Descriptor 2, -\D_kds",
         )
-    if plotmode == 0:
+    if plotmode == 2:
         plot_3d_contour(
             xint,
             yint,
@@ -400,8 +412,9 @@ def plot_3d_k_volcano(
             filename=filename,
             cb=cb,
             ms=ms,
+            plotmode=plotmode,
         )
-    if plotmode == 1:
+    else:
         plot_3d_scatter(
             xint,
             yint,
@@ -422,6 +435,7 @@ def plot_3d_k_volcano(
             filename=filename,
             cb=cb,
             ms=ms,
+            plotmode=plotmode,
         )
     return xint, yint, grid, px, py
 
@@ -442,14 +456,16 @@ def plot_3d_es_volcano(
     plotmode=1,
     verb=0,
 ):
+    x1base = 25
+    x2base = 20
     X1, X2, tag1, tag2, tags, d = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
     lnsteps = range(d.shape[1])
-    x1max = bround(X1.max() + rmargin)
-    x1min = bround(X1.min() - lmargin)
-    x2max = bround(X2.max() + rmargin)
-    x2min = bround(X2.min() - lmargin)
+    x1max = bround(X1.max() + rmargin, x1base)
+    x1min = bround(X1.min() - lmargin, x1base)
+    x2max = bround(X2.max() + rmargin, x2base)
+    x2min = bround(X2.min() - lmargin, x2base)
     if verb > 1:
         print(
             f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
@@ -493,7 +509,7 @@ def plot_3d_es_volcano(
         py[i] = d[i, idx2].reshape(-1)
     x1label = f"{tags[idx1]} [kcal/mol]"
     x2label = f"{tags[idx2]} [kcal/mol]"
-    ylabel = r"-δ$E_{span}$ [kcal/mol]"
+    ylabel = r"-δ$E$ [kcal/mol]"
     filename = f"es_volcano_{tags[idx1]}_{tags[idx2]}.png"
     if verb > 0:
         csvname = f"es_volcano_{tags[idx1]}_{tags[idx2]}.csv"
@@ -511,7 +527,7 @@ def plot_3d_es_volcano(
             delimiter=",",
             header="Descriptor 1, Descriptor 2, -\d_Ges",
         )
-    if plotmode == 0:
+    if plotmode == 2:
         plot_3d_contour(
             xint,
             yint,
@@ -532,8 +548,9 @@ def plot_3d_es_volcano(
             filename=filename,
             cb=cb,
             ms=ms,
+            plotmode=plotmode,
         )
-    if plotmode == 1:
+    else:
         plot_3d_scatter(
             xint,
             yint,
@@ -554,6 +571,7 @@ def plot_3d_es_volcano(
             filename=filename,
             cb=cb,
             ms=ms,
+            plotmode=plotmode,
         )
     return xint, yint, grid, px, py
 
@@ -575,14 +593,16 @@ def plot_3d_tof_volcano(
     plotmode=1,
     verb=0,
 ):
+    x1base = 25
+    x2base = 20
     X1, X2, tag1, tag2, tags, d = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
     lnsteps = range(d.shape[1])
-    x1max = bround(X1.max() + rmargin)
-    x1min = bround(X1.min() - lmargin)
-    x2max = bround(X2.max() + rmargin)
-    x2min = bround(X2.min() - lmargin)
+    x1max = bround(X1.max() + rmargin, x1base)
+    x1min = bround(X1.min() - lmargin, x1base)
+    x2max = bround(X2.max() + rmargin, x2base)
+    x2min = bround(X2.min() - lmargin, x2base)
     if verb > 1:
         print(
             f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
@@ -637,7 +657,7 @@ def plot_3d_tof_volcano(
             delimiter=",",
             header="Descriptor 1, Descriptor 2, log10(TOF)",
         )
-    if plotmode == 0:
+    if plotmode == 2:
         plot_3d_contour(
             xint,
             yint,
@@ -658,8 +678,9 @@ def plot_3d_tof_volcano(
             filename=filename,
             cb=cb,
             ms=ms,
+            plotmode=plotmode,
         )
-    if plotmode == 1:
+    else:
         plot_3d_scatter(
             xint,
             yint,
@@ -680,6 +701,7 @@ def plot_3d_tof_volcano(
             filename=filename,
             cb=cb,
             ms=ms,
+            plotmode=plotmode,
         )
     return xint, yint, grid, px, py
 
@@ -717,10 +739,10 @@ def plot_3d_contour(
     filename="plot.png",
     cb="white",
     ms="o",
-    plotmode=0,
+    plotmode=2,
 ):
     fig, ax = plt.subplots(
-        frameon=False, figsize=[3, 5], dpi=300, constrained_layout=True
+        frameon=False, figsize=[4.2, 3], dpi=300, constrained_layout=True
     )
     grid = np.clip(grid, ymin, ymax)
     norm = cm.colors.Normalize(vmax=ymax, vmin=ymin)
@@ -739,8 +761,8 @@ def plot_3d_contour(
     plt.ylabel(x2label)
     plt.xlim(x1min, x1max)
     plt.ylim(x2min, x2max)
-    plt.xticks(np.arange(x1min, x1max + 0.1, xbase))
-    plt.yticks(np.arange(x2min, x2max + 0.1, xbase))
+    plt.xticks(np.arange(x1min, x1max + 0.1, x1base))
+    plt.yticks(np.arange(x2min, x2max + 0.1, x2base))
     ax.contour(xint, yint, grid, cset.levels, colors="black", linewidths=0.3)
     fmt = lambda x, pos: "%.0f" % x
     cbar = fig.colorbar(cset, format=FuncFormatter(fmt))
@@ -749,7 +771,7 @@ def plot_3d_contour(
         ax.scatter(
             px[i],
             py[i],
-            s=7.5,
+            s=12.5,
             c=cb[i],
             marker=ms[i],
             linewidths=0.15,
@@ -778,39 +800,41 @@ def plot_3d_scatter(
     filename="plot.png",
     cb="white",
     ms="o",
-    plotmode=1,
+    plotmode=0,
 ):
     fig, ax = plt.subplots(
-        frameon=False, figsize=[3, 5], dpi=300, constrained_layout=True
+        frameon=False, figsize=[4.2, 3], dpi=300, constrained_layout=True
     )
     grid = np.clip(grid, ymin, ymax)
     norm = cm.colors.Normalize(vmax=ymax, vmin=ymin)
     ax = beautify_ax(ax)
     cset = ax.imshow(
         grid,
-        interpolation="bilinear",
+        interpolation="antialiased",
         extent=[x1min, x1max, x2min, x2max],
         origin="lower",
         cmap=cm.jet,
+        aspect="auto",
     )
     # Labels and key
     plt.xlabel(x1label)
     plt.ylabel(x2label)
     plt.xlim(x1min, x1max)
     plt.ylim(x2min, x2max)
-    plt.xticks(np.arange(x1min, x1max + 0.1, xbase))
-    plt.yticks(np.arange(x2min, x2max + 0.1, xbase))
+    plt.xticks(np.arange(x1min, x1max + 0.1, x1base))
+    plt.yticks(np.arange(x2min, x2max + 0.1, x2base))
     fmt = lambda x, pos: "%.0f" % x
     cbar = fig.colorbar(cset, format=FuncFormatter(fmt))
     cbar.set_label(ylabel, labelpad=15, rotation=270)
-    for i in range(len(px)):
-        ax.scatter(
-            px[i],
-            py[i],
-            s=7.5,
-            c=cb[i],
-            marker=ms[i],
-            linewidths=0.15,
-            edgecolors="black",
-        )
+    if plotmode == 1:
+        for i in range(len(px)):
+            ax.scatter(
+                px[i],
+                py[i],
+                s=12.5,
+                c=cb[i],
+                marker=ms[i],
+                linewidths=0.15,
+                edgecolors="black",
+            )
     plt.savefig(filename)
