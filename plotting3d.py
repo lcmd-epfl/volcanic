@@ -760,7 +760,7 @@ def plot_3d_contour(
     plt.xlabel(x1label)
     plt.ylabel(x2label)
     plt.xlim(x1min, x1max)
-    plt.ylim(x2min, x2max)
+    plt.ylim(x2max, x2min)
     plt.xticks(np.arange(x1min, x1max + 0.1, x1base))
     plt.yticks(np.arange(x2min, x2max + 0.1, x2base))
     ax.contour(xint, yint, grid, cset.levels, colors="black", linewidths=0.3)
@@ -820,7 +820,7 @@ def plot_3d_scatter(
     plt.xlabel(x1label)
     plt.ylabel(x2label)
     plt.xlim(x1min, x1max)
-    plt.ylim(x2min, x2max)
+    plt.ylim(x2max, x2min)
     plt.xticks(np.arange(x1min, x1max + 0.1, x1base))
     plt.yticks(np.arange(x2min, x2max + 0.1, x2base))
     fmt = lambda x, pos: "%.0f" % x
