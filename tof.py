@@ -90,9 +90,11 @@ def calc_tof(array, dgr, T, coeff, exact=True, verb=0):
                 if i < j:
                     dE[i, j] = matrix_T_I[i, 1] - matrix_T_I[j, 0] + dgr
         Energy_Span = np.amax(dE)
-        if verb > 1:
-            print(f"Energy Span set to : {Energy_Span} kcal/mol.")
-        TOF = ((k_b * T) / h) * np.exp((-(Energy_Span * 4184) / (R * T)))  # s^-1
+        if verb > 2:
+            print(f"Energy Span computed : {Energy_Span} kcal/mol.")
+        TOF = ((k_b * T) / h) * np.exp((-(Energy_Span * 4184) / (R * T)))
+        if verb > 2:
+            print(f"TOF computed : {TOF} s^-1.")
         i, j = np.unravel_index(np.argmax(dE, axis=None), dE.shape)
         X_TOF[i, 1] = 1.0
         X_TOF[j, 0] = 1.0

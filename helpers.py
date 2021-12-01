@@ -140,7 +140,7 @@ def processargs(arguments):
         dest="verb",
         type=int,
         default=0,
-        help="Verbosity level of the code. Higher is more verbose and viceversa. (default: 1)",
+        help="Verbosity level of the code. Higher is more verbose and viceversa. Set to at least 2 to generate csv output files (default: 1)",
     )
     vbuilder.add_argument(
         "-r",
