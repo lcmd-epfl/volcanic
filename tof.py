@@ -5,17 +5,17 @@ import scipy.constants as sc
 import copy
 
 
-def calc_tof(array, Delta_Gr, T, coeff, exact=True, verb=0):
+def calc_tof(array, dgr, T, coeff, exact=True, verb=0):
     """Function to compute TOF using the energy span model.
     Reproduces results from the AUTOF code (https://doi.org/10.1002/jcc.21669).
-    Based on original implementation by Pit Steinbach."""
+    Adapted from the AUTOF implementation with contribution by Pit Steinbach."""
 
     coeff = np.array(coeff)
     array = np.array(array)
     assert array.size == coeff.size
-    h = sc.value("Planck constant")
-    k_b = sc.value("Boltzmann constant")
-    R = sc.value("molar gas constant")
+    h = 6.62607015e-34
+    k_b = 1.380649e-23
+    R = 8.314462618
     n_S = array.size
     n_TS = np.count_nonzero(coeff)
     n_I = np.count_nonzero(coeff == 0)
@@ -38,8 +38,8 @@ def calc_tof(array, Delta_Gr, T, coeff, exact=True, verb=0):
                         matrix_T_I[j, 1] = array[i]
                 j += 1
             if i == n_S - 1:
-                if Delta_Gr > array[i]:
-                    matrix_T_I[j, 1] = Delta_Gr
+                if dgr > array[i]:
+                    matrix_T_I[j, 1] = dgr
                 else:
                     matrix_T_I[j, 1] = array[i]
     if verb > 3:
@@ -50,21 +50,19 @@ def calc_tof(array, Delta_Gr, T, coeff, exact=True, verb=0):
             for j in range(n_I):
                 if i >= j:
                     sum_span += np.exp(
-                        ((matrix_T_I[i, 1] - matrix_T_I[j, 0] - Delta_Gr) * 4184)
-                        / (R * T)
+                        ((matrix_T_I[i, 1] - matrix_T_I[j, 0] - dgr) * 4184) / (R * T)
                     )
                 if i < j:
                     sum_span += np.exp(
                         ((matrix_T_I[i, 1] - matrix_T_I[j, 0]) * 4184) / (R * T)
                     )
-        TOF = ((k_b * T) / h) * ((np.exp((-Delta_Gr * 4184) / (R * T))) / sum_span)
+        TOF = ((k_b * T) / h) * ((np.exp((-dgr * 4184) / (R * T))) / sum_span)
         for i in range(n_I):
             sum_e = 0
             for j in range(n_I):
                 if i >= j:
                     sum_e += np.exp(
-                        ((matrix_T_I[i, 1] - matrix_T_I[j, 0] - Delta_Gr) * 4184)
-                        / (R * T)
+                        ((matrix_T_I[i, 1] - matrix_T_I[j, 0] - dgr) * 4184) / (R * T)
                     )
                 if i < j:
                     sum_e += np.exp(
@@ -76,8 +74,7 @@ def calc_tof(array, Delta_Gr, T, coeff, exact=True, verb=0):
             for i in range(n_I):
                 if i >= j:
                     sum_e += np.exp(
-                        ((matrix_T_I[i, 1] - matrix_T_I[j, 0] - Delta_Gr) * 4184)
-                        / (R * T)
+                        ((matrix_T_I[i, 1] - matrix_T_I[j, 0] - dgr) * 4184) / (R * T)
                     )
                 if i < j:
                     sum_e += np.exp(
@@ -91,7 +88,7 @@ def calc_tof(array, Delta_Gr, T, coeff, exact=True, verb=0):
                 if i >= j:
                     dE[i, j] = matrix_T_I[i, 1] - matrix_T_I[j, 0]
                 if i < j:
-                    dE[i, j] = matrix_T_I[i, 1] - matrix_T_I[j, 0] + Delta_Gr
+                    dE[i, j] = matrix_T_I[i, 1] - matrix_T_I[j, 0] + dgr
         Energy_Span = np.amax(dE)
         if verb > 1:
             print(f"Energy Span set to : {Energy_Span} kcal/mol.")
