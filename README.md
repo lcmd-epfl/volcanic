@@ -16,7 +16,6 @@ The code runs on pure python with minimal dependencies:
 - `matplotlib`
 - `pandas`
 
-To use
 
 ## Install [↑](#install)
 
@@ -40,7 +39,7 @@ python -m volcanic [-h] [-version] -i [FILENAMES] [-df DFILENAMES] [-nd ND] [-v 
                 [-rm RMARGIN] [-lm LMARGIN] [-np NPOINTS] [-d] [-is IMPUTER_STRAT] [-refill]
 ```
 
-Options can be consulted using the `-h` flag.
+Options can be consulted using the `-h` flag in either case.
 
 ## Examples [↑](#examples)
 

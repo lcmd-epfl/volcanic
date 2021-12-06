@@ -29,7 +29,7 @@ from .helpers import (
 )
 from .exceptions import InputError
 
-if __name__ == "__main__" or __name__ == "volcanic.volcanic" :
+if __name__ == "__main__" or __name__ == "volcanic.volcanic":
     (
         df,
         nd,
