@@ -59,7 +59,7 @@ def user_choose_1_dv(dvs, r2s, tags):
     if not ok:
         manual = yesno("Would you want to use some other descriptor variable instead")
         if manual:
-            for i, tag in enumerate(tags):
+            for i, tag in enumerate(tags[::-1]):
                 ok = yesno(f"Use {tag} as descriptor")
                 if ok:
                     return i
@@ -83,7 +83,7 @@ def user_choose_2_dv(ddvs, r2s, tags):
             "Would you want to use some other descriptor variable combination instead"
         )
         if manual:
-            for i, ptag in enumerate(ptags):
+            for i, ptag in enumerate(ptags[::-1]):
                 ok = yesno(f"Use combination of {ptag[0]} and {ptag[1]} as descriptor")
                 if ok:
                     idx1 = np.where(tags == np.str(ptag[0]))[0][0] + 1
