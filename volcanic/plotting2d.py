@@ -20,11 +20,11 @@ def get_reg_targets(idx, d, tags, coeff, regress, mode="k"):
     X = d[:, idx].reshape(-1)
     d1 = d[:, regress]
     d2 = d[:, ~regress]
+    coeff = coeff[regress]
     if mode == "t":
-        coeff = coeff[regress]
         d1 = d1[:, ~coeff]
         tags = tags[~coeff]
-    return X, tag, tags, d1, d2
+    return X, tag, tags, d1, d2, coeff
 
 
 def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
@@ -57,7 +57,9 @@ def plot_2d_lsfer(
 ):
     xbase = 20
     ybase = 10
-    Xf, tag, tags, d, d2 = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
+    Xf, tag, tags, d, d2, coeff = get_reg_targets(
+        idx, d, tags, coeff, regress, mode="k"
+    )
     lnsteps = range(d.shape[1])
     d_refill = np.zeros_like(d)
     d_refill[~np.isnan(d)] = d[~np.isnan(d)]
@@ -283,7 +285,7 @@ def plot_2d_es_volcano(
 ):
     xbase = 20
     ybase = 10
-    X, tag, tags, d, d2 = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
+    X, tag, tags, d, d2, coeff = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
     xmax = bround(X.max() + rmargin, xbase)
     xmin = bround(X.min() - lmargin, xbase)
@@ -399,7 +401,7 @@ def plot_2d_k_volcano(
 ):
     xbase = 20
     ybase = 10
-    X, tag, tags, d, d2 = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
+    X, tag, tags, d, d2, coeff = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
     xmax = bround(X.max() + rmargin, xbase)
     xmin = bround(X.min() - lmargin, xbase)
@@ -513,7 +515,7 @@ def plot_2d_t_volcano(
 ):
     xbase = 20
     ybase = 10
-    X, tag, tags, d, d2 = get_reg_targets(idx, d, tags, coeff, regress, mode="t")
+    X, tag, tags, d, d2, coeff = get_reg_targets(idx, d, tags, coeff, regress, mode="t")
     lnsteps = range(d.shape[1])
     xmax = bround(X.max() + rmargin, xbase)
     xmin = bround(X.min() - lmargin, xbase)
@@ -628,7 +630,7 @@ def plot_2d_tof_volcano(
 ):
     xbase = 20
     ybase = 5
-    X, tag, tags, d, d2 = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
+    X, tag, tags, d, d2, coeff = get_reg_targets(idx, d, tags, coeff, regress, mode="k")
     lnsteps = range(d.shape[1])
     xmax = bround(X.max() + rmargin, xbase)
     xmin = bround(X.min() - lmargin, xbase)

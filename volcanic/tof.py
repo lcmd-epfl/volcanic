@@ -11,7 +11,6 @@ def calc_tof(array, dgr, T, coeff, exact=True, verb=0):
 
     coeff = np.array(coeff)
     array = np.array(array)
-    assert array.size == coeff.size
     h = 6.62607015e-34
     k_b = 1.380649e-23
     R = 8.314462618
@@ -21,6 +20,12 @@ def calc_tof(array, dgr, T, coeff, exact=True, verb=0):
     if verb > 1:
         print(f"Number of intermediates taken into account is {n_I}")
         print(f"Number of TS taken into account is {n_TS}")
+    try:
+        assert array.size == coeff.size
+    except AssertionError:
+        print(
+            f"WARNING: The species number {n_S} does not seem to match the identified intermediates ({n_I}) plus TS ({n_TS})."
+        )
     X_TOF = np.zeros((n_I, 2))
     matrix_T_I = np.zeros((n_I, 2))
     j = 0

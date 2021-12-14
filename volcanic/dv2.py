@@ -98,26 +98,30 @@ def find_2_dv(d, tags, coeff, regress, verb=0):
                 )
         if verb > 2:
             print(
-                f"\nWith a combination of {tags[i]} and {tags[j]} as descriptor the following r2 values were obtained : {ir2s}"
+                f"\nWith a combination of {tags[i]} and {tags[j]} as descriptor the following r2 values were obtained : {np.round(ir2s,2)}"
             )
-        maes[idx] = np.array(imaes).mean()
-        r2s[idx] = np.array(ir2s).mean()
-        maps[idx] = np.array(imaps).std()
+        maes[idx] = np.around(np.array(imaes).mean(), 4)
+        r2s[idx] = np.around(np.array(ir2s).mean(), 4)
+        maps[idx] = np.around(np.array(imaps).std(), 4)
         if verb > 0:
             print(
                 f"\nWith a combination of {tags[i]} and {tags[j]} as descriptor,\n the mean r2 is : {np.round(r2s[idx],2)},\n the mean MAE is :  {np.round(maes[idx],2)}\n the std MAPE is : {np.round(maps[idx],2)}\n"
             )
     criteria = []
-    criteria.append(np.squeeze(np.where(r2s == np.max(r2s[~np.ma.make_mask(pcoeff)]))))
     criteria.append(
-        np.squeeze(np.where(maes == np.min(maes[~np.ma.make_mask(pcoeff)])))
+        np.squeeze(np.where(r2s == np.nanmax(r2s[~np.ma.make_mask(pcoeff)])))
     )
     criteria.append(
-        np.squeeze(np.where(maps == np.min(maps[~np.ma.make_mask(pcoeff)])))
+        np.squeeze(np.where(maes == np.nanmin(maes[~np.ma.make_mask(pcoeff)])))
+    )
+    criteria.append(
+        np.squeeze(np.where(maps == np.nanmin(maps[~np.ma.make_mask(pcoeff)])))
     )
     for i, criterion in enumerate(criteria):
         if isinstance(criterion, (np.ndarray)):
             if any(criterion.shape):
+                if verb > 2:
+                    print(f"A random choice has been made to break a score tie.")
                 criterion = [idx for idx in criterion if ~np.ma.make_mask(pcoeff)[idx]]
                 criteria[i] = rng.choice(criterion, size=1)
     a = int(criteria[0])

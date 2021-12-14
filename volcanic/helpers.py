@@ -147,8 +147,8 @@ def processargs(arguments):
         "--r",
         dest="runmode",
         type=int,
-        default=5,
-        help="Defines the volcano plots to build.\n 0: LSRs\n 1: Thermodynamic\n 2: Kinetic\n 3: Energy Span & TOF\n 4: All of the above\n 5: Ask through CLI (default)",
+        default=6,
+        help="Defines the volcano plots to build.\n 0: LSRs\n 1: Thermodynamic\n 2: Kinetic\n 3: Energy Span\n 4: TOF\n 5: All of the above\n Other: Ask through CLI (default)",
     )
     runmode_arg.add_argument(
         "-lsfer",
@@ -433,15 +433,15 @@ def setflags(runmode):
         es_volcano = False
         tof_volcano = True
     elif runmode == 5:
-        t_volcano = yesno("Generate thermodynamic volcano plot")
-        k_volcano = yesno("Generate kinetic volcano plot")
-        es_volcano = yesno("Generate energy span volcano plot")
-        tof_volcano = yesno("Generate TOF volcano plot")
-    else:
         t_volcano = True
         k_volcano = True
         es_volcano = True
         tof_volcano = True
+    else:
+        t_volcano = yesno("Generate thermodynamic volcano plot")
+        k_volcano = yesno("Generate kinetic volcano plot")
+        es_volcano = yesno("Generate energy span volcano plot")
+        tof_volcano = yesno("Generate TOF volcano plot")
     return t_volcano, k_volcano, es_volcano, tof_volcano
 
 

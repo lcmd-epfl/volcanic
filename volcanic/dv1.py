@@ -112,11 +112,11 @@ def find_1_dv(d, tags, coeff, regress, verb=0):
                 )
         if verb > 2:
             print(
-                f"\nWith {tags[i]} as descriptor the following r2 values were obtained : {ir2s}"
+                f"\nWith {tags[i]} as descriptor the following r2 values were obtained : {np.round(ir2s,2)}"
             )
-        maes[i] = np.array(imaes).mean()
-        r2s[i] = np.array(ir2s).mean()
-        maps[i] = np.array(imaps).mean()
+        maes[i] = np.around(np.array(imaes).mean(), 4)
+        r2s[i] = np.around(np.array(ir2s).mean(), 4)
+        maps[i] = np.around(np.array(imaps).mean(), 4)
         if verb > 0:
             print(
                 f"\nWith {tags[i]} as descriptor,\n the mean r2 is : {np.round(r2s[i],2)},\n the mean MAE is :  {np.round(maes[i],2)}\n the std MAPE is : {np.round(maps[i],2)}\n"

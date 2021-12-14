@@ -23,12 +23,13 @@ def get_reg_targets(idx1, idx2, d, tags, coeff, regress, mode="k"):
     tags = tags[regress]
     X1 = d[:, idx1].reshape(-1)
     X2 = d[:, idx2].reshape(-1)
-    d = d[:, regress]
+    d1 = d[:, regress]
+    d2 = d[:, ~regress]
+    coeff = coeff[regress]
     if mode == "t":
-        coeff = coeff[regress]
-        d = d[:, ~coeff]
+        d1 = d1[:, ~coeff]
         tags = tags[~coeff]
-    return X1, X2, tag1, tag2, tags, d
+    return X1, X2, tag1, tag2, tags, d1, d2, coeff
 
 
 def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
@@ -62,7 +63,7 @@ def plot_3d_lsfer(
 ):
     x1base = 20
     x2base = 20
-    X1, X2, tag1, tag2, tags, d = get_reg_targets(
+    X1, X2, tag1, tag2, tags, d, d2, coeff = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
     d_refill = np.zeros_like(d)
@@ -164,7 +165,7 @@ def plot_3d_lsfer(
         plt.ylabel(f"{tags[j]} [kcal/mol]")
         plt.xlim(xmin, xmax)
         plt.savefig(f"{tags[j]}.png")
-    return d_refill
+    return np.hstack((d_refill, d2))
 
 
 def plot_3d_t_volcano(
@@ -185,7 +186,7 @@ def plot_3d_t_volcano(
 ):
     x1base = 25
     x2base = 20
-    X1, X2, tag1, tag2, tags, d = get_reg_targets(
+    X1, X2, tag1, tag2, tags, d, d2, coeff = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="t"
     )
     lnsteps = range(d.shape[1])
@@ -322,7 +323,7 @@ def plot_3d_k_volcano(
 ):
     x1base = 25
     x2base = 20
-    X1, X2, tag1, tag2, tags, d = get_reg_targets(
+    X1, X2, tag1, tag2, tags, d, d2, coeff = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
     lnsteps = range(d.shape[1])
@@ -458,7 +459,7 @@ def plot_3d_es_volcano(
 ):
     x1base = 25
     x2base = 20
-    X1, X2, tag1, tag2, tags, d = get_reg_targets(
+    X1, X2, tag1, tag2, tags, d, d2, coeff = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
     lnsteps = range(d.shape[1])
@@ -474,7 +475,7 @@ def plot_3d_es_volcano(
     yint = np.linspace(x2min, x2max, npoints)
     grids = []
     for i, j in enumerate(lnsteps):
-        XY = np.vstack([[d[:, idx1], d[:, idx2]], d[:, j]]).T
+        XY = np.vstack([X1, X2, d[:, j]]).T
         X = XY[:, :2]
         Y = XY[:, 2]
         reg = sk.linear_model.LinearRegression().fit(X, Y)
@@ -505,14 +506,14 @@ def plot_3d_es_volcano(
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
         profile = d[i, :-1]
-        px[i] = d[i, idx1].reshape(-1)
-        py[i] = d[i, idx2].reshape(-1)
-    x1label = f"{tags[idx1]} [kcal/mol]"
-    x2label = f"{tags[idx2]} [kcal/mol]"
+        px[i] = X1[i]
+        py[i] = X2[i]
+    x1label = f"{tag1} [kcal/mol]"
+    x2label = f"{tag2} [kcal/mol]"
     ylabel = r"-δ$E$ [kcal/mol]"
-    filename = f"es_volcano_{tags[idx1]}_{tags[idx2]}.png"
+    filename = f"es_volcano_{tag1}_{tag2}.png"
     if verb > 0:
-        csvname = f"es_volcano_{tags[idx1]}_{tags[idx2]}.csv"
+        csvname = f"es_volcano_{tag1}_{tag2}.csv"
         print(f"Saving volcano data to file {csvname}")
         x = np.zeros_like(grid.reshape(-1))
         y = np.zeros_like(grid.reshape(-1))
@@ -595,7 +596,7 @@ def plot_3d_tof_volcano(
 ):
     x1base = 25
     x2base = 20
-    X1, X2, tag1, tag2, tags, d = get_reg_targets(
+    X1, X2, tag1, tag2, tags, d, d2, coeff = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
     lnsteps = range(d.shape[1])
@@ -635,14 +636,14 @@ def plot_3d_tof_volcano(
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
         profile = d[i, :-1]
-        px[i] = d[i, idx1].reshape(-1)
-        py[i] = d[i, idx2].reshape(-1)
-    x1label = f"{tags[idx1]} [kcal/mol]"
-    x2label = f"{tags[idx2]} [kcal/mol]"
+        px[i] = X1[i]
+        py[i] = X2[i]
+    x1label = f"{tag1} [kcal/mol]"
+    x2label = f"{tag2} [kcal/mol]"
     ylabel = "log(TOF) [1/s]"
-    filename = f"tof_volcano_{tags[idx1]}_{tags[idx2]}.png"
+    filename = f"tof_volcano_{tag1}_{tag2}.png"
     if verb > 0:
-        csvname = f"tof_volcano_{tags[idx1]}_{tags[idx2]}.csv"
+        csvname = f"tof_volcano_{tag1}_{tag2}.csv"
         print(f"Saving TOF volcano data to file {csvname}")
         x = np.zeros_like(grid.reshape(-1))
         y = np.zeros_like(grid.reshape(-1))
