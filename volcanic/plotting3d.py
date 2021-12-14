@@ -374,10 +374,10 @@ def plot_3d_k_volcano(
         py[i] = X2[i]
     x1label = f"{tag1} [kcal/mol]"
     x2label = f"{tag2} [kcal/mol]"
-    ylabel = "-ΔG(pds) [kcal/mol]"
-    filename = f"t_volcano_{tag1}_{tag2}.png"
+    ylabel = "-ΔG(kds) [kcal/mol]"
+    filename = f"k_volcano_{tag1}_{tag2}.png"
     if verb > 0:
-        csvname = f"t_volcano_{tag1}_{tag2}.csv"
+        csvname = f"k_volcano_{tag1}_{tag2}.csv"
         print(f"Saving volcano data to file {csvname}")
         x = np.zeros_like(grid.reshape(-1))
         y = np.zeros_like(grid.reshape(-1))
