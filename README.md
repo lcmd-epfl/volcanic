@@ -52,6 +52,11 @@ python volcanic.py -i [FILENAME]
 
 This will query the user for options and generate the volcano plots as png images. Options can be consulted with the `-h` flag.
 
+The input of volcanic.py is a `pandas` compatible dataframe, which incluves plain .csv and .xls files. 
+
+Regarding format, volcanic.py expects headers for all columns. The first column must contain names/identifiers. Then, volcanic.py expects a number of columns with relative free energies for the species in the catalytic cycle (in order of appearance), whose headers must contain "TS" if the species is a transition state, and a final column whose header is "Product" containing the reaction energy. Non-energy descriptors can be input as a separate file using the `-df` flag or as extra columns whose headers contain the word "Descriptor".
+
+
 ---
 
 

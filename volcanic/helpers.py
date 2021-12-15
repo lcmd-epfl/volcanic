@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 import os
 import itertools
-import h5py
 import argparse
 from itertools import cycle
 from volcanic.exceptions import InputError
@@ -383,6 +382,8 @@ def check_input(filenames, dfilenames, temp, nd, imputer_strat, verb):
 
 def arraydump(path: str, descriptor: np.array, volcano_list, volcano_headers):
     """Dump array as an hdf5 file."""
+    import h5py
+
     h5 = h5py.File(path, "w")
     assert len(volcano_list) == len(volcano_headers)
     # hdf5 file is like a dictionary, every dataset has a key and a data value (which can be an array)
@@ -394,6 +395,8 @@ def arraydump(path: str, descriptor: np.array, volcano_list, volcano_headers):
 
 def arrayread(path: str):
     """Read hdf5 dataset."""
+    import h5py
+
     h5 = h5py.File(path, "r")
     volcano_headers = []
     volcano_list = []
