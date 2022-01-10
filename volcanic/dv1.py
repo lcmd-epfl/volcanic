@@ -40,14 +40,14 @@ def curate_d(d, regress, cb, ms, tags, imputer_strat="none", nstds=5, verb=0):
             outlier = np.where(absd > maxtol)
             if verb > 1:
                 print(
-                    f"Among data series {tagsit[outlier]} some outliers (very large values) were detected: {dit[outlier,i].flatten()} and will be skipped."
+                    f"Among data series {tagsit[i]} some outliers (very large values) were detected: {dit[outlier,i].flatten()} and will be skipped."
                 )
             dit[outlier, i] = np.nan
         if any(absd < mintol):
             outlier = np.where(absd < mintol)
             if verb > 1:
                 print(
-                    f"Among data series {tagsit[outlier]} some outliers (very small values) were detected: {dit[outlier,i].flatten()} and will be skipped."
+                    f"Among data series {tagsit[i]} some outliers (very small values) were detected: {dit[outlier,i].flatten()} and will be skipped."
                 )
             dit[outlier, i] = np.nan
         if i > 0:
