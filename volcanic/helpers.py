@@ -207,7 +207,7 @@ def processargs(arguments):
         "--temp",
         "-temp",
         dest="temp",
-        type=int,
+        type=float,
         default=298.15,
         help="Temperature in K. (default: 298.15)",
     )
