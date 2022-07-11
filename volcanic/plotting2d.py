@@ -112,7 +112,7 @@ def plot_2d_lsfer(
         t = stats.t.ppf(0.95, dof)
         resid = Y - Y_pred
         chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid ** 2) / dof)
+        s_err = np.sqrt(np.sum(resid**2) / dof)
         fig, ax = plt.subplots(
             frameon=False, figsize=[4.2, 3], dpi=300, constrained_layout=True
         )
@@ -304,7 +304,7 @@ def plot_2d_es_volcano(
         resid = Y - Y_pred
         with np.errstate(invalid="ignore"):
             chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid ** 2) / dof)
+        s_err = np.sqrt(np.sum(resid**2) / dof)
         yint = np.polyval(p, xint)
         dgs[:, i] = yint
     ymin = np.zeros_like(yint)
@@ -339,7 +339,7 @@ def plot_2d_es_volcano(
     for i in range(d.shape[0]):
         profile = d[i, :-1]
         dgr = dgs[i][-1]
-        px[i] = d[i, idx].reshape(-1)
+        px[i] = X[i].reshape(-1)
         py[i] = calc_es(profile, dgr, esp=True)[0]
         if verb > 1:
             pointsname = f"points_es_volcano_{tag}.csv"
@@ -420,7 +420,7 @@ def plot_2d_k_volcano(
         resid = Y - Y_pred
         with np.errstate(invalid="ignore"):
             chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid ** 2) / dof)
+        s_err = np.sqrt(np.sum(resid**2) / dof)
         yint = np.polyval(p, xint)
         dgs[:, i] = yint
     ymin = np.zeros_like(yint)
@@ -534,7 +534,7 @@ def plot_2d_t_volcano(
         resid = Y - Y_pred
         with np.errstate(invalid="ignore"):
             chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid ** 2) / dof)
+        s_err = np.sqrt(np.sum(resid**2) / dof)
         yint = np.polyval(p, xint)
         dgs[:, i] = yint
     ymin = np.zeros_like(yint)
@@ -649,7 +649,7 @@ def plot_2d_tof_volcano(
         resid = Y - Y_pred
         with np.errstate(invalid="ignore"):
             chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid ** 2) / dof)
+        s_err = np.sqrt(np.sum(resid**2) / dof)
         yint = np.polyval(p, xint)
         dgs[:, i] = yint
     ytof = np.zeros_like(yint)
@@ -662,7 +662,7 @@ def plot_2d_tof_volcano(
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
-        px[i] = d[i, idx].reshape(-1)
+        px[i] = X[i].reshape(-1)
         profile = d[i, :]
         dgr = dgs[i][-1]
         tof = np.log10(calc_tof(profile, dgr, T, coeff, exact=True)[0])
