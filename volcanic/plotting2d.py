@@ -112,7 +112,7 @@ def plot_2d_lsfer(
         t = stats.t.ppf(0.95, dof)
         resid = Y - Y_pred
         chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid**2) / dof)
+        s_err = np.sqrt(np.sum(resid ** 2) / dof)
         fig, ax = plt.subplots(
             frameon=False, figsize=[4.2, 3], dpi=300, constrained_layout=True
         )
@@ -206,11 +206,7 @@ def plot_2d(
                 avgs.append((rb[i] + rb[i + 1]) / 2)
             for i in rb:
                 ax.axvline(
-                    i,
-                    linestyle="dashed",
-                    color="black",
-                    linewidth=0.75,
-                    alpha=0.75,
+                    i, linestyle="dashed", color="black", linewidth=0.75, alpha=0.75,
                 )
     elif plotmode == 1:
         ax.plot(x, y, "-", linewidth=1.5, color="midnightblue", alpha=0.95, zorder=1)
@@ -304,7 +300,7 @@ def plot_2d_es_volcano(
         resid = Y - Y_pred
         with np.errstate(invalid="ignore"):
             chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid**2) / dof)
+        s_err = np.sqrt(np.sum(resid ** 2) / dof)
         yint = np.polyval(p, xint)
         dgs[:, i] = yint
     ymin = np.zeros_like(yint)
@@ -420,7 +416,7 @@ def plot_2d_k_volcano(
         resid = Y - Y_pred
         with np.errstate(invalid="ignore"):
             chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid**2) / dof)
+        s_err = np.sqrt(np.sum(resid ** 2) / dof)
         yint = np.polyval(p, xint)
         dgs[:, i] = yint
     ymin = np.zeros_like(yint)
@@ -534,7 +530,7 @@ def plot_2d_t_volcano(
         resid = Y - Y_pred
         with np.errstate(invalid="ignore"):
             chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid**2) / dof)
+        s_err = np.sqrt(np.sum(resid ** 2) / dof)
         yint = np.polyval(p, xint)
         dgs[:, i] = yint
     ymin = np.zeros_like(yint)
@@ -649,7 +645,7 @@ def plot_2d_tof_volcano(
         resid = Y - Y_pred
         with np.errstate(invalid="ignore"):
             chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid**2) / dof)
+        s_err = np.sqrt(np.sum(resid ** 2) / dof)
         yint = np.polyval(p, xint)
         dgs[:, i] = yint
     ytof = np.zeros_like(yint)

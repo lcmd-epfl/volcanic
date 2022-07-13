@@ -441,6 +441,18 @@ def plot_3d_k_volcano(
     return xint, yint, grid, px, py
 
 
+def cantor_pair(a, b):
+    return (a + b) * (a + b + 1) / 2 + b
+
+
+def cantor_unpair(n):
+    w = np.floor((np.sqrt(8 * n + 1) - 1) / 2)
+    t = (pow(w, 2) + w) / 2
+    b = int(n - t)
+    a = int(w - b)
+    return a, b
+
+
 def plot_3d_es_volcano(
     idx1,
     idx2,
@@ -459,6 +471,7 @@ def plot_3d_es_volcano(
 ):
     x1base = 25
     x2base = 20
+    plot_regions = True
     X1, X2, tag1, tag2, tags, d, d2, coeff = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
@@ -497,9 +510,21 @@ def plot_3d_es_volcano(
             grid[k, l], ridmax[k, l], ridmin[k, l], diff = calc_es(
                 profile, dgr, esp=True
             )
-    rid = np.hstack([ridmin, ridmax])
-    if verb > 0:
-        pass
+    if plot_regions:
+        rid = np.array(cantor_pair(ridmin, ridmax), dtype=int)
+        ridgrid = np.zeros_like(gridj, dtype=int)
+        (unique, count) = np.unique(rid, return_counts=True)
+        id_labels = []
+        for k, (span, c) in enumerate(zip(unique, count)):
+            pair = np.where(rid == span)
+            idmin, idmax = cantor_unpair(span)
+            id_labels.append(f"{tags[idmin]}\n->n{tags[idmax]}")
+            if verb > 1:
+                print(f"Region ID {k} corresponding to {tags[idmin]}->{tags[idmax]} in {c} points.")
+            ridgrid[np.where(rid == span)] = k
+        if verb > 0:
+            print(f"Found {len(unique)} distinct regions in the energy span.")
+
     ymin = grid.min()
     ymax = grid.max()
     px = np.zeros_like(d[:, 0])
@@ -512,8 +537,12 @@ def plot_3d_es_volcano(
     x2label = f"{tag2} [kcal/mol]"
     ylabel = r"-δ$E$ [kcal/mol]"
     filename = f"es_volcano_{tag1}_{tag2}.png"
+    if plot_regions:
+        filename_regions = f"regions_es_volcano_{tag1}_{tag2}.png"
     if verb > 0:
         csvname = f"es_volcano_{tag1}_{tag2}.csv"
+        if plot_regions:
+            csvname_regions = f"regions_es_volcano_{tag1}_{tag2}.csv"
         print(f"Saving volcano data to file {csvname}")
         x = np.zeros_like(grid.reshape(-1))
         y = np.zeros_like(grid.reshape(-1))
@@ -521,12 +550,49 @@ def plot_3d_es_volcano(
             x[i] = xy[0]
             y[i] = xy[1]
         zdata = list(zip(x, y, grid.reshape(-1)))
+        if plot_regions:
+            zdata_regions = list(zip(x, y, ridgrid.reshape(-1)))
         np.savetxt(
             csvname,
             zdata,
             fmt="%.4e",
             delimiter=",",
             header="Descriptor 1, Descriptor 2, -\d_Ges",
+        )
+        if plot_regions:
+            np.savetxt(
+                csvname_regions,
+                zdata_regions,
+                fmt="%.4e",
+                delimiter=",",
+                header="Descriptor 1, Descriptor 2, RegionID",
+            )
+    if plot_regions:
+        ymin_region = 0
+        ymax_region = len(unique)
+        plot_3d_contour_regions(
+            xint,
+            yint,
+            ridgrid.T,
+            px,
+            py,
+            ymin_region,
+            ymax_region,
+            x1min,
+            x1max,
+            x2min,
+            x2max,
+            x1base,
+            x2base,
+            x1label=x1label,
+            x2label=x2label,
+            ylabel="Region",
+            filename=filename_regions,
+            cb=cb,
+            ms=ms,
+            nunique=len(unique),
+            id_labels=id_labels,
+            plotmode=3,
         )
     if plotmode == 2:
         plot_3d_contour(
@@ -747,8 +813,8 @@ def plot_3d_contour(
     )
     grid = np.clip(grid, ymin, ymax)
     norm = cm.colors.Normalize(vmax=ymax, vmin=ymin)
-    levels = np.arange(ymin - 5, ymax + 5, 2.5)
     ax = beautify_ax(ax)
+    levels = np.arange(ymin - 5, ymax + 5, 2.5)
     cset = ax.contourf(
         xint,
         yint,
@@ -757,6 +823,7 @@ def plot_3d_contour(
         norm=norm,
         cmap=cm.get_cmap("jet", len(levels)),
     )
+
     # Labels and key
     plt.xlabel(x1label)
     plt.ylabel(x2label)
@@ -768,6 +835,76 @@ def plot_3d_contour(
     fmt = lambda x, pos: "%.0f" % x
     cbar = fig.colorbar(cset, format=FuncFormatter(fmt))
     cbar.set_label(ylabel, labelpad=15, rotation=270)
+    for i in range(len(px)):
+        ax.scatter(
+            px[i],
+            py[i],
+            s=12.5,
+            c=cb[i],
+            marker=ms[i],
+            linewidths=0.15,
+            edgecolors="black",
+        )
+    plt.savefig(filename)
+
+
+def plot_3d_contour_regions(
+    xint,
+    yint,
+    grid,
+    px,
+    py,
+    ymin,
+    ymax,
+    x1min,
+    x1max,
+    x2min,
+    x2max,
+    x1base,
+    x2base,
+    x1label="X1-axis",
+    x2label="X2-axis",
+    ylabel="Y-axis",
+    filename="plot.png",
+    cb="white",
+    ms="o",
+    nunique=2,
+    id_labels=[],
+    plotmode=3,
+):
+    fig, ax = plt.subplots(
+        frameon=False, figsize=[4.2, 3], dpi=300, constrained_layout=True
+    )
+    ax = beautify_ax(ax)
+    levels = np.arange(-0.1, nunique + 0.9, 1)
+    cset = ax.contourf(
+        xint, yint, grid, levels=levels, cmap=cm.get_cmap("Dark2", nunique + 1),
+    )
+
+    # Labels and key
+    plt.xlabel(x1label)
+    plt.ylabel(x2label)
+    plt.xlim(x1min, x1max)
+    plt.ylim(x2max, x2min)
+    plt.xticks(np.arange(x1min, x1max + 0.1, x1base))
+    plt.yticks(np.arange(x2min, x2max + 0.1, x2base))
+    ax.contour(xint, yint, grid, cset.levels, colors="black", linewidths=0.1)
+    fmt = lambda x, pos: "%.0f" % x
+    cbar = fig.colorbar(cset, format=FuncFormatter(fmt))
+    cbar.set_ticks([])
+    cbar.set_label(ylabel, labelpad=15, rotation=270)
+    for j, tlab in enumerate(id_labels):
+        cbar.ax.text(
+            12.5,
+            0.4 + j,
+            tlab,
+            ha="center",
+            va="center",
+            weight="light",
+            fontsize=3.5,
+            rotation=-90,
+        )
+        cbar.ax.get_yaxis().labelpad = 15
     for i in range(len(px)):
         ax.scatter(
             px[i],
