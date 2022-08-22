@@ -57,7 +57,7 @@ The input of volcanic.py is a `pandas` compatible dataframe, which includes plai
 
 Regarding format, volcanic.py expects headers for all columns. The first column must contain names/identifiers. Then, volcanic.py expects a number of columns with relative free energies for the species in the catalytic cycle (in order of appearance), whose headers must contain "TS" if the species is a transition state, and a final column whose header is "Product" containing the reaction energy. Non-energy descriptors can be input as a separate file using the `-df` flag or as extra columns whose headers contain the word "Descriptor".
 
-High verbosity levels (`-h`) will print the output as csv files as well, which can be used to plot your volcano plot or activity map as you wish. An example is found in the `pretty_plotting_example` directory in this repository.
+High verbosity levels (`-v 1`) will print the output as csv files as well, which can be used to plot your volcano plot or activity map as you wish. An example is found in the `pretty_plotting_example` directory in this repository.
 
 
 ## Citation [↑](#citation)
