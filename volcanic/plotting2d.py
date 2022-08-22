@@ -338,7 +338,7 @@ def plot_2d_es_volcano(
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
         profile = d[i, :-1]
-        dgr = dgs[i][-1]
+        dgr = dgr[i]
         px[i] = X[i].reshape(-1)
         py[i] = calc_es(profile, dgr, esp=True)[0]
         if verb > 1:
@@ -454,7 +454,7 @@ def plot_2d_k_volcano(
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
         profile = d[i, :-1]
-        dgr = dgs[i][-1]
+        dgr = dgr[i]
         px[i] = X[i].reshape(-1)
         py[i] = calc_s_es(profile, dgr, esp=True)[0]
         if verb > 1:
@@ -568,7 +568,7 @@ def plot_2d_t_volcano(
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
         profile = d[i, :-1]
-        dgr = dgs[i][-1]
+        dgr = dgr[i]
         px[i] = X[i].reshape(-1)
         py[i] = calc_s_es(profile, dgr, esp=True)[0]
         if verb > 1:
@@ -664,7 +664,7 @@ def plot_2d_tof_volcano(
     for i in range(d.shape[0]):
         px[i] = X[i].reshape(-1)
         profile = d[i, :]
-        dgr = dgs[i][-1]
+        dgr = dgr[i]
         tof = np.log10(calc_tof(profile, dgr, T, coeff, exact=True)[0])
         py[i] = tof
         if verb > 2:
