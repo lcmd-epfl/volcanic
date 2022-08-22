@@ -65,7 +65,7 @@ High verbosity levels (`-h`) will print the output as csv files as well, which c
 Please cite the accompanying manuscript, which clarifies the details of volcano plot construction. You can find it [here](https://rdcu.be/cT7uu).
 
 ```
-Laplaza, R., Das, S., Wodrich, M.D. et al. Constructing and interpreting volcano plots and activity maps to navigate homogeneous catalyst landscapes. <b>Nat Protoc (2022)</b>. https://doi.org/10.1038/s41596-022-00726-2
+Laplaza, R., Das, S., Wodrich, M.D. et al. Constructing and interpreting volcano plots and activity maps to navigate homogeneous catalyst landscapes. Nat Protoc (2022). https://doi.org/10.1038/s41596-022-00726-2
 ```
 
 ---
