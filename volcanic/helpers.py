@@ -27,7 +27,8 @@ def bround(x, base: float = 10, type=None) -> float:
     elif type == "min":
         return base * np.floor(x / base)
     else:
-        return base * np.round(x / base)
+        tick = base * np.round(x / base)
+        return tick
 
 
 def group_data_points(bc, ec, names):
@@ -96,7 +97,7 @@ def processargs(arguments):
     vbuilder = argparse.ArgumentParser(
         prog="volcanic",
         description="Build volcano plots from reaction energy profile data.",
-        epilog="Remember to cite the volcanic paper - and enjoy!",
+        epilog="Remember to cite the volcanic paper: \n \nLaplaza, R., Das, S., Wodrich, M.D. et al. Constructing and interpreting volcano plots and activity maps to navigate homogeneous catalyst landscapes. Nat Protoc (2022). \nhttps://doi.org/10.1038/s41596-022-00726-2 \n \n - and enjoy!",
     )
     vbuilder.add_argument(
         "-version", "--version", action="version", version="%(prog)s 1.0"

@@ -105,7 +105,7 @@ def calc_tof(array, dgr, T, coeff, exact=True, verb=0):
     return TOF, X_TOF
 
 
-def calc_es(profile, dgr, esp=True):
+def calc_es(profile, dgr, esp=True, chemical_sense=False):
     es1 = -np.inf
     imax = 0
     imin = 1
@@ -123,7 +123,7 @@ def calc_es(profile, dgr, esp=True):
     return [-es1, imax, imin, diff]
 
 
-def calc_s_es(profile, dgr, esp=True):
+def calc_s_es(profile, dgr, esp=True, chemical_sense=False):
     es1 = -np.inf
     imax = 0
     imin = 1

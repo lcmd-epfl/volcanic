@@ -46,6 +46,28 @@ def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
     return ax
 
 
+def get_bases(X1, X2):
+
+    return get_base(X1), get_base(X2)
+
+
+def get_base(X):
+    s = np.abs(X.max() - X.min())
+    om = np.round(np.log10(s))
+    xbase = max([(10**om) * 2, 0.1])
+    if s < 2 * xbase:
+        r = np.round(xbase / s)
+        xbase = xbase * 4 / r
+    if s > 8 * xbase:
+        r = np.round(s / xbase)
+        xbase = r / 4 * xbase
+    if xbase > 1:
+        xbase = int(xbase)
+    else:
+        xbase = max([xbase, 0.1])
+    return xbase
+
+
 def plot_3d_lsfer(
     idx1,
     idx2,
@@ -61,11 +83,10 @@ def plot_3d_lsfer(
     plotmode=1,
     verb=0,
 ):
-    x1base = 20
-    x2base = 20
     X1, X2, tag1, tag2, tags, d, d2, coeff = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
+    x1base, x2base = get_bases(X1, X2)
     d_refill = np.zeros_like(d)
     d_refill[~np.isnan(d)] = d[~np.isnan(d)]
     lnsteps = range(d.shape[1])
@@ -88,8 +109,8 @@ def plot_3d_lsfer(
         Ym = XYm[:, 2]
         X = XY[:, :2]
         Y = XY[:, 2]
-        xmax = bround(Y.max() + rmargin, x1base)
-        xmin = bround(Y.min() - lmargin, x1base)
+        xmax = bround(Y.max() + rmargin, x1base, "max")
+        xmin = bround(Y.min() - lmargin, x1base, "min")
         xint = np.sort(Y)
         reg = sk.linear_model.LinearRegression().fit(X, Y)
         if verb > 2:
@@ -127,7 +148,7 @@ def plot_3d_lsfer(
         t = stats.t.ppf(0.95, dof)
         resid = Y - Y_pred
         chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid ** 2) / dof)
+        s_err = np.sqrt(np.sum(resid**2) / dof)
         fig, ax = plt.subplots(
             frameon=False, figsize=[3, 3], dpi=300, constrained_layout=True
         )
@@ -184,16 +205,15 @@ def plot_3d_t_volcano(
     plotmode=1,
     verb=0,
 ):
-    x1base = 25
-    x2base = 20
     X1, X2, tag1, tag2, tags, d, d2, coeff = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="t"
     )
+    x1base, x2base = get_bases(X1, X2)
     lnsteps = range(d.shape[1])
-    x1max = bround(X1.max() + rmargin, x1base)
-    x1min = bround(X1.min() - lmargin, x1base)
-    x2max = bround(X2.max() + rmargin, x2base)
-    x2min = bround(X2.min() - lmargin, x2base)
+    x1max = bround(X1.max() + rmargin, x1base, "max")
+    x1min = bround(X1.min() - lmargin, x1base, "min")
+    x2max = bround(X2.max() + rmargin, x2base, "max")
+    x2min = bround(X2.min() - lmargin, x2base, "min")
     if verb > 1:
         print(
             f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
@@ -321,16 +341,15 @@ def plot_3d_k_volcano(
     plotmode=1,
     verb=0,
 ):
-    x1base = 25
-    x2base = 20
     X1, X2, tag1, tag2, tags, d, d2, coeff = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
+    x1base, x2base = get_bases(X1, X2)
     lnsteps = range(d.shape[1])
-    x1max = bround(X1.max() + rmargin, x1base)
-    x1min = bround(X1.min() - lmargin, x1base)
-    x2max = bround(X2.max() + rmargin, x2base)
-    x2min = bround(X2.min() - lmargin, x2base)
+    x1max = bround(X1.max() + rmargin, x1base, "max")
+    x1min = bround(X1.min() - lmargin, x1base, "min")
+    x2max = bround(X2.max() + rmargin, x2base, "max")
+    x2min = bround(X2.min() - lmargin, x2base, "min")
     if verb > 1:
         print(
             f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
@@ -469,17 +488,17 @@ def plot_3d_es_volcano(
     plotmode=1,
     verb=0,
 ):
-    x1base = 25
-    x2base = 20
     plot_regions = True
+    chemical_sense = True
     X1, X2, tag1, tag2, tags, d, d2, coeff = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
+    x1base, x2base = get_bases(X1, X2)
     lnsteps = range(d.shape[1])
-    x1max = bround(X1.max() + rmargin, x1base)
-    x1min = bround(X1.min() - lmargin, x1base)
-    x2max = bround(X2.max() + rmargin, x2base)
-    x2min = bround(X2.min() - lmargin, x2base)
+    x1max = bround(X1.max() + rmargin, x1base, "max")
+    x1min = bround(X1.min() - lmargin, x1base, "min")
+    x2max = bround(X2.max() + rmargin, x2base, "max")
+    x2min = bround(X2.min() - lmargin, x2base, "min")
     if verb > 1:
         print(
             f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
@@ -508,7 +527,7 @@ def plot_3d_es_volcano(
             profile = [gridj[k, l] for gridj in grids][:-1]
             dgr = [gridj[k, l] for gridj in grids][-1]
             grid[k, l], ridmax[k, l], ridmin[k, l], diff = calc_es(
-                profile, dgr, esp=True
+                profile, dgr, esp=True, chemical_sense=chemical_sense
             )
     if plot_regions:
         rid = np.array(cantor_pair(ridmin, ridmax), dtype=int)
@@ -520,7 +539,9 @@ def plot_3d_es_volcano(
             idmin, idmax = cantor_unpair(span)
             id_labels.append(f"{tags[idmin]}\n->n{tags[idmax]}")
             if verb > 1:
-                print(f"Region ID {k} corresponding to {tags[idmin]}->{tags[idmax]} in {c} points.")
+                print(
+                    f"Region ID {k} corresponding to {tags[idmin]}->{tags[idmax]} in {c} points."
+                )
             ridgrid[np.where(rid == span)] = k
         if verb > 0:
             print(f"Found {len(unique)} distinct regions in the energy span.")
@@ -660,16 +681,15 @@ def plot_3d_tof_volcano(
     plotmode=1,
     verb=0,
 ):
-    x1base = 25
-    x2base = 20
     X1, X2, tag1, tag2, tags, d, d2, coeff = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
+    x1base, x2base = get_bases(X1, X2)
     lnsteps = range(d.shape[1])
-    x1max = bround(X1.max() + rmargin, x1base)
-    x1min = bround(X1.min() - lmargin, x1base)
-    x2max = bround(X2.max() + rmargin, x2base)
-    x2min = bround(X2.min() - lmargin, x2base)
+    x1max = bround(X1.max() + rmargin, x1base, "max")
+    x1min = bround(X1.min() - lmargin, x1base, "min")
+    x2max = bround(X2.max() + rmargin, x2base, "max")
+    x2min = bround(X2.min() - lmargin, x2base, "min")
     if verb > 1:
         print(
             f"Range of descriptors set to [ {x1min} , {x1max} ] and [ {x2min} , {x2max} ]"
@@ -878,7 +898,11 @@ def plot_3d_contour_regions(
     ax = beautify_ax(ax)
     levels = np.arange(-0.1, nunique + 0.9, 1)
     cset = ax.contourf(
-        xint, yint, grid, levels=levels, cmap=cm.get_cmap("Dark2", nunique + 1),
+        xint,
+        yint,
+        grid,
+        levels=levels,
+        cmap=cm.get_cmap("Dark2", nunique + 1),
     )
 
     # Labels and key

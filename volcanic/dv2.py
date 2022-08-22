@@ -8,6 +8,8 @@ from collections import deque
 from volcanic.exceptions import InputError
 
 rng = np.random.default_rng()
+sup = np.testing.suppress_warnings()
+sup.filter(module=np.core)
 
 
 def count_iter_items(iterable):
@@ -26,13 +28,14 @@ def dv_collinear(X, verb=0):
     if np.any(np.where(c_idx > 250)):
         if verb > 1:
             print(
-                "Descriptors are likley to be linearly dependant given SVD :\n {s} \n Skipping."
+                f"Descriptors are likely to be linearly dependant given SVD. Skipping."
             )
         return True
     else:
         return False
 
 
+@sup
 def find_2_dv(d, tags, coeff, regress, verb=0):
     assert isinstance(d, np.ndarray)
     assert len(tags) == len(coeff)
@@ -76,7 +79,7 @@ def find_2_dv(d, tags, coeff, regress, verb=0):
             XY = np.vstack([[d[:, i], d[:, j]], d[:, k]]).T
             XY = XY[~np.isnan(XY).any(axis=1)]
             X = XY[:, :2]
-            if dv_collinear(X):
+            if dv_collinear(X, verb):
                 maes[idx] = np.nan
                 r2s[idx] = 0
                 maps[idx] = np.nan
@@ -165,16 +168,64 @@ def find_2_dv(d, tags, coeff, regress, verb=0):
 
 def test_dv2():
     a = np.array(
-        [0, -11.34, 2.66, -14.78, 0.14, -18.22, -13.81, -20.98, -22.26, -53.98, -43.19,]
+        [
+            0,
+            -11.34,
+            2.66,
+            -14.78,
+            0.14,
+            -18.22,
+            -13.81,
+            -20.98,
+            -22.26,
+            -53.98,
+            -43.19,
+        ]
     )
     b = np.array(
-        [0, -11.24, 3.66, -16.78, 0.54, -18.52, -4.81, -21.98, -23.26, -52.98, -43.19,]
+        [
+            0,
+            -11.24,
+            3.66,
+            -16.78,
+            0.54,
+            -18.52,
+            -4.81,
+            -21.98,
+            -23.26,
+            -52.98,
+            -43.19,
+        ]
     )
     c = np.array(
-        [0, -14.24, 0.66, -14.78, 0.94, -14.52, -1.81, -20.98, -24.26, -54.98, -43.19,]
+        [
+            0,
+            -14.24,
+            0.66,
+            -14.78,
+            0.94,
+            -14.52,
+            -1.81,
+            -20.98,
+            -24.26,
+            -54.98,
+            -43.19,
+        ]
     )
     d = np.array(
-        [0, -18.24, 2.66, -17.78, 1.14, -15.52, -2.81, -25.98, -21.26, -50.98, -43.19,]
+        [
+            0,
+            -18.24,
+            2.66,
+            -17.78,
+            1.14,
+            -15.52,
+            -2.81,
+            -25.98,
+            -21.26,
+            -50.98,
+            -43.19,
+        ]
     )
     dgr = -43.19
     coeff = np.array([0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0], dtype=bool)
