@@ -3,22 +3,41 @@
 import numpy as np
 import sklearn as sk
 import sklearn.linear_model
-from sklearn.impute import SimpleImputer, KNNImputer
+
 from volcanic.exceptions import InputError
 
 rng = np.random.default_rng()
 
 
-def call_imputer(a, b, imputer_strat="simple"):
-    if imputer_strat == "simple":
+def call_imputer(a, b, imputer_strat="iterative"):
+    if imputer_strat == "iterative":
+        try:
+            from sklearn.experimental import enable_iterative_imputer
+            from sklearn.impute import IterativeImputer
+        except ModuleNotFoundError as err:
+            return a
+        imputer = IterativeImputer(max_iter=25)
+        newa = imputer.fit(b).transform(a.reshape(1, -1)).flatten()
+        return newa
+    elif imputer_strat == "simple":
+        try:
+            from sklearn.impute import SimpleImputer
+        except ModuleNotFoundError as err:
+            return a
         imputer = SimpleImputer()
         newa = imputer.fit_transform(a.reshape(-1, 1)).flatten()
         return newa
-    if imputer_strat == "knn":
+    elif imputer_strat == "knn":
+        try:
+            from sklearn.impute import KNNImputer
+        except ModuleNotFoundError as err:
+            return a
         imputer = KNNImputer(n_neighbors=2)
-        newa = imputer.fit_transform(np.vstack([b, a]).T)[:, 1]
+        newa = imputer.fit(b).transform(a.reshape(1, -1)).flatten()
         return newa
-    if imputer_strat == "none":
+    elif imputer_strat == "none":
+        return a
+    else:
         return a
 
 
@@ -50,11 +69,17 @@ def curate_d(d, regress, cb, ms, tags, imputer_strat="none", nstds=5, verb=0):
                     f"Among data series {tagsit[i]} some outliers (very small values) were detected: {dit[outlier,i].flatten()} and will be skipped."
                 )
             dit[outlier, i] = np.nan
-        if i > 0:
-            dit[:, i] = call_imputer(dit[:, i], dit[:, i - 1], imputer_strat)
-        if i == 0:
-            dit[:, i] = call_imputer(dit[:, i], dit[:, i + 1], imputer_strat)
-        curated_d[:, i] = dit[:, i]
+    for j in range(dit.shape[0]):
+        n_nans = np.count_nonzero(np.isnan(dit[j, :]))
+        if n_nans > 0:
+            tofix = dit[j, :]
+            if verb > 1:
+                print(f"Using the imputer strategy, converted\n {tofix}.")
+            toref = dit[np.arange(dit.shape[0]) != j, :]
+            dit[j, :] = call_imputer(tofix, toref, imputer_strat)
+            if verb > 1:
+                print(f"to\n {dit[j,:]}.")
+        curated_d[j, :] = dit[j, :]
     incomplete = np.ones_like(curated_d[:, 0], dtype=bool)
     for i in range(curated_d.shape[0]):
         n_nans = np.count_nonzero(np.isnan(curated_d[i, :]))
@@ -239,7 +264,7 @@ def test_dv1():
     assert np.allclose(r2s, [0.6436413778677442, 0.6419178563084623], 4)
 
 
-def test_inputer():
+def test_imputer():
     coeff = [0, 0, 1, 0, 1, 0, 0, 1]
     dgr = -28.1
     # Ni(PMe3)
@@ -251,9 +276,9 @@ def test_inputer():
     d = np.vstack([a, b, c])
 
     # with erased values
-    a2 = np.array([0.0, 0.2, np.nan, 10.5, 23.9, -19.9, -27.5, -0.5])
+    a2 = np.array([0.0, 0.2, 27.4, 10.5, 23.9, -19.9, -27.5, -0.5])
     b2 = np.array([0.0, 6.34, 28.6, np.nan, 22.81, -17.96, -40.31, -0.07])
-    c2 = np.array([0.0, 4.68, 27.95, 13.85, 25.95, -14.93, np.nan, 2.07])
+    c2 = np.array([0.0, 4.68, 27.95, 13.85, 25.95, -14.93, -24.80, 2.07])
     d2 = np.vstack([a2, b2, c2])
     cb = np.ones((3))
     ms = np.ones((3))
@@ -273,12 +298,23 @@ def test_inputer():
             "Product",
         ]
     )
-    d_simple = curate_d(d2, regress, cb, ms, tags, imputer_strat="simple", verb=2)[0]
-    d_knn = curate_d(d2, regress, cb, ms, tags, imputer_strat="knn", verb=2)[0]
-    assert np.isclose(np.linalg.norm(d - d_simple), 9.17805398763812)
-    assert np.isclose(np.linalg.norm(d - d_knn), 9.17805398763812)
+    d2_test = np.copy(d2)
+    d_simple = curate_d(d2_test, regress, cb, ms, tags, imputer_strat="simple", verb=2)[
+        0
+    ]
+
+    d2_test = np.copy(d2)
+    d_knn = curate_d(d2_test, regress, cb, ms, tags, imputer_strat="knn", verb=2)[0]
+
+    d2_test = np.copy(d2)
+    d_iterative = curate_d(
+        d2_test, regress, cb, ms, tags, imputer_strat="iterative", verb=2
+    )[0]
+    assert np.isclose(np.linalg.norm(d - d_simple), 11.50428)
+    assert np.isclose(np.linalg.norm(d - d_knn), 0.75500, rtol=0.1)
+    assert np.isclose(np.linalg.norm(d - d_iterative), 0.80902, rtol=0.1)
 
 
 if __name__ == "__main__":
     test_dv1()
-    test_inputer()
+    test_imputer()

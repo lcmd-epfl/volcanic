@@ -1,33 +1,20 @@
 #!/usr/bin/env python
 
 from __future__ import absolute_import
+
 import sys
+
 import numpy as np
+
 from .dv1 import curate_d, find_1_dv
 from .dv2 import find_2_dv
-from .plotting2d import (
-    plot_2d_lsfer,
-    plot_2d_t_volcano,
-    plot_2d_k_volcano,
-    plot_2d_es_volcano,
-    plot_2d_tof_volcano,
-)
-from .plotting3d import (
-    plot_3d_lsfer,
-    plot_3d_t_volcano,
-    plot_3d_k_volcano,
-    plot_3d_es_volcano,
-    plot_3d_tof_volcano,
-)
-from .helpers import (
-    processargs,
-    group_data_points,
-    user_choose_1_dv,
-    user_choose_2_dv,
-    arraydump,
-    setflags,
-)
 from .exceptions import InputError
+from .helpers import (arraydump, group_data_points, processargs, setflags,
+                      user_choose_1_dv, user_choose_2_dv)
+from .plotting2d import (plot_2d_es_volcano, plot_2d_k_volcano, plot_2d_lsfer,
+                         plot_2d_t_volcano, plot_2d_tof_volcano)
+from .plotting3d import (plot_3d_es_volcano, plot_3d_k_volcano, plot_3d_lsfer,
+                         plot_3d_t_volcano, plot_3d_tof_volcano)
 
 if __name__ == "__main__" or __name__ == "volcanic.volcanic":
     (

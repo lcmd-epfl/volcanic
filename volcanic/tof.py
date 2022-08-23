@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-import numpy as np
 import copy
+
+import numpy as np
 
 
 def calc_tof(array, dgr, T, coeff, exact=True, verb=0):

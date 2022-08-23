@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
+import itertools
+from collections import deque
+
 import numpy as np
 import sklearn as sk
 import sklearn.linear_model
-import itertools
-from collections import deque
+
 from volcanic.exceptions import InputError
 
 rng = np.random.default_rng()
