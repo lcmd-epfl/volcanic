@@ -317,8 +317,8 @@ def plot_2d_es_volcano(
     prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :-1]
-        dgr = dgs[i][-1]
-        ymin[i], ridmax[i], ridmin[i], diff = calc_es(profile, dgr, esp=True)
+        dgr_s = dgs[i][-1]
+        ymin[i], ridmax[i], ridmin[i], diff = calc_es(profile, dgr_s, esp=True)
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -338,9 +338,9 @@ def plot_2d_es_volcano(
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
         profile = d[i, :-1]
-        dgr = dgr[i]
+        dgr_s = dgr[i]
         px[i] = X[i].reshape(-1)
-        py[i] = calc_es(profile, dgr, esp=True)[0]
+        py[i] = calc_es(profile, dgr_s, esp=True)[0]
         if verb > 1:
             pointsname = f"points_es_volcano_{tag}.csv"
             zdata = list(zip(px, py))
@@ -433,8 +433,8 @@ def plot_2d_k_volcano(
     prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :-1]
-        dgr = dgs[i][-1]
-        ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr, esp=True)
+        dgr_s = dgs[i][-1]
+        ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr_s, esp=True)
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -454,9 +454,9 @@ def plot_2d_k_volcano(
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
         profile = d[i, :-1]
-        dgr = dgr[i]
+        dgr_s = dgr[i]
         px[i] = X[i].reshape(-1)
-        py[i] = calc_s_es(profile, dgr, esp=True)[0]
+        py[i] = calc_s_es(profile, dgr_s, esp=True)[0]
         if verb > 1:
             pointsname = f"points_k_volcano_{tag}.csv"
             zdata = list(zip(px, py))
@@ -547,8 +547,8 @@ def plot_2d_t_volcano(
     prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :-1]
-        dgr = dgs[i][-1]
-        ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr, esp=True)
+        dgr_s = dgs[i][-1]
+        ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr_s, esp=True)
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -568,9 +568,9 @@ def plot_2d_t_volcano(
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
         profile = d[i, :-1]
-        dgr = dgr[i]
+        dgr_s = dgr[i]
         px[i] = X[i].reshape(-1)
-        py[i] = calc_s_es(profile, dgr, esp=True)[0]
+        py[i] = calc_s_es(profile, dgr_s, esp=True)[0]
         if verb > 1:
             pointsname = f"points_t_volcano_{tag}.csv"
             zdata = list(zip(px, py))
@@ -656,16 +656,16 @@ def plot_2d_tof_volcano(
     # We must take the initial and ending states into account here
     for i in range(ytof.shape[0]):
         profile = dgs[i, :]
-        dgr = dgs[i][-1]
-        tof = np.log10(calc_tof(profile, dgr, T, coeff, exact=True)[0])
+        dgr_s = dgs[i][-1]
+        tof = np.log10(calc_tof(profile, dgr_s, T, coeff, exact=True)[0])
         ytof[i] = tof
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
         px[i] = X[i].reshape(-1)
         profile = d[i, :]
-        dgr = dgr[i]
-        tof = np.log10(calc_tof(profile, dgr, T, coeff, exact=True)[0])
+        dgr_s = dgr[i]
+        tof = np.log10(calc_tof(profile, dgr_s, T, coeff, exact=True)[0])
         py[i] = tof
         if verb > 2:
             print(f"Profile {profile} corresponds with log10(TOF) of {tof}")
