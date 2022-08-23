@@ -57,12 +57,12 @@ def get_base(X):
     s = np.abs(X.max() - X.min())
     om = np.round(np.log10(s))
     xbase = max([(10**om) * 2, 0.1])
-    if s < 2 * xbase:
+    if s < 3 * xbase:
         r = np.round(xbase / s)
-        xbase = xbase * 4 / r
-    if s > 8 * xbase:
+        xbase = xbase * 3 / r
+    if s > 7 * xbase:
         r = np.round(s / xbase)
-        xbase = r / 4 * xbase
+        xbase = r / 3 * xbase
     if xbase > 1:
         xbase = int(xbase)
     else:

@@ -85,7 +85,7 @@ def find_2_dv(d, tags, coeff, regress, verb=0):
                 maes[idx] = np.nan
                 r2s[idx] = 0
                 maps[idx] = np.nan
-                continue
+                break
             Y = XY[:, 2]
             # Fitting using scikit-learn LinearModel
             reg = sk.linear_model.LinearRegression().fit(X, Y)
