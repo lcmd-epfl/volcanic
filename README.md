@@ -12,11 +12,12 @@ volcanic: Automated Generator of Volcano Plots
 
 ## About [↑](#about)
 
-The code runs on pure python with minimal dependencies: 
+The code runs on pure python with the following dependencies: 
 - `numpy`
 - `scipy`
 - `matplotlib`
 - `pandas`
+- `scikit-learn`
 
 
 ## Install [↑](#install)
