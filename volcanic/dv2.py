@@ -27,7 +27,7 @@ def dv_collinear(X, verb=0):
     u, s, vh = np.linalg.svd(X, full_matrices=True)
     c_idx = np.ones_like(s)
     c_idx = np.max(s) / s
-    if np.any(np.where(c_idx > 250)):
+    if np.any(np.where(c_idx > 1e9)):
         if verb > 1:
             print(
                 f"Descriptors are likely to be linearly dependant given SVD. Skipping."
