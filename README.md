@@ -42,7 +42,9 @@ python -m volcanic [-h] [-version] -i [FILENAMES] [-df DFILENAMES] [-nd ND] [-v 
                 [-rm RMARGIN] [-lm LMARGIN] [-np NPOINTS] [-d] [-is IMPUTER_STRAT] [-refill]
 ```
 
-Options can be consulted using the `-h` flag in either case. The help menu is quite detailed.
+Options can be consulted using the `-h` flag in either case. The help menu is quite detailed. 
+
+Note that the volcano plot and activity map functions are directly exposed in `volcanic.py` as `volcanic_2d` and `volcanic_3d` respectively, in case you want to incorporate them in your own code.
 
 ## Examples [↑](#examples)
 
