@@ -20,7 +20,7 @@ setup(
     url="https://github.com/lcmd-epfl/volcanic/",
     keywords=["compchem"],
     classifiers=["Programming Language :: Python :: 3"],
-    install_requires=["numpy", "scipy", "matplotlib"],
+    install_requires=["numpy", "scipy", "matplotlib", "pandas", "scikit-learn"],
     include_package_data=True,
     entry_points={
         "console_scripts": [
