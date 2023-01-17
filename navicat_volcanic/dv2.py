@@ -7,7 +7,7 @@ import numpy as np
 import sklearn as sk
 import sklearn.linear_model
 
-from volcanic.exceptions import InputError
+from navicat_volcanic.exceptions import InputError
 
 rng = np.random.default_rng()
 sup = np.testing.suppress_warnings()
