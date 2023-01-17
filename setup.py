@@ -10,8 +10,8 @@ with io.open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="volcanic",
-    packages=["volcanic"],
-    version="1.1",
+    packages=["navicat_volcanic"],
+    version="1.2.0",
     description="Automated Generator of Volcano Plots",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -25,14 +25,14 @@ setup(
         "scipy",
         "matplotlib",
         "pandas",
-        "scikit-learn",
         "h5py",
+        "scikit-learn",
         "setuptools",
     ],
     include_package_data=True,
     entry_points={
         "console_scripts": [
-            "volcanic = volcanic:main",
+            "navicat_volcanic = navicat_volcanic.volcanic:run_volcanic",
         ],
     },
 )

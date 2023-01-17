@@ -8,7 +8,7 @@ from itertools import cycle
 import numpy as np
 import pandas as pd
 
-from volcanic.exceptions import InputError
+from navicat_volcanic.exceptions import InputError
 
 
 def yesno(question):
