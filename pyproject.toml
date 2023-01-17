@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "navicat_volcanic"
-version = "1.2.2"
+version = "1.2.3"
 authors = [
   { name="R. Laplaza", email="rlaplaza@duck.com" },
 ]
@@ -27,4 +27,4 @@ classifiers = [
 ]
 
 [project.scripts]
-navicat_marc = "navicat_volcanic.volcanic:run_volcanic"
+navicat_volcanic = "navicat_volcanic.volcanic:run_volcanic"

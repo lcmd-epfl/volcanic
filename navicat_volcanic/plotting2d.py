@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 import sklearn as sk
 import sklearn.linear_model
 
-from volcanic.exceptions import MissingDataError
-from volcanic.helpers import bround
-from volcanic.tof import calc_es, calc_s_es, calc_tof
+from navicat_volcanic.exceptions import MissingDataError
+from navicat_volcanic.helpers import bround
+from navicat_volcanic.tof import calc_es, calc_s_es, calc_tof
 
 
 def get_reg_targets(idx, d, tags, coeff, regress, mode="k"):

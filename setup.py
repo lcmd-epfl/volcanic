@@ -1,8 +1,9 @@
-from setuptools import setup
 import io
 
 # Read the contents of your README file
 from os import path
+
+from setuptools import setup
 
 this_directory = path.abspath(path.dirname(__file__))
 with io.open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
@@ -11,7 +12,7 @@ with io.open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
 setup(
     name="volcanic",
     packages=["navicat_volcanic"],
-    version="1.2.2",
+    version="1.2.3",
     description="Automated Generator of Volcano Plots",
     long_description=long_description,
     long_description_content_type="text/markdown",
