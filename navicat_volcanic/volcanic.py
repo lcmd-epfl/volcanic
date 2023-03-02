@@ -7,15 +7,28 @@ import numpy as np
 from navicat_volcanic.dv1 import curate_d, find_1_dv
 from navicat_volcanic.dv2 import find_2_dv
 from navicat_volcanic.exceptions import InputError
-from navicat_volcanic.helpers import (arraydump, group_data_points,
-                                      processargs, setflags, user_choose_1_dv,
-                                      user_choose_2_dv)
-from navicat_volcanic.plotting2d import (plot_2d_es_volcano, plot_2d_k_volcano,
-                                         plot_2d_lsfer, plot_2d_t_volcano,
-                                         plot_2d_tof_volcano)
-from navicat_volcanic.plotting3d import (plot_3d_es_volcano, plot_3d_k_volcano,
-                                         plot_3d_lsfer, plot_3d_t_volcano,
-                                         plot_3d_tof_volcano)
+from navicat_volcanic.helpers import (
+    arraydump,
+    group_data_points,
+    processargs,
+    setflags,
+    user_choose_1_dv,
+    user_choose_2_dv,
+)
+from navicat_volcanic.plotting2d import (
+    plot_2d_es_volcano,
+    plot_2d_k_volcano,
+    plot_2d_lsfer,
+    plot_2d_t_volcano,
+    plot_2d_tof_volcano,
+)
+from navicat_volcanic.plotting3d import (
+    plot_3d_es_volcano,
+    plot_3d_k_volcano,
+    plot_3d_lsfer,
+    plot_3d_t_volcano,
+    plot_3d_tof_volcano,
+)
 
 
 def run_volcanic():

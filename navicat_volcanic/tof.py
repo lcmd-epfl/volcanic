@@ -5,6 +5,14 @@ import copy
 import numpy as np
 
 
+def calc_atof(es, dgr, T, verb=0):
+    h = 6.62607015e-34
+    k_b = 1.380649e-23
+    R = 8.314462618
+    TOF = ((k_b * T) / h) * np.exp((-(es * 4184) / (R * T)))
+    return TOF
+
+
 def calc_tof(array, dgr, T, coeff, exact=True, verb=0):
     """Function to compute TOF using the energy span model.
     Reproduces results from the AUTOF code (https://doi.org/10.1002/jcc.21669).
@@ -95,6 +103,7 @@ def calc_tof(array, dgr, T, coeff, exact=True, verb=0):
                 if i < j:
                     dE[i, j] = matrix_T_I[i, 1] - matrix_T_I[j, 0] + dgr
         Energy_Span = np.amax(dE)
+        sum_span = None
         if verb > 2:
             print(f"Energy Span computed : {Energy_Span} kcal/mol.")
         TOF = ((k_b * T) / h) * np.exp((-(Energy_Span * 4184) / (R * T)))
@@ -103,7 +112,7 @@ def calc_tof(array, dgr, T, coeff, exact=True, verb=0):
         i, j = np.unravel_index(np.argmax(dE, axis=None), dE.shape)
         X_TOF[i, 1] = 1.0
         X_TOF[j, 0] = 1.0
-    return TOF, X_TOF
+    return TOF, X_TOF, sum_span
 
 
 def calc_es(profile, dgr, esp=True, chemical_sense=False):

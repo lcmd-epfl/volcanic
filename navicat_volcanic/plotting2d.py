@@ -11,7 +11,7 @@ import sklearn.linear_model
 
 from navicat_volcanic.exceptions import MissingDataError
 from navicat_volcanic.helpers import bround
-from navicat_volcanic.tof import calc_es, calc_s_es, calc_tof
+from navicat_volcanic.tof import calc_es, calc_s_es, calc_tof, calc_atof
 
 
 def get_reg_targets(idx, d, tags, coeff, regress, mode="k"):
@@ -28,15 +28,23 @@ def get_reg_targets(idx, d, tags, coeff, regress, mode="k"):
     return X, tag, tags, d1, d2, coeff
 
 
-def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
-    if ax is None:
-        ax = plt.gca()
+def calc_ci(resid, n, dof, x, x2, y2):
+    t = stats.t.ppf(0.95, dof)
+    s_err = np.sqrt(np.sum(resid**2) / dof)
 
     ci = (
         t
         * s_err
         * np.sqrt(1 / n + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
     )
+
+    return ci
+
+
+def plot_ci(ci, x2, y2, ax=None):
+    if ax is None:
+        ax = plt.gca()
+
     ax.fill_between(x2, y2 + ci, y2 - ci, color="#b9cfe7", alpha=0.6)
 
     return ax
@@ -108,24 +116,14 @@ def plot_2d_lsfer(
                     "Both descriptor and regression target are undefined. This should have been fixed before this point. Exiting."
                 )
         n = Y.size
-        m = p.size
-        dof = n - m
-        t = stats.t.ppf(0.95, dof)
+        dof = n - p.size
         resid = Y - Y_pred
-        chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid**2) / dof)
         fig, ax = plt.subplots(
             frameon=False, figsize=[4.2, 3], dpi=300, constrained_layout=True
         )
         yint = np.polyval(p, xint)
-        plot_ci_manual(t, s_err, n, X, xint, yint, ax=ax)
-        pi = (
-            t
-            * s_err
-            * np.sqrt(
-                1 + 1 / n + (xint - np.mean(X)) ** 2 / np.sum((X - np.mean(X)) ** 2)
-            )
-        )
+        ci = calc_ci(resid, n, dof, X, xint, yint)
+        plot_ci(ci, xint, yint, ax=ax)
         ax.plot(xint, yint, "-", linewidth=1, color="#000a75", alpha=0.85, zorder=1)
         plotpoints(ax, X, Y, cbi, msi, plotmode=1)
         beautify_ax(ax)
@@ -133,6 +131,12 @@ def plot_2d_lsfer(
         plt.xlabel(f"{tag} [kcal/mol]")
         plt.ylabel(f"{tags[j]} [kcal/mol]")
         plt.xlim(xmin, xmax)
+
+        ymin, ymax = ax.get_ylim()
+        ymax = bround(ymax, ybase, type="max")
+        ymin = bround(ymin, ybase, type="min")
+        plt.ylim(ymin, ymax)
+        plt.yticks(np.arange(ymin, ymax + 0.1, ybase))
         plt.xticks(np.arange(xmin, xmax + 0.1, xbase))
         plt.savefig(f"{tags[j]}.png")
     return np.hstack((d_refill, d2))
@@ -176,8 +180,9 @@ def plot_2d(
     y,
     px,
     py,
-    xmin,
-    xmax,
+    ci=None,
+    xmin=0,
+    xmax=100,
     xbase=20,
     ybase=10,
     xlabel="X-axis",
@@ -261,6 +266,26 @@ def plot_2d(
                     zorder=4,
                 )
         plotpoints(ax, px, py, cb, ms, plotmode)
+    elif plotmode == 3:
+        ax.plot(x, y, "-", linewidth=1.5, color="midnightblue", alpha=0.95, zorder=1)
+        ax = beautify_ax(ax)
+        if rid is not None and rb is not None:
+            avgs = []
+            rb.append(xmax)
+            for i in range(len(rb) - 1):
+                avgs.append((rb[i] + rb[i + 1]) / 2)
+            for i in rb:
+                ax.axvline(
+                    i,
+                    linestyle="dashed",
+                    color="black",
+                    linewidth=0.75,
+                    alpha=0.75,
+                    zorder=3,
+                )
+        plotpoints(ax, px, py, cb, ms, plotmode)
+        if ci is not None:
+            plot_ci(ci, x, y, ax=ax)
     ymin, ymax = ax.get_ylim()
     ymax = bround(ymax, ybase, type="max")
     ymin = bround(ymin, ybase, type="min")
@@ -294,6 +319,7 @@ def plot_2d_es_volcano(
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
     dgs = np.zeros((npoints, len(lnsteps)))
+    sigma_dgs = np.zeros((npoints, len(lnsteps)))
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
         p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
@@ -301,14 +327,15 @@ def plot_2d_es_volcano(
         n = Y.size
         m = p.size
         dof = n - m
-        t = stats.t.ppf(0.95, dof)
         resid = Y - Y_pred
         with np.errstate(invalid="ignore"):
             chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid**2) / dof)
         yint = np.polyval(p, xint)
+        ci = calc_ci(resid, n, dof, X, xint, yint)
         dgs[:, i] = yint
+        sigma_dgs[:, i] = ci
     ymin = np.zeros_like(yint)
+    ci = np.zeros_like(yint)
     ridmax = np.zeros_like(yint, dtype=int)
     ridmin = np.zeros_like(yint, dtype=int)
     rid = []
@@ -318,8 +345,10 @@ def plot_2d_es_volcano(
     prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :-1]
+        sigmas = sigma_dgs[i, :-1]
         dgr_s = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_es(profile, dgr_s, esp=True)
+        ci[i] = sigmas[ridmin[i]] + sigmas[ridmax[i]]
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -369,6 +398,7 @@ def plot_2d_es_volcano(
         ymin,
         px,
         py,
+        ci,
         xmin,
         xmax,
         xbase,
@@ -410,6 +440,7 @@ def plot_2d_k_volcano(
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
     dgs = np.zeros((npoints, len(lnsteps)))
+    sigma_dgs = np.zeros((npoints, len(lnsteps)))
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
         p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
@@ -417,14 +448,15 @@ def plot_2d_k_volcano(
         n = Y.size
         m = p.size
         dof = n - m
-        t = stats.t.ppf(0.95, dof)
         resid = Y - Y_pred
         with np.errstate(invalid="ignore"):
             chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid**2) / dof)
         yint = np.polyval(p, xint)
+        ci = calc_ci(resid, n, dof, X, xint, yint)
         dgs[:, i] = yint
+        sigma_dgs[:, i] = ci
     ymin = np.zeros_like(yint)
+    ci = np.zeros_like(yint)
     ridmax = np.zeros_like(yint, dtype=int)
     ridmin = np.zeros_like(yint, dtype=int)
     rid = []
@@ -434,8 +466,10 @@ def plot_2d_k_volcano(
     prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :-1]
+        sigmas = sigma_dgs[i, :-1]
         dgr_s = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr_s, esp=True)
+        ci[i] = sigmas[ridmin[i]] + sigmas[ridmax[i]]
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -483,6 +517,7 @@ def plot_2d_k_volcano(
         ymin,
         px,
         py,
+        ci,
         xmin,
         xmax,
         xbase,
@@ -524,6 +559,7 @@ def plot_2d_t_volcano(
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
     dgs = np.zeros((npoints, len(lnsteps)))
+    sigma_dgs = np.zeros((npoints, len(lnsteps)))
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
         p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
@@ -531,14 +567,15 @@ def plot_2d_t_volcano(
         n = Y.size
         m = p.size
         dof = n - m
-        t = stats.t.ppf(0.95, dof)
         resid = Y - Y_pred
         with np.errstate(invalid="ignore"):
             chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid**2) / dof)
         yint = np.polyval(p, xint)
+        ci = calc_ci(resid, n, dof, X, xint, yint)
         dgs[:, i] = yint
+        sigma_dgs[:, i] = ci
     ymin = np.zeros_like(yint)
+    ci = np.zeros_like(yint)
     ridmax = np.zeros_like(yint, dtype=int)
     ridmin = np.zeros_like(yint, dtype=int)
     rid = []
@@ -548,8 +585,10 @@ def plot_2d_t_volcano(
     prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :-1]
+        sigmas = sigma_dgs[i, :-1]
         dgr_s = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr_s, esp=True)
+        ci[i] = sigmas[ridmin[i] - 1] + sigmas[ridmax[i] - 1]
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -597,6 +636,7 @@ def plot_2d_t_volcano(
         ymin,
         px,
         py,
+        ci,
         xmin,
         xmax,
         xbase,
@@ -639,6 +679,7 @@ def plot_2d_tof_volcano(
         print(f"Range of descriptor set to [ {xmin} , {xmax} ]")
     xint = np.linspace(xmin, xmax, npoints)
     dgs = np.zeros((npoints, len(lnsteps)))
+    sigma_dgs = np.zeros((npoints, len(lnsteps)))
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
         p, cov = np.polyfit(X, Y, 1, cov=True)
@@ -646,30 +687,48 @@ def plot_2d_tof_volcano(
         n = Y.size
         m = p.size
         dof = n - m
-        t = stats.t.ppf(0.95, dof)
         resid = Y - Y_pred
         with np.errstate(invalid="ignore"):
             chi2 = np.sum((resid / Y_pred) ** 2)
-        s_err = np.sqrt(np.sum(resid**2) / dof)
         yint = np.polyval(p, xint)
+        ci = calc_ci(resid, n, dof, X, xint, yint)
         dgs[:, i] = yint
+        sigma_dgs[:, i] = ci
     ytof = np.zeros_like(yint)
+    ci = np.zeros_like(yint)
+    ridmax = np.zeros_like(yint, dtype=int)
+    ridmin = np.zeros_like(yint, dtype=int)
     # We must take the initial and ending states into account here
     for i in range(ytof.shape[0]):
         profile = dgs[i, :]
+        sigmas = sigma_dgs[i, :-1]
+        if verb > 5:
+            print(f"95% CI uncertainties for profile {profile} are {sigmas}.")
         dgr_s = dgs[i][-1]
-        tof = np.log10(calc_tof(profile, dgr_s, T, coeff, exact=True)[0])
-        ytof[i] = tof
+        tof, xtof, e = calc_tof(profile, dgr_s, T, coeff, exact=True)
+        es, ridmax[i], ridmin[i], _ = calc_es(profile, dgr_s, esp=True)
+        sigma_d = sigmas[ridmin[i]] + sigmas[ridmax[i]]
+        sigma_tof_p = calc_atof(es + sigma_d, dgr_s, T)
+        sigma_tof_m = calc_atof(es - sigma_d, dgr_s, T)
+        sigma_ltof_p = np.log10(sigma_tof_p)
+        sigma_ltof_m = np.log10(sigma_tof_m)
+        sigma_ltof = (sigma_ltof_m - sigma_ltof_p) / 2
+        ltof = np.log10(tof)
+        if verb > 6:
+            print(f"Uncertainty for a log10(TOF) value of {ltof} is {sigma_ltof}")
+        ci[i] = sigma_ltof
+        ytof[i] = ltof
     px = np.zeros_like(d[:, 0])
     py = np.zeros_like(d[:, 0])
     for i in range(d.shape[0]):
         px[i] = X[i].reshape(-1)
         profile = d[i, :]
         dgr_s = dgr[i]
-        tof = np.log10(calc_tof(profile, dgr_s, T, coeff, exact=True)[0])
-        py[i] = tof
+        tof = calc_tof(profile, dgr_s, T, coeff, exact=True)[0]
+        ltof = np.log10(tof)
+        py[i] = ltof
         if verb > 2:
-            print(f"Profile {profile} corresponds with log10(TOF) of {tof}")
+            print(f"Profile {profile} corresponds with log10(TOF) of {ltof}")
         if verb > 1:
             pointsname = f"points_tof_volcano_{tag}.csv"
             zdata = list(zip(px, py))
@@ -695,6 +754,7 @@ def plot_2d_tof_volcano(
         ytof,
         px,
         py,
+        ci,
         xmin,
         xmax,
         xbase,
