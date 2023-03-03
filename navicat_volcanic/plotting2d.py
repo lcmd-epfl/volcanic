@@ -389,9 +389,13 @@ def plot_2d_es_volcano(
     if verb > 0:
         csvname = f"es_volcano_{tag}.csv"
         print(f"Saving volcano data to file {csvname}")
-        zdata = list(zip(xint, ymin))
+        zdata = list(zip(xint, ymin, ci))
         np.savetxt(
-            csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\d_Ges"
+            csvname,
+            zdata,
+            fmt="%.4e",
+            delimiter=",",
+            header="Descriptor, -\d_Ges, 95%CI",
         )
     plot_2d(
         xint,
@@ -508,9 +512,13 @@ def plot_2d_k_volcano(
     if verb > 0:
         csvname = f"k_volcano_{tag}.csv"
         print(f"Saving volcano data to file {csvname}")
-        zdata = list(zip(xint, ymin))
+        zdata = list(zip(xint, ymin, ci))
         np.savetxt(
-            csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\D_Gkds"
+            csvname,
+            zdata,
+            fmt="%.4e",
+            delimiter=",",
+            header="Descriptor, -\D_Gkds, 95%CI",
         )
     plot_2d(
         xint,
@@ -627,9 +635,13 @@ def plot_2d_t_volcano(
     if verb > 0:
         csvname = f"t_volcano_{tag}.csv"
         print(f"Saving volcano data to file {csvname}")
-        zdata = list(zip(xint, ymin))
+        zdata = list(zip(xint, ymin, ci))
         np.savetxt(
-            csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, -\D_Gpds"
+            csvname,
+            zdata,
+            fmt="%.4e",
+            delimiter=",",
+            header="Descriptor, -\D_Gpds, 95%CI",
         )
     plot_2d(
         xint,
@@ -745,9 +757,13 @@ def plot_2d_tof_volcano(
     if verb > 0:
         csvname = f"tof_volcano_{tag}.csv"
         print(f"Saving TOF volcano data to file {csvname}")
-        zdata = list(zip(xint, ytof))
+        zdata = list(zip(xint, ytof, ci))
         np.savetxt(
-            csvname, zdata, fmt="%.4e", delimiter=",", header="Descriptor, log10(TOF)"
+            csvname,
+            zdata,
+            fmt="%.4e",
+            delimiter=",",
+            header="Descriptor, log10(TOF), 95%CI",
         )
     plot_2d(
         xint,
