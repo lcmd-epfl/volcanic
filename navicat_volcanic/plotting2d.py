@@ -348,7 +348,7 @@ def plot_2d_es_volcano(
         sigmas = sigma_dgs[i, :-1]
         dgr_s = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_es(profile, dgr_s, esp=True)
-        ci[i] = sigmas[ridmin[i]] + sigmas[ridmax[i]]
+        ci[i] = sigmas[ridmin[i] - 1] + sigmas[ridmax[i] - 1]
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -473,7 +473,7 @@ def plot_2d_k_volcano(
         sigmas = sigma_dgs[i, :-1]
         dgr_s = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr_s, esp=True)
-        ci[i] = sigmas[ridmin[i]] + sigmas[ridmax[i]]
+        ci[i] = sigmas[ridmin[i] - 1] + sigmas[ridmax[i] - 1]
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -719,7 +719,7 @@ def plot_2d_tof_volcano(
         dgr_s = dgs[i][-1]
         tof, xtof, e = calc_tof(profile, dgr_s, T, coeff, exact=True)
         es, ridmax[i], ridmin[i], _ = calc_es(profile, dgr_s, esp=True)
-        sigma_d = sigmas[ridmin[i]] + sigmas[ridmax[i]]
+        sigma_d = sigmas[ridmin[i] - 1] + sigmas[ridmax[i] - 1]
         sigma_tof_p = calc_atof(es + sigma_d, dgr_s, T)
         sigma_tof_m = calc_atof(es - sigma_d, dgr_s, T)
         sigma_ltof_p = np.log10(sigma_tof_p)
