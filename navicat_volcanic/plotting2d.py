@@ -43,7 +43,10 @@ def calc_ci(resid, n, dof, x, x2, y2):
 
 def plot_ci(ci, x2, y2, ax=None):
     if ax is None:
-        ax = plt.gca()
+        try:
+            ax = plt.gca()
+        except Exception as m:
+            return
 
     ax.fill_between(x2, y2 + ci, y2 - ci, color="#b9cfe7", alpha=0.6)
 
@@ -139,6 +142,17 @@ def plot_2d_lsfer(
         plt.yticks(np.arange(ymin, ymax + 0.1, ybase))
         plt.xticks(np.arange(xmin, xmax + 0.1, xbase))
         plt.savefig(f"{tags[j]}.png")
+        if verb > 0:
+            csvname = f"{tag[j]}.csv"
+            print(f"Saving volcano data to file {csvname}")
+            zdata = list(zip(xint, yint, ci))
+            np.savetxt(
+                csvname,
+                zdata,
+                fmt="%.4e",
+                delimiter=",",
+                header=f"Descriptor, {tag[j]}, 95%CI",
+            )
     return np.hstack((d_refill, d2))
 
 
