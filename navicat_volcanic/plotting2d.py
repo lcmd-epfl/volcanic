@@ -143,7 +143,7 @@ def plot_2d_lsfer(
         plt.xticks(np.arange(xmin, xmax + 0.1, xbase))
         plt.savefig(f"{tags[j]}.png")
         if verb > 0:
-            csvname = f"{tag[j]}.csv"
+            csvname = f"{tags[j]}.csv"
             print(f"Saving volcano data to file {csvname}")
             zdata = list(zip(xint, yint, ci))
             np.savetxt(
@@ -151,7 +151,7 @@ def plot_2d_lsfer(
                 zdata,
                 fmt="%.4e",
                 delimiter=",",
-                header=f"Descriptor, {tag[j]}, 95%CI",
+                header=f"Descriptor, {tags[j]}, 95%CI",
             )
     return np.hstack((d_refill, d2))
 
