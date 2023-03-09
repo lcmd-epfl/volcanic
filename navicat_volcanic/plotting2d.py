@@ -728,6 +728,9 @@ def plot_2d_tof_volcano(
     ci = np.zeros_like(yint)
     ridmax = np.zeros_like(yint, dtype=int)
     ridmin = np.zeros_like(yint, dtype=int)
+    slope = 0
+    prevslope = 0
+    prev = 0
     # We must take the initial and ending states into account here
     for i in range(ytof.shape[0]):
         profile = dgs[i, :]
@@ -736,14 +739,11 @@ def plot_2d_tof_volcano(
             print(f"95% CI uncertainties for profile {profile} are {sigmas}.")
         dgr_s = dgs[i][-1]
         tof, xtof, e = calc_tof(profile, dgr_s, T, coeff, exact=True)
-        es, ridmax[i], ridmin[i], _ = calc_es(profile, dgr_s, esp=True)
+        es, ridmax[i], ridmin[i], diff = calc_es(profile, dgr_s, esp=True)
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
-        slope = ymin[i] - prev
-        prev = ymin[i]
+        slope = np.log10(tof) - prev
         numchange = [np.abs(diff) > 1e-2, ~np.isclose(slope, prevslope, 1)]
         if any(idchange) and any(numchange):
-            rid.append(f"{tags[ridmin[i]]} ➜ {tags[ridmax[i]]}")
-            rb.append(xint[i])
             prevslope = slope
         else:
             ridmax[i] = ridmax[i - 1]
@@ -755,6 +755,7 @@ def plot_2d_tof_volcano(
         sigma_ltof_m = np.log10(sigma_tof_m)
         sigma_ltof = (sigma_ltof_m - sigma_ltof_p) / 2
         ltof = np.log10(tof)
+        prev = ltof
         if verb > 6:
             print(f"Uncertainty for a log10(TOF) value of {ltof} is {sigma_ltof}")
         ci[i] = sigma_ltof
