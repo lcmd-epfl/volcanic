@@ -366,7 +366,6 @@ def plot_2d_es_volcano(
         sigmas = sigma_dgs[i]
         dgr_s = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_es(profile, dgr_s, esp=True)
-        ci[i] = sigmas[ridmin[i]] + sigmas[ridmax[i]]
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -378,6 +377,7 @@ def plot_2d_es_volcano(
         else:
             ridmax[i] = ridmax[i - 1]
             ridmin[i] = ridmin[i - 1]
+        ci[i] = sigmas[ridmin[i]] + sigmas[ridmax[i]]
     if verb > 0:
         print(f"Identified {len(rid)} different determining states.")
         for i, j in zip(rid, rb):
@@ -737,6 +737,17 @@ def plot_2d_tof_volcano(
         dgr_s = dgs[i][-1]
         tof, xtof, e = calc_tof(profile, dgr_s, T, coeff, exact=True)
         es, ridmax[i], ridmin[i], _ = calc_es(profile, dgr_s, esp=True)
+        idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
+        slope = ymin[i] - prev
+        prev = ymin[i]
+        numchange = [np.abs(diff) > 1e-2, ~np.isclose(slope, prevslope, 1)]
+        if any(idchange) and any(numchange):
+            rid.append(f"{tags[ridmin[i]]} ➜ {tags[ridmax[i]]}")
+            rb.append(xint[i])
+            prevslope = slope
+        else:
+            ridmax[i] = ridmax[i - 1]
+            ridmin[i] = ridmin[i - 1]
         sigma_d = sigmas[ridmin[i]] + sigmas[ridmax[i]]
         sigma_tof_p = calc_atof(es + sigma_d, dgr_s, T)
         sigma_tof_m = calc_atof(es - sigma_d, dgr_s, T)
