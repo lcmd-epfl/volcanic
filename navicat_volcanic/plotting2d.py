@@ -69,6 +69,10 @@ def plot_2d_lsfer(
 ):
     xbase = 20
     ybase = 10
+    if np.isclose(d[:, -1].std(), 0):
+        regress[-1] = False
+        if verb > 0:
+            print(f"\nReaction energy is constant. Assuming substrates are constant.")
     Xf, tag, tags, d, d2, coeff = get_reg_targets(
         idx, d, tags, coeff, regress, mode="k"
     )
@@ -76,7 +80,7 @@ def plot_2d_lsfer(
     d_refill = np.zeros_like(d)
     d_refill[~np.isnan(d)] = d[~np.isnan(d)]
     mape = 100
-    for j in lnsteps[1:-1]:
+    for j in lnsteps[1:]:
         if verb > 0:
             print(f"Plotting regression of {tags[j]}.")
         Yf = d[:, j].reshape(-1)
@@ -359,10 +363,10 @@ def plot_2d_es_volcano(
     prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :-1]
-        sigmas = sigma_dgs[i, :-1]
+        sigmas = sigma_dgs[i]
         dgr_s = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_es(profile, dgr_s, esp=True)
-        ci[i] = sigmas[ridmin[i] - 1] + sigmas[ridmax[i] - 1]
+        ci[i] = sigmas[ridmin[i]] + sigmas[ridmax[i]]
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -484,10 +488,10 @@ def plot_2d_k_volcano(
     prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :-1]
-        sigmas = sigma_dgs[i, :-1]
+        sigmas = sigma_dgs[i]
         dgr_s = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr_s, esp=True)
-        ci[i] = sigmas[ridmin[i] - 1] + sigmas[ridmax[i] - 1]
+        ci[i] = sigmas[ridmin[i]] + sigmas[ridmax[i]]
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -532,7 +536,7 @@ def plot_2d_k_volcano(
             zdata,
             fmt="%.4e",
             delimiter=",",
-            header="Descriptor, -\D_Gkds, 95%CI",
+            header="Descriptor, -\d_Gkds, 95%CI",
         )
     plot_2d(
         xint,
@@ -607,10 +611,10 @@ def plot_2d_t_volcano(
     prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :-1]
-        sigmas = sigma_dgs[i, :-1]
+        sigmas = sigma_dgs[i]
         dgr_s = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr_s, esp=True)
-        ci[i] = sigmas[ridmin[i] - 1] + sigmas[ridmax[i] - 1]
+        ci[i] = sigmas[ridmin[i]] + sigmas[ridmax[i]]
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -655,7 +659,7 @@ def plot_2d_t_volcano(
             zdata,
             fmt="%.4e",
             delimiter=",",
-            header="Descriptor, -\D_Gpds, 95%CI",
+            header="Descriptor, -\d_Gpds, 95%CI",
         )
     plot_2d(
         xint,
@@ -727,13 +731,13 @@ def plot_2d_tof_volcano(
     # We must take the initial and ending states into account here
     for i in range(ytof.shape[0]):
         profile = dgs[i, :]
-        sigmas = sigma_dgs[i, :-1]
+        sigmas = sigma_dgs[i]
         if verb > 5:
             print(f"95% CI uncertainties for profile {profile} are {sigmas}.")
         dgr_s = dgs[i][-1]
         tof, xtof, e = calc_tof(profile, dgr_s, T, coeff, exact=True)
         es, ridmax[i], ridmin[i], _ = calc_es(profile, dgr_s, esp=True)
-        sigma_d = sigmas[ridmin[i] - 1] + sigmas[ridmax[i] - 1]
+        sigma_d = sigmas[ridmin[i]] + sigmas[ridmax[i]]
         sigma_tof_p = calc_atof(es + sigma_d, dgr_s, T)
         sigma_tof_m = calc_atof(es - sigma_d, dgr_s, T)
         sigma_ltof_p = np.log10(sigma_tof_p)

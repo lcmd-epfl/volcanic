@@ -85,6 +85,10 @@ def plot_3d_lsfer(
     plotmode=1,
     verb=0,
 ):
+    if np.isclose(d[:, -1].std(), 0):
+        regress[-1] = False
+        if verb > 0:
+            print(f"\nReaction energy is constant. Assuming substrates are constant.")
     X1, X2, tag1, tag2, tags, d, d2, coeff = get_reg_targets(
         idx1, idx2, d, tags, coeff, regress, mode="k"
     )
@@ -93,7 +97,7 @@ def plot_3d_lsfer(
     d_refill[~np.isnan(d)] = d[~np.isnan(d)]
     lnsteps = range(d.shape[1])
     mape = 100
-    for j in lnsteps[1:-1]:
+    for j in lnsteps[1:]:
         if verb > 0:
             print(f"Plotting regression of {tags[j]}.")
         XY = np.vstack([X1, X2, d[:, j]]).T

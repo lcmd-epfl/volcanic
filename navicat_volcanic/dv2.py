@@ -47,6 +47,10 @@ def find_2_dv(d, tags, coeff, regress, verb=0):
         raise InputError(
             "The first field of every profile should be the same (reference state). Exit."
         )
+    if np.isclose(d[:, -1].std(), 0):
+        regress[-1] = False
+        if verb > 0:
+            print(f"\nReaction energy is constant. Assuming substrates are constant.")
     tags = tags[1:]
     coeff = coeff[1:]
     regress = regress[1:]
