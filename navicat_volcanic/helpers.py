@@ -69,7 +69,7 @@ def user_choose_1_dv(dvs, r2s, tags):
 
 
 def user_choose_2_dv(ddvs, r2s, tags):
-    tags = np.array(tags[1:], dtype=np.str)
+    tags = np.array(tags[1:], dtype=np.str_)
     ptags = []
     for pair in itertools.combinations(tags, r=2):
         ptags.append([pair[0], pair[1]])
@@ -88,8 +88,8 @@ def user_choose_2_dv(ddvs, r2s, tags):
             for i, ptag in enumerate(ptags):
                 ok = yesno(f"Use combination of {ptag[0]} and {ptag[1]} as descriptor")
                 if ok:
-                    idx1 = np.where(tags == np.str(ptag[0]))[0][0] + 1
-                    idx2 = np.where(tags == np.str(ptag[1]))[0][0] + 1
+                    idx1 = np.where(tags == np.str_(ptag[0]))[0][0] + 1
+                    idx2 = np.where(tags == np.str_(ptag[1]))[0][0] + 1
                     return idx1, idx2
     return None, None
 
@@ -102,7 +102,7 @@ def processargs(arguments):
         epilog="Remember to cite the volcanic paper: \n \nLaplaza, R., Das, S., Wodrich, M.D. et al. Constructing and interpreting volcano plots and activity maps to navigate homogeneous catalyst landscapes. Nat Protoc (2022). \nhttps://doi.org/10.1038/s41596-022-00726-2 \n \n - and enjoy!",
     )
     vbuilder.add_argument(
-        "-version", "--version", action="version", version="%(prog)s 1.2.11"
+        "-version", "--version", action="version", version="%(prog)s 1.2.12"
     )
     runmode_arg = vbuilder.add_mutually_exclusive_group()
     vbuilder.add_argument(
