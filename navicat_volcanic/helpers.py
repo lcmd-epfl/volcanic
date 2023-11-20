@@ -95,14 +95,13 @@ def user_choose_2_dv(ddvs, r2s, tags):
 
 
 def processargs(arguments):
-
     vbuilder = argparse.ArgumentParser(
         prog="volcanic",
         description="Build volcano plots from reaction energy profile data.",
         epilog="Remember to cite the volcanic paper: \n \nLaplaza, R., Das, S., Wodrich, M.D. et al. Constructing and interpreting volcano plots and activity maps to navigate homogeneous catalyst landscapes. Nat Protoc (2022). \nhttps://doi.org/10.1038/s41596-022-00726-2 \n \n - and enjoy!",
     )
     vbuilder.add_argument(
-        "-version", "--version", action="version", version="%(prog)s 1.3.1"
+        "-version", "--version", action="version", version="%(prog)s 1.3.2"
     )
     runmode_arg = vbuilder.add_mutually_exclusive_group()
     vbuilder.add_argument(

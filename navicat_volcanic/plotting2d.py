@@ -69,12 +69,14 @@ def plot_2d_lsfer(
 ):
     xbase = 20
     ybase = 10
-    if np.isclose(d[:, -1].std(), 0):
-        regress[-1] = False
-        if verb > 0:
-            print(f"\nReaction energy is constant. Assuming substrates are constant.")
+    valid_d = np.copy(regress)
+    for i, r in enumerate(regress):
+        if np.isclose(d[:, i].std(), 0):
+            valid_d[i] = False
+            if verb > 2:
+                print(f"Energy constant with mean {d[:,i].mean()}, will not regress.")
     Xf, tag, tags, d, d2, coeff = get_reg_targets(
-        idx, d, tags, coeff, regress, mode="k"
+        idx, d, tags, coeff, valid_d, mode="k"
     )
     lnsteps = range(d.shape[1])
     d_refill = np.zeros_like(d)
@@ -340,6 +342,14 @@ def plot_2d_es_volcano(
     sigma_dgs = np.zeros((npoints, len(lnsteps)))
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
+        if np.isclose(Y.std(), 0):
+            if verb > 4:
+                print(
+                    f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
+                )
+            dgs[:, i] = Y.mean()
+            sigma_dgs[:, i] = 0
+            continue
         p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
         Y_pred = np.polyval(p, X)
         n = Y.size
@@ -400,7 +410,9 @@ def plot_2d_es_volcano(
                 header="Descriptor, -\d_Ges",
             )
         if verb > 2:
-            print(f"Profile {profile} corresponds with ES of {py[i]}")
+            print(
+                f"Profile {profile} with reaction energy {dgr_s} corresponds with ES of {py[i]}"
+            )
     xlabel = f"{tag} [kcal/mol]"
     ylabel = r"-δ$E$ [kcal/mol]"
     filename = f"es_volcano_{tag}.png"
@@ -465,6 +477,14 @@ def plot_2d_k_volcano(
     sigma_dgs = np.zeros((npoints, len(lnsteps)))
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
+        if np.isclose(Y.std(), 0):
+            if verb > 4:
+                print(
+                    f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
+                )
+            dgs[:, i] = Y.mean()
+            sigma_dgs[:, i] = 0
+            continue
         p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
         Y_pred = np.polyval(p, X)
         n = Y.size
@@ -588,6 +608,14 @@ def plot_2d_t_volcano(
     sigma_dgs = np.zeros((npoints, len(lnsteps)))
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
+        if np.isclose(Y.std(), 0):
+            if verb > 4:
+                print(
+                    f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
+                )
+            dgs[:, i] = Y.mean()
+            sigma_dgs[:, i] = 0
+            continue
         p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
         Y_pred = np.polyval(p, X)
         n = Y.size
@@ -712,6 +740,14 @@ def plot_2d_tof_volcano(
     sigma_dgs = np.zeros((npoints, len(lnsteps)))
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
+        if np.isclose(Y.std(), 0):
+            if verb > 4:
+                print(
+                    f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
+                )
+            dgs[:, i] = Y.mean()
+            sigma_dgs[:, i] = 0
+            continue
         p, cov = np.polyfit(X, Y, 1, cov=True)
         Y_pred = np.polyval(p, X)
         n = Y.size
@@ -736,7 +772,9 @@ def plot_2d_tof_volcano(
         profile = dgs[i, :]
         sigmas = sigma_dgs[i]
         if verb > 5:
-            print(f"95% CI uncertainties for profile {profile} are {sigmas}.")
+            print(
+                f"95% CI uncertainties for profile {np.round(profile,2)} are {np.round(sigmas,2)}."
+            )
         dgr_s = dgs[i][-1]
         tof, xtof, e = calc_tof(profile, dgr_s, T, coeff, exact=True)
         es, ridmax[i], ridmin[i], diff = calc_es(profile, dgr_s, esp=True)
@@ -756,8 +794,12 @@ def plot_2d_tof_volcano(
         sigma_ltof = (sigma_ltof_m - sigma_ltof_p) / 2
         ltof = np.log10(tof)
         prev = ltof
+        if verb > 4:
+            print(
+                f"Simulated profile {np.round(profile,2)} with reaction energy {np.round(dgr_s,2)} corresponds with log10(TOF) of {np.round(ltof,2)}"
+            )
         if verb > 6:
-            print(f"Uncertainty for a log10(TOF) value of {ltof} is {sigma_ltof}")
+            print(f"Uncertainty is {np.round(sigma_ltof,2)}")
         ci[i] = sigma_ltof
         ytof[i] = ltof
     px = np.zeros_like(d[:, 0])
@@ -770,7 +812,9 @@ def plot_2d_tof_volcano(
         ltof = np.log10(tof)
         py[i] = ltof
         if verb > 2:
-            print(f"Profile {profile} corresponds with log10(TOF) of {ltof}")
+            print(
+                f"Profile {profile} with reaction energy {dgr_s} corresponds with log10(TOF) of {np.round(ltof,2)}"
+            )
         if verb > 1:
             pointsname = f"points_tof_volcano_{tag}.csv"
             zdata = list(zip(px, py))

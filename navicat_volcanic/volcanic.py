@@ -95,12 +95,12 @@ def run_volcanic():
             coeff[i] = False
             regress[i] = True
 
-    if verb > 0:
-        print(f"Reaction profile is given by stationary points:\n {tags[regress]}")
-
     # Your data might contain outliers (human error, computation error) or missing points.
     # We will attempt to curate your data automatically.
     d, cb, ms = curate_d(d, regress, cb, ms, tags, imputer_strat, nstds=3, verb=verb)
+
+    if verb > 0:
+        print(f"Reaction profile is given by stationary points:\n {tags[regress]}")
 
     # Runmode used to set up flags for volcano generation.
     t_volcano, k_volcano, es_volcano, tof_volcano = setflags(runmode)
@@ -109,6 +109,8 @@ def run_volcanic():
         # volcanic will find best non-TS descriptor variable
         dvs, r2s = find_1_dv(d, tags, coeff, regress, verb)
         idx = user_choose_1_dv(dvs, r2s, tags)
+        if verb > 0:
+            print(f"Reaction profile is given by stationary points:\n {tags[regress]}")
         if idx is not None:
             print(f"Generating LSR plots using descriptor variable {tags[idx]}")
             if refill:
