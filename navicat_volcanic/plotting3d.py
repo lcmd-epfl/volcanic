@@ -237,7 +237,7 @@ def plot_3d_t_volcano(
                 print(
                     f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
                 )
-            gridj = Y.mean()
+            gridj.fill(Y.mean())
             grids.append(gridj)
             continue
         reg = sk.linear_model.LinearRegression().fit(X, Y)
@@ -381,7 +381,7 @@ def plot_3d_k_volcano(
                 print(
                     f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
                 )
-            gridj = Y.mean()
+            gridj.fill(Y.mean())
             grids.append(gridj)
             continue
         reg = sk.linear_model.LinearRegression().fit(X, Y)
@@ -538,7 +538,7 @@ def plot_3d_es_volcano(
                 print(
                     f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
                 )
-            gridj = Y.mean()
+            gridj.fill(Y.mean())
             grids.append(gridj)
             continue
         reg = sk.linear_model.LinearRegression().fit(X, Y)
@@ -737,7 +737,7 @@ def plot_3d_tof_volcano(
                 print(
                     f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
                 )
-            gridj = Y.mean()
+            gridj.fill(Y.mean())
             grids.append(gridj)
             continue
         reg = sk.linear_model.LinearRegression().fit(X, Y)
