@@ -41,6 +41,19 @@ def calc_ci(resid, n, dof, x, x2, y2):
     return ci
 
 
+def calc_pi(resid, n, dof, x, x2, y2):
+    t = stats.t.ppf(0.95, dof)
+    s_err = np.sqrt(np.sum(resid**2) / dof)
+
+    pi = (
+        t
+        * s_err
+        * np.sqrt(1 + (1 / n) + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
+    )
+
+    return pi
+
+
 def plot_ci(ci, x2, y2, ax=None):
     if ax is None:
         try:
