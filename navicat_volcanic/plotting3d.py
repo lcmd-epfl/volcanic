@@ -49,7 +49,6 @@ def plot_ci_manual(t, s_err, n, x, x2, y2, ax=None):
 
 
 def get_bases(X1, X2):
-
     return get_base(X1), get_base(X2)
 
 
@@ -85,15 +84,20 @@ def plot_3d_lsfer(
     plotmode=1,
     verb=0,
 ):
+    valid_d = np.copy(regress)
+    if np.isclose(d[:, -1].std(), 0):
+        valid_d[-1] = False
+        if verb > 0:
+            print(f"\nReaction energy is constant. Assuming substrates are constant.")
     X1, X2, tag1, tag2, tags, d, d2, coeff = get_reg_targets(
-        idx1, idx2, d, tags, coeff, regress, mode="k"
+        idx1, idx2, d, tags, coeff, valid_d, mode="k"
     )
     x1base, x2base = get_bases(X1, X2)
     d_refill = np.zeros_like(d)
     d_refill[~np.isnan(d)] = d[~np.isnan(d)]
     lnsteps = range(d.shape[1])
     mape = 100
-    for j in lnsteps[1:-1]:
+    for j in lnsteps[1:]:
         if verb > 0:
             print(f"Plotting regression of {tags[j]}.")
         XY = np.vstack([X1, X2, d[:, j]]).T
@@ -224,12 +228,20 @@ def plot_3d_t_volcano(
     yint = np.linspace(x2min, x2max, npoints)
     grids = []
     for i, j in enumerate(lnsteps):
+        gridj = np.zeros((npoints, npoints))
         XY = np.vstack([X1, X2, d[:, j]]).T
         X = XY[:, :2]
         Y = XY[:, 2]
+        if np.isclose(Y.std(), 0):
+            if verb > 4:
+                print(
+                    f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
+                )
+            gridj.fill(Y.mean())
+            grids.append(gridj)
+            continue
         reg = sk.linear_model.LinearRegression().fit(X, Y)
         Y_pred = reg.predict(X)
-        gridj = np.zeros((npoints, npoints))
         for k, x1 in enumerate(xint):
             for l, x2 in enumerate(yint):
                 x1x2 = np.vstack([x1, x2]).reshape(1, -1)
@@ -360,12 +372,20 @@ def plot_3d_k_volcano(
     yint = np.linspace(x2min, x2max, npoints)
     grids = []
     for i, j in enumerate(lnsteps):
+        gridj = np.zeros((npoints, npoints))
         XY = np.vstack([X1, X2, d[:, j]]).T
         X = XY[:, :2]
         Y = XY[:, 2]
+        if np.isclose(Y.std(), 0):
+            if verb > 4:
+                print(
+                    f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
+                )
+            gridj.fill(Y.mean())
+            grids.append(gridj)
+            continue
         reg = sk.linear_model.LinearRegression().fit(X, Y)
         Y_pred = reg.predict(X)
-        gridj = np.zeros((npoints, npoints))
         for k, x1 in enumerate(xint):
             for l, x2 in enumerate(yint):
                 x1x2 = np.vstack([x1, x2]).reshape(1, -1)
@@ -509,12 +529,20 @@ def plot_3d_es_volcano(
     yint = np.linspace(x2min, x2max, npoints)
     grids = []
     for i, j in enumerate(lnsteps):
+        gridj = np.zeros((npoints, npoints))
         XY = np.vstack([X1, X2, d[:, j]]).T
         X = XY[:, :2]
         Y = XY[:, 2]
+        if np.isclose(Y.std(), 0):
+            if verb > 4:
+                print(
+                    f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
+                )
+            gridj.fill(Y.mean())
+            grids.append(gridj)
+            continue
         reg = sk.linear_model.LinearRegression().fit(X, Y)
         Y_pred = reg.predict(X)
-        gridj = np.zeros((npoints, npoints))
         for k, x1 in enumerate(xint):
             for l, x2 in enumerate(yint):
                 x1x2 = np.vstack([x1, x2]).reshape(1, -1)
@@ -700,12 +728,20 @@ def plot_3d_tof_volcano(
     yint = np.linspace(x2min, x2max, npoints)
     grids = []
     for i, j in enumerate(lnsteps):
+        gridj = np.zeros((npoints, npoints))
         XY = np.vstack([X1, X2, d[:, j]]).T
         X = XY[:, :2]
         Y = XY[:, 2]
+        if np.isclose(Y.std(), 0):
+            if verb > 4:
+                print(
+                    f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
+                )
+            gridj.fill(Y.mean())
+            grids.append(gridj)
+            continue
         reg = sk.linear_model.LinearRegression().fit(X, Y)
         Y_pred = reg.predict(X)
-        gridj = np.zeros((npoints, npoints))
         for k, x1 in enumerate(xint):
             for l, x2 in enumerate(yint):
                 x1x2 = np.vstack([x1, x2]).reshape(1, -1)

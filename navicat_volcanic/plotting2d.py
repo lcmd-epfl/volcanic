@@ -41,9 +41,25 @@ def calc_ci(resid, n, dof, x, x2, y2):
     return ci
 
 
+def calc_pi(resid, n, dof, x, x2, y2):
+    t = stats.t.ppf(0.95, dof)
+    s_err = np.sqrt(np.sum(resid**2) / dof)
+
+    pi = (
+        t
+        * s_err
+        * np.sqrt(1 + (1 / n) + (x2 - np.mean(x)) ** 2 / np.sum((x - np.mean(x)) ** 2))
+    )
+
+    return pi
+
+
 def plot_ci(ci, x2, y2, ax=None):
     if ax is None:
-        ax = plt.gca()
+        try:
+            ax = plt.gca()
+        except Exception as m:
+            return
 
     ax.fill_between(x2, y2 + ci, y2 - ci, color="#b9cfe7", alpha=0.6)
 
@@ -66,14 +82,20 @@ def plot_2d_lsfer(
 ):
     xbase = 20
     ybase = 10
+    valid_d = np.copy(regress)
+    for i, r in enumerate(regress):
+        if np.isclose(d[:, i].std(), 0):
+            valid_d[i] = False
+            if verb > 2:
+                print(f"Energy constant with mean {d[:,i].mean()}, will not regress.")
     Xf, tag, tags, d, d2, coeff = get_reg_targets(
-        idx, d, tags, coeff, regress, mode="k"
+        idx, d, tags, coeff, valid_d, mode="k"
     )
     lnsteps = range(d.shape[1])
     d_refill = np.zeros_like(d)
     d_refill[~np.isnan(d)] = d[~np.isnan(d)]
     mape = 100
-    for j in lnsteps[1:-1]:
+    for j in lnsteps[1:]:
         if verb > 0:
             print(f"Plotting regression of {tags[j]}.")
         Yf = d[:, j].reshape(-1)
@@ -139,6 +161,17 @@ def plot_2d_lsfer(
         plt.yticks(np.arange(ymin, ymax + 0.1, ybase))
         plt.xticks(np.arange(xmin, xmax + 0.1, xbase))
         plt.savefig(f"{tags[j]}.png")
+        if verb > 0:
+            csvname = f"{tags[j]}.csv"
+            print(f"Saving volcano data to file {csvname}")
+            zdata = list(zip(xint, yint, ci))
+            np.savetxt(
+                csvname,
+                zdata,
+                fmt="%.4e",
+                delimiter=",",
+                header=f"Descriptor, {tags[j]}, 95%CI",
+            )
     return np.hstack((d_refill, d2))
 
 
@@ -322,6 +355,14 @@ def plot_2d_es_volcano(
     sigma_dgs = np.zeros((npoints, len(lnsteps)))
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
+        if np.isclose(Y.std(), 0):
+            if verb > 4:
+                print(
+                    f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
+                )
+            dgs[:, i] = Y.mean()
+            sigma_dgs[:, i] = 0
+            continue
         p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
         Y_pred = np.polyval(p, X)
         n = Y.size
@@ -345,10 +386,9 @@ def plot_2d_es_volcano(
     prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :-1]
-        sigmas = sigma_dgs[i, :-1]
+        sigmas = sigma_dgs[i]
         dgr_s = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_es(profile, dgr_s, esp=True)
-        ci[i] = sigmas[ridmin[i] - 1] + sigmas[ridmax[i] - 1]
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -360,6 +400,7 @@ def plot_2d_es_volcano(
         else:
             ridmax[i] = ridmax[i - 1]
             ridmin[i] = ridmin[i - 1]
+        ci[i] = sigmas[ridmin[i]] + sigmas[ridmax[i]]
     if verb > 0:
         print(f"Identified {len(rid)} different determining states.")
         for i, j in zip(rid, rb):
@@ -382,7 +423,9 @@ def plot_2d_es_volcano(
                 header="Descriptor, -\d_Ges",
             )
         if verb > 2:
-            print(f"Profile {profile} corresponds with ES of {py[i]}")
+            print(
+                f"Profile {profile} with reaction energy {dgr_s} corresponds with ES of {py[i]}"
+            )
     xlabel = f"{tag} [kcal/mol]"
     ylabel = r"-δ$E$ [kcal/mol]"
     filename = f"es_volcano_{tag}.png"
@@ -447,6 +490,14 @@ def plot_2d_k_volcano(
     sigma_dgs = np.zeros((npoints, len(lnsteps)))
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
+        if np.isclose(Y.std(), 0):
+            if verb > 4:
+                print(
+                    f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
+                )
+            dgs[:, i] = Y.mean()
+            sigma_dgs[:, i] = 0
+            continue
         p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
         Y_pred = np.polyval(p, X)
         n = Y.size
@@ -470,10 +521,10 @@ def plot_2d_k_volcano(
     prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :-1]
-        sigmas = sigma_dgs[i, :-1]
+        sigmas = sigma_dgs[i]
         dgr_s = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr_s, esp=True)
-        ci[i] = sigmas[ridmin[i] - 1] + sigmas[ridmax[i] - 1]
+        ci[i] = sigmas[ridmin[i]] + sigmas[ridmax[i]]
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -518,7 +569,7 @@ def plot_2d_k_volcano(
             zdata,
             fmt="%.4e",
             delimiter=",",
-            header="Descriptor, -\D_Gkds, 95%CI",
+            header="Descriptor, -\d_Gkds, 95%CI",
         )
     plot_2d(
         xint,
@@ -570,6 +621,14 @@ def plot_2d_t_volcano(
     sigma_dgs = np.zeros((npoints, len(lnsteps)))
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
+        if np.isclose(Y.std(), 0):
+            if verb > 4:
+                print(
+                    f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
+                )
+            dgs[:, i] = Y.mean()
+            sigma_dgs[:, i] = 0
+            continue
         p, cov = np.polyfit(X, Y, 1, cov=True)  # 1 -> degree of polynomial
         Y_pred = np.polyval(p, X)
         n = Y.size
@@ -593,10 +652,10 @@ def plot_2d_t_volcano(
     prev = 0
     for i in range(ymin.shape[0]):
         profile = dgs[i, :-1]
-        sigmas = sigma_dgs[i, :-1]
+        sigmas = sigma_dgs[i]
         dgr_s = dgs[i][-1]
         ymin[i], ridmax[i], ridmin[i], diff = calc_s_es(profile, dgr_s, esp=True)
-        ci[i] = sigmas[ridmin[i] - 1] + sigmas[ridmax[i] - 1]
+        ci[i] = sigmas[ridmin[i]] + sigmas[ridmax[i]]
         idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
         slope = ymin[i] - prev
         prev = ymin[i]
@@ -641,7 +700,7 @@ def plot_2d_t_volcano(
             zdata,
             fmt="%.4e",
             delimiter=",",
-            header="Descriptor, -\D_Gpds, 95%CI",
+            header="Descriptor, -\d_Gpds, 95%CI",
         )
     plot_2d(
         xint,
@@ -694,6 +753,14 @@ def plot_2d_tof_volcano(
     sigma_dgs = np.zeros((npoints, len(lnsteps)))
     for i, j in enumerate(lnsteps):
         Y = d[:, j].reshape(-1)
+        if np.isclose(Y.std(), 0):
+            if verb > 4:
+                print(
+                    f"State energy is constant at {i},{j} with mean {Y.mean()}. Setting to constant with zero uncertainty."
+                )
+            dgs[:, i] = Y.mean()
+            sigma_dgs[:, i] = 0
+            continue
         p, cov = np.polyfit(X, Y, 1, cov=True)
         Y_pred = np.polyval(p, X)
         n = Y.size
@@ -710,24 +777,42 @@ def plot_2d_tof_volcano(
     ci = np.zeros_like(yint)
     ridmax = np.zeros_like(yint, dtype=int)
     ridmin = np.zeros_like(yint, dtype=int)
+    slope = 0
+    prevslope = 0
+    prev = 0
     # We must take the initial and ending states into account here
     for i in range(ytof.shape[0]):
         profile = dgs[i, :]
-        sigmas = sigma_dgs[i, :-1]
+        sigmas = sigma_dgs[i]
         if verb > 5:
-            print(f"95% CI uncertainties for profile {profile} are {sigmas}.")
+            print(
+                f"95% CI uncertainties for profile {np.round(profile,2)} are {np.round(sigmas,2)}."
+            )
         dgr_s = dgs[i][-1]
         tof, xtof, e = calc_tof(profile, dgr_s, T, coeff, exact=True)
-        es, ridmax[i], ridmin[i], _ = calc_es(profile, dgr_s, esp=True)
-        sigma_d = sigmas[ridmin[i] - 1] + sigmas[ridmax[i] - 1]
+        es, ridmax[i], ridmin[i], diff = calc_es(profile, dgr_s, esp=True)
+        idchange = [ridmax[i] != ridmax[i - 1], ridmin[i] != ridmin[i - 1]]
+        slope = np.log10(tof) - prev
+        numchange = [np.abs(diff) > 1e-2, ~np.isclose(slope, prevslope, 1)]
+        if any(idchange) and any(numchange):
+            prevslope = slope
+        else:
+            ridmax[i] = ridmax[i - 1]
+            ridmin[i] = ridmin[i - 1]
+        sigma_d = sigmas[ridmin[i]] + sigmas[ridmax[i]]
         sigma_tof_p = calc_atof(es + sigma_d, dgr_s, T)
         sigma_tof_m = calc_atof(es - sigma_d, dgr_s, T)
         sigma_ltof_p = np.log10(sigma_tof_p)
         sigma_ltof_m = np.log10(sigma_tof_m)
         sigma_ltof = (sigma_ltof_m - sigma_ltof_p) / 2
         ltof = np.log10(tof)
+        prev = ltof
+        if verb > 4:
+            print(
+                f"Simulated profile {np.round(profile,2)} with reaction energy {np.round(dgr_s,2)} corresponds with log10(TOF) of {np.round(ltof,2)}"
+            )
         if verb > 6:
-            print(f"Uncertainty for a log10(TOF) value of {ltof} is {sigma_ltof}")
+            print(f"Uncertainty is {np.round(sigma_ltof,2)}")
         ci[i] = sigma_ltof
         ytof[i] = ltof
     px = np.zeros_like(d[:, 0])
@@ -740,7 +825,9 @@ def plot_2d_tof_volcano(
         ltof = np.log10(tof)
         py[i] = ltof
         if verb > 2:
-            print(f"Profile {profile} corresponds with log10(TOF) of {ltof}")
+            print(
+                f"Profile {profile} with reaction energy {dgr_s} corresponds with log10(TOF) of {np.round(ltof,2)}"
+            )
         if verb > 1:
             pointsname = f"points_tof_volcano_{tag}.csv"
             zdata = list(zip(px, py))

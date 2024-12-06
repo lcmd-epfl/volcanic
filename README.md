@@ -78,7 +78,9 @@ The input of volcanic is a `pandas` compatible dataframe, which includes plain .
 
 Regarding format, volcanic expects headers for all columns. The first column must contain names/identifiers. Then, volcanic expects a number of columns with relative free energies for the species in the catalytic cycle (in order of appearance), whose headers must contain "TS" if the species is a transition state, and a final column whose header is "Product" containing the reaction energy. Non-energy descriptors can be input as a separate file using the `-df` flag or as extra columns whose headers contain the word "Descriptor".
 
-High verbosity levels (`-v 1`, `-v 2`, etc.) will print the output as .csv files as well, which can be used to plot your volcano plot or activity map using external tools. An example is found in the `pretty_plotting_example` directory in this repository. Keep increasing the verbosity to get even more detailed output. This can be useful for understanding what the code is doing and what can have possibly gone wrong. To be as automated as possible, reasonable default values are set for most choices.
+High verbosity levels (`-v 1`, `-v 2`, etc.) will print the output as .csv files as well, which can be used to plot your volcano plot or activity map using external tools. An example is found in the `pretty_plotting_example` directory in this repository. Keep increasing the verbosity to get even more detailed output. This can be useful for understanding what the code is doing and what can have possibly gone wrong. To be as automated as possible, reasonable default values are set for most choices. The generated csvs also contain the 95% confidence interval value for the plot in question, which are obtained by propagating the uncertainty of the LSFERs involved in the computation. To simplify the propagation of uncertainties in the TOF computation, the uncertainty is approximated using the energy span in TOF volcano plots. 
+
+The plotmode (`-pm 1`, `-pm 2`) option can be used to modify the default look of the generated pngs, including more detail as the plotmode level increases. 
 
 
 ## Citation [↑](#citation)

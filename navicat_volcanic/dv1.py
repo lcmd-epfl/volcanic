@@ -99,18 +99,23 @@ def curate_d(d, regress, cb, ms, tags, imputer_strat="none", nstds=5, verb=0):
 def find_1_dv(d, tags, coeff, regress, verb=0):
     assert isinstance(d, np.ndarray)
     assert len(tags) == len(coeff) == len(regress)
+    valid_d = np.copy(regress)
     try:
         assert np.isclose(d[:, 0].std(), 0)
     except AssertionError as m:
         raise InputError(
             "The first field of every profile should be the same (reference state). Exit."
         )
+    if np.isclose(d[:, -1].std(), 0):
+        valid_d[-1] = False
+        if verb > 0:
+            print(f"\nReaction energy is constant. Assuming substrates are constant.")
     tags = tags[1:]
     coeff = coeff[1:]
-    regress = regress[1:]
+    valid_d = valid_d[1:]
     d = d[:, 1:]
     lnsteps = range(d.shape[1])
-    regsteps = range(d[:, regress].shape[1])
+    regsteps = range(d[:, valid_d].shape[1])
     # Regression diagnostics
     maes = np.ones(d.shape[1])
     r2s = np.ones(d.shape[1])
@@ -122,7 +127,7 @@ def find_1_dv(d, tags, coeff, regress, verb=0):
         imaps = []
         ir2s = []
         for j in regsteps:
-            Y = d[:, regress][:, j]
+            Y = d[:, valid_d][:, j]
             XY = np.vstack([d[:, i], d[:, j]]).T
             XY = XY[~np.isnan(XY).any(axis=1)]
             X = XY[:, 0].reshape(-1, 1)

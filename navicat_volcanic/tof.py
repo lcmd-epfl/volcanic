@@ -156,17 +156,17 @@ def test_tof():
     a = np.array([0.0, 8.59756198, 7.1439459, 12.47470641, -27.48101312])
     dgr_a = -5.8
     coeff_a = [0, 1, 0, 1, 0]
-    etof, xetof = calc_tof(a, dgr_a, T, coeff_a, exact=True, verb=0)
+    etof, xetof, _ = calc_tof(a, dgr_a, T, coeff_a, exact=True, verb=0)
     assert np.isclose(etof, 5.71e-13, 4)
-    atof, xatof = calc_tof(a, dgr_a, T, coeff_a, exact=False, verb=0)
+    atof, xatof, _ = calc_tof(a, dgr_a, T, coeff_a, exact=False, verb=0)
 
     T = 298.15
     c = np.array([0.0, -1.2, 3.7, 18.9, 3.8, 7.4, -3.8, -1.0, 6.0, 20.1])
     dgr_c = -6.5
     coeff_c = [0, 0, 0, 1, 0, 0, 0, 0, 0, 1]
-    etof, xetof = calc_tof(c, dgr_c, T, coeff_c, exact=True, verb=0)
+    etof, xetof, _ = calc_tof(c, dgr_c, T, coeff_c, exact=True, verb=0)
     assert np.isclose(etof, 1.84e-05, 4)
-    atof, xatof = calc_tof(c, dgr_c, T, coeff_c, exact=False, verb=0)
+    atof, xatof, _ = calc_tof(c, dgr_c, T, coeff_c, exact=False, verb=0)
 
 
 def test_aryl_ether_cleavage():
@@ -181,11 +181,11 @@ def test_aryl_ether_cleavage():
     # Ni(PBu3)
     c = np.array([0.0, 4.68, 27.95, 13.85, 25.95, -14.93, -24.80, 2.07])
 
-    etof, xetof = calc_tof(a, dgr, T, coeff, exact=True, verb=0)
+    etof, xetof, _ = calc_tof(a, dgr, T, coeff, exact=True, verb=0)
     assert np.isclose(etof, 6.91e-04, 4)
-    etof, xetof = calc_tof(b, dgr, T, coeff, exact=True, verb=0)
+    etof, xetof, _ = calc_tof(b, dgr, T, coeff, exact=True, verb=0)
     assert np.isclose(etof, 2.89e-11, 4)
-    etof, xetof = calc_tof(c, dgr, T, coeff, exact=True, verb=0)
+    etof, xetof, _ = calc_tof(c, dgr, T, coeff, exact=True, verb=0)
     assert np.isclose(etof, 6.85e-04, 4)
 
 
